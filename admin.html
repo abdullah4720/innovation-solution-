@@ -157,7 +157,7 @@
         </div>
         <div class="table-wrap"><table>
           <thead><tr><th>الرمز</th><th>الفريق</th><th>المسار</th><th>التحدي</th>
-            <th>الأعضاء</th><th>المشروع</th><th>الحالة</th></tr></thead>
+            <th>الأعضاء</th><th>المشروع</th><th>الحالة</th><th>إجراءات</th></tr></thead>
           <tbody id="teamsBody"></tbody>
         </table></div>
       </div>
@@ -406,9 +406,30 @@ function renderTeams(){
           `<option value="${s}" ${t.status===s?'selected':''}>${
             {registered:'مسجَّل',shortlisted:'مرشَّح',rejected:'مستبعد',withdrawn:'منسحب'}[s]}</option>`).join('')}
       </select></td>
+      <td style="white-space:nowrap;">
+        <button class="b b-ghost b-sm" onclick="resetTeamPassword('${t.id}','${t.name.replace(/'/g,"\\'")}')">تصفير كلمة المرور</button>
+        <button class="b b-danger b-sm" onclick="deleteTeam('${t.id}','${t.name.replace(/'/g,"\\'")}')">حذف</button>
+      </td>
     </tr>`;
-  }).join('') || '<tr><td colspan="7"><div class="empty">لا توجد فرق.</div></td></tr>';
+  }).join('') || '<tr><td colspan="8"><div class="empty">لا توجد فرق.</div></td></tr>';
 }
+async function resetTeamPassword(id, name){
+  if(!confirm(`تصفير كلمة مرور كل أعضاء "${name}"؟\n\nبيخرجون من البوابة، وكل عضو بيختار كلمة مرور جديدة بالبريد والجوال.`)) return;
+  const { data, error } = await supabaseClient.rpc('admin_reset_team_password', { p_team_id: id });
+  if(error) return toast('تعذّر التصفير: ' + error.message);
+  toast(`تم تصفير ${data ?? 0} عضو`);
+}
+
+async function deleteTeam(id, name){
+  if(!confirm(`حذف فريق "${name}" نهائيًا؟\n\nبيُحذف معه الأعضاء والمشروع والملفات المرتبطة ودرجات التحكيم. لا يمكن التراجع.`)) return;
+  if(!confirm('تأكيد أخير — احذف الفريق؟')) return;
+  const { data, error } = await supabaseClient.rpc('admin_delete_team', { p_team_id: id });
+  if(error) return toast('تعذّر الحذف: ' + error.message);
+  const n = (data && data[0] && data[0].deleted_members) || 0;
+  toast(`تم حذف الفريق و${n} عضو`);
+  loadAll();
+}
+
 async function setTeamStatus(id,status){
   const { error } = await supabaseClient.from('teams').update({ status }).eq('id',id);
   if(error) return toast('تعذّر الحفظ');
@@ -552,6 +573,7 @@ function previewImport(){
     if(!importRows.length){ msg('importMsg','ما فيه صفوف فيها بيانات قائد فريق.'); return; }
 
     const badTrack = importRows.filter(r => !r.track);
+    const noReg    = importRows.filter(r => !r.reg_no);
     const noEmail  = importRows.flatMap(r => r.members.filter(m => !m.email || !m.phone)
                       .map(m => `${r.title || r.reg_no}: ${m.full_name}`));
 
@@ -559,6 +581,7 @@ function previewImport(){
       <div style="font-size:13.5px;margin-bottom:12px;line-height:1.9;">
         ${importRows.length} فريق · ${importRows.reduce((n,r)=>n+r.members.length,0)} عضو
         ${badTrack.length ? `<div style="color:var(--bad);margin-top:6px;">مسار غير معروف في ${badTrack.length} فريق: ${badTrack.map(b=>b.trackRaw||'(فارغ)').join('، ')}</div>` : ''}
+        ${noReg.length ? `<div style="color:var(--bad);margin-top:6px;">${noReg.length} فريق بلا رقم تسجيل (بيُتخطّى): ${noReg.map(b=>b.title||'(بلا عنوان)').join('، ')}</div>` : ''}
         ${noEmail.length ? `<div style="color:var(--bad);margin-top:6px;">أعضاء بلا بريد أو جوال (بيُتخطّون): ${noEmail.slice(0,6).join(' · ')}${noEmail.length>6?' …':''}</div>` : ''}
       </div>
       <div class="table-wrap"><table>
@@ -589,11 +612,17 @@ async function runImport(){
     const label = r.title || r.reg_no || r.members[0].full_name;
     if(!r.track){ fail.push(`${label} — مسار غير معروف`); continue; }
 
-    const { data: code } = await supabaseClient.rpc('new_team_code');
+    // رمز الفريق = رقم التسجيل من الملف
+    const code = (r.reg_no || '').trim();
+    if(!code){ fail.push(`${label} — بدون رقم تسجيل`); continue; }
+
     const { data: team, error: te } = await supabaseClient.from('teams')
-      .insert({ code, reg_no: r.reg_no, name: r.title || label, track_id: r.track })
+      .insert({ code, reg_no: code, name: r.title || label, track_id: r.track })
       .select().single();
-    if(te){ fail.push(`${label} — ${te.message}`); continue; }
+    if(te){
+      fail.push(`${label} — ` + (te.code === '23505' ? `رقم التسجيل ${code} مستورد مسبقًا` : te.message));
+      continue;
+    }
 
     const rows = r.members
       .filter(m => m.email && m.phone)
@@ -630,7 +659,9 @@ function renderJudges(){
       <td dir="ltr" style="text-align:right;font-size:12px;">${j.phone}</td>
       <td>${j.must_set_password?'<span class="pill grey">لم يُعيّنها</span>':'<span class="pill teal">جاهز</span>'}</td>
       <td>${n}</td>
-      <td><button class="b b-danger b-sm" onclick="removeJudge('${j.id}')">حذف</button></td>
+      <td style="white-space:nowrap;">
+        <button class="b b-ghost b-sm" onclick="resetJudgePassword('${j.id}')">تصفير</button>
+        <button class="b b-danger b-sm" onclick="removeJudge('${j.id}')">حذف</button></td>
     </tr>`;
   }).join('') || '<tr><td colspan="6"><div class="empty">أضف المحكّمين من الحقول أعلاه.</div></td></tr>';
 }
@@ -646,6 +677,13 @@ async function addJudge(){
   msg('judgeMsg','تمت الإضافة. أرسل له رابط judge.html.',true);
   loadAll();
 }
+async function resetJudgePassword(id){
+  if(!confirm('تصفير كلمة مرور المحكّم؟ بيختار كلمة مرور جديدة عند دخوله.')) return;
+  const { error } = await supabaseClient.rpc('admin_reset_judge_password', { p_judge_id: id });
+  if(error) return toast('تعذّر التصفير: ' + error.message);
+  loadAll(); toast('تم التصفير');
+}
+
 async function removeJudge(id){
   if(!confirm('حذف المحكّم وكل تقييماته؟')) return;
   await supabaseClient.from('judges').delete().eq('id',id);
