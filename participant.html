@@ -2,472 +2,420 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>بوابة المشارك | صناع الحلول الابتكارية 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>بوابة المشارك — صنّاع الحلول الابتكارية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root{--navy:#0B1B3F;--gold:#14B8A6;--gold-2:#f7cf4d;--cream:#FBF6E9;--ink:#1c2230;--line:#e7ddc0;}
+  :root{--bg:#0E1422;--surface:#151C2E;--surface-2:#1A2236;--line:#26314A;
+    --teal:#35C9AE;--amber:#DB8A52;--text:#EAF0F8;--muted:#96A3B8;--bad:#E2706A;}
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--cream);color:var(--ink);font-family:'IBM Plex Sans Arabic',sans-serif;}
-  h1,h2,h3,.display{font-family:'Tajawal',sans-serif;}
-
-  .hero{position:relative;background:var(--navy);color:#fff;overflow:hidden;padding:34px 20px 46px;}
-  .hero::before, .hero::after{content:"";position:absolute;height:3px;background:var(--gold);width:140%;transform:rotate(-8deg);}
-  .hero::before{top:14px;left:-40px;} .hero::after{top:26px;left:-40px;opacity:.5;}
-  .hero-inner{position:relative;max-width:640px;margin:0 auto;text-align:center;padding-top:16px;}
-  .eyebrow{color:var(--gold-2);font-weight:600;font-size:13px;margin-bottom:4px;}
-  .hero h1{font-size:28px;font-weight:900;margin:4px 0 2px;}
-  .hero .sub{font-size:14.5px;opacity:.85;}
-
-  main{max-width:640px;margin:-24px auto 60px;padding:0 16px;}
-  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px;
-    box-shadow:0 10px 30px rgba(11,27,63,.07);}
-  .card h2{font-size:17px;margin:0 0 12px;color:var(--navy);border-right:4px solid var(--gold);padding-right:10px;}
-
-  label{display:block;font-size:13.5px;font-weight:600;margin:10px 0 5px;color:#132a5c;}
-  input{width:100%;padding:12px 14px;border:1.5px solid #dcd3b8;border-radius:10px;font-family:inherit;font-size:15px;background:#fffdf7;}
-  input:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(231,177,10,.18);}
-  button.submit{width:100%;margin-top:16px;background:var(--gold);color:var(--navy);border:none;padding:13px;
-    border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:15.5px;cursor:pointer;}
-  button.submit:disabled{opacity:.6;cursor:not-allowed;}
-
-  .msg{font-size:13.5px;margin-top:10px;padding:10px 12px;border-radius:8px;display:none;}
-  .msg.error{background:#fdecec;color:#9c2b2b;display:block;}
-
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Arabic',sans-serif;}
+  h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
+  a{color:var(--teal);}
+  .hero{background:var(--surface);border-bottom:1px solid var(--line);padding:22px 20px;position:relative;overflow:hidden;}
+  .hero::after{content:'';position:absolute;inset-inline:0;top:14px;height:1px;background:var(--teal);opacity:.35;}
+  .hero h1{font-size:19px;}
+  .hero .sub{color:var(--teal);font-size:12.5px;margin-top:6px;}
+  .hero .out{position:absolute;left:18px;top:18px;}
+  main{max-width:660px;margin:0 auto;padding:20px 14px 80px;}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px;}
+  .panel h3{font-size:16px;margin-bottom:12px;}
+  label{display:block;font-size:12.5px;color:var(--muted);margin:13px 0 5px;}
+  input,textarea{background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:11px 12px;font-family:inherit;font-size:15px;width:100%;}
+  textarea{resize:vertical;min-height:86px;line-height:1.85;}
+  input:focus,textarea:focus{outline:1.5px solid var(--teal);border-color:var(--teal);}
+  button.b{border:none;border-radius:10px;padding:12px 18px;font-family:'Tajawal',sans-serif;
+    font-weight:700;font-size:14.5px;cursor:pointer;}
+  .b-teal{background:var(--teal);color:#0E1422;width:100%;margin-top:16px;}
+  .b-teal:disabled{opacity:.5;cursor:not-allowed;}
+  .b-ghost{background:transparent;border:1px solid var(--line);color:var(--text);padding:7px 13px;font-size:12.5px;}
+  .msg{font-size:13px;padding:11px 13px;border-radius:9px;margin-top:12px;display:none;line-height:1.75;}
+  .msg.err{background:rgba(226,112,106,.12);color:var(--bad);display:block;}
+  .msg.ok{background:rgba(53,201,174,.12);color:var(--teal);display:block;}
   .hide{display:none !important;}
 
-  .result-name{font-size:22px;font-weight:900;color:var(--navy);text-align:center;}
+  .who .nm{font-family:'Tajawal',sans-serif;font-size:23px;font-weight:900;}
+  .who .rl{font-size:12.5px;color:var(--muted);margin-top:5px;}
+  .team-line{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+  .team-line .tn{font-family:'Tajawal',sans-serif;font-size:16px;}
+  .team-line .code{font-size:12px;color:var(--teal);direction:ltr;display:inline-block;margin-top:3px;}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;}
+  .chip{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;
+    padding:6px 13px;font-size:12.5px;color:var(--muted);}
+  .chip.lead{border-color:var(--teal);color:var(--teal);}
+  .challenge{background:var(--surface-2);border-radius:10px;padding:13px;font-size:12.5px;
+    line-height:1.85;color:var(--muted);margin-top:13px;}
 
-  .progress-timeline{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;position:relative;}
-  .progress-timeline::before{content:"";position:absolute;top:11px;right:8%;left:8%;height:2px;background:#e5e1cc;z-index:0;}
-  .pt-step{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;flex:1;gap:6px;}
-  .pt-dot{width:24px;height:24px;border-radius:50%;background:#f1f1ec;border:2px solid #dcd3b8;
-    display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#9ca3af;}
-  .pt-step.done .pt-dot{background:var(--gold);border-color:var(--gold);color:var(--navy);}
-  .pt-step.current .pt-dot{background:var(--navy);border-color:var(--navy);color:#fff;}
-  .pt-label{font-size:11px;color:#6b7280;text-align:center;font-weight:600;}
-  .pt-step.done .pt-label, .pt-step.current .pt-label{color:var(--navy);}
+  .days{display:flex;gap:10px;}
+  .day{flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;}
+  .day .l{font-size:12px;color:var(--muted);}
+  .day .d{font-size:11.5px;color:var(--muted);opacity:.8;margin-top:2px;}
+  .day .v{font-family:'Tajawal',sans-serif;font-weight:700;font-size:15px;margin-top:8px;}
+  .day.yes{border-color:var(--teal);} .day.yes .v{color:var(--teal);}
+  .day.no{border-color:var(--bad);}  .day.no .v{color:var(--bad);}
+  .day.wait .v{color:var(--muted);}
 
-  .ann-item{background:#fff9e6;border:1.5px solid var(--gold);border-radius:12px;padding:12px 14px;margin-bottom:10px;text-align:right;}
-  .ann-item .ann-title{font-weight:700;color:var(--navy);font-size:14px;margin-bottom:3px;}
-  .ann-item .ann-body{font-size:13px;color:#3a3f4b;line-height:1.7;white-space:pre-line;}
-  .ann-item .ann-date{font-size:10.5px;color:#9ca3af;margin-top:6px;}
-  .result-track{text-align:center;color:#6b7280;font-size:14px;margin-top:2px;}
-
-  .days{display:flex;gap:8px;margin-top:16px;}
-  .day{flex:1;text-align:center;padding:12px 6px;border-radius:12px;font-size:13px;font-weight:700;border:1.5px solid #e5e1cc;}
-  .day .lbl{font-size:11.5px;font-weight:600;color:#6b7280;margin-bottom:4px;}
-  .day.present{background:#e8f6ec;border-color:#1e7a3f;color:#1e7a3f;}
-  .day.absent{background:#fdecec;border-color:#c0392b;color:#c0392b;}
-  .day.pending{background:#f5f4ef;color:#9ca3af;}
-
-  .hours-card{margin-top:18px;background:#fffdf7;border:1.5px solid var(--gold);border-radius:14px;padding:16px 18px;}
-  .hours-card h3{margin:0 0 4px;font-size:15px;color:var(--navy);font-family:'Tajawal',sans-serif;}
-  .hours-card .hint{font-size:12px;color:#6b7280;margin-bottom:12px;}
-  .hour-row{display:flex;justify-content:space-between;align-items:center;padding:7px 0;font-size:13.5px;
-    border-bottom:1px dashed #e9e3cd;}
-  .hour-row:last-of-type{border-bottom:none;}
-  .hour-row .hlabel{color:#3a3f4b;font-weight:600;}
-  .hour-chip{font-weight:700;font-size:12.5px;padding:3px 10px;border-radius:999px;}
-  .hour-chip.earned{background:#e8f6ec;color:#1e7a3f;}
-  .hour-chip.zero{background:#fdecec;color:#9c2b2b;}
-  .hour-chip.pending{background:#f1f1f1;color:#9ca3af;}
-
-  .hours-total{margin-top:12px;padding-top:12px;border-top:1.5px solid var(--gold);}
-  .hours-total .total-line{display:flex;justify-content:space-between;font-weight:700;font-size:14.5px;color:var(--navy);
-    font-family:'Tajawal',sans-serif;margin-bottom:8px;}
-  .progress-track{background:#f0ead4;border-radius:999px;height:10px;overflow:hidden;}
-  .progress-fill{background:var(--gold);height:100%;border-radius:999px;transition:width .4s;}
-
-  .cert-box{margin-top:18px;text-align:center;padding:16px;border-radius:12px;}
-  .cert-box.ready{background:#fff9e6;border:1.5px solid var(--gold);}
-  .cert-box.notready{background:#f5f4ef;color:#6b7280;}
-  .cert-box.action{background:#fff9e6;border:1.5px solid var(--gold);color:#3a3f4b;}
-  .cert-box a.btn{display:inline-block;margin-top:10px;background:var(--navy);color:#fff;text-decoration:none;
-    padding:10px 20px;border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:14px;}
-
-  .eval-card{margin-top:18px;background:#fffdf7;border:1.5px solid var(--gold);border-radius:14px;padding:18px;}
-  .eval-card h3{margin:0 0 4px;font-size:15px;color:var(--navy);font-family:'Tajawal',sans-serif;}
-  .eval-card .hint{font-size:12px;color:#6b7280;margin-bottom:12px;}
-  .eval-card label{margin:12px 0 6px;}
-  .eval-card textarea{width:100%;padding:12px;border:1.5px solid #dcd3b8;border-radius:10px;font-family:inherit;
-    font-size:14px;resize:vertical;min-height:70px;background:#fffdf7;}
-  .stars{display:flex;gap:6px;flex-direction:row-reverse;justify-content:flex-end;}
-  .stars input{display:none;}
-  .stars label{margin:0;font-size:28px;color:#e2ddc8;cursor:pointer;padding:0;width:auto;}
-  .stars input:checked ~ label, .stars label:hover, .stars label:hover ~ label{color:var(--gold);}
-  .eval-submit{width:100%;margin-top:16px;background:var(--navy);color:#fff;border:none;padding:12px;
-    border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:15px;cursor:pointer;}
-  .eval-submit:disabled{opacity:.6;cursor:not-allowed;}
-
-  .back-link{display:block;text-align:center;margin-top:6px;color:#6b7280;font-size:13px;cursor:pointer;}
-
-  .ptabs{display:flex;gap:4px;margin:18px 0 18px;background:#f3efe0;border-radius:12px;padding:5px;}
-  .ptab{position:relative;flex:1;padding:10px 10px;cursor:pointer;font-size:13px;font-weight:700;color:#6b7280;
-    border-radius:9px;display:flex;align-items:center;justify-content:center;gap:6px;text-align:center;
-    transition:background .15s, color .15s, box-shadow .15s;}
-  .ptab.active{color:var(--navy);background:#fff;box-shadow:0 2px 8px rgba(11,27,63,.12);}
-  .ptab-badge{background:var(--gold);color:var(--navy);font-size:10px;font-weight:800;border-radius:999px;
-    padding:1px 6px;min-width:16px;text-align:center;display:inline-block;}
-  .ptab.active .ptab-badge{background:var(--navy);color:#fff;}
-  .ptab-content{animation:fadeIn .2s ease;}
-  @keyframes fadeIn{from{opacity:0;} to{opacity:1;}}
+  .cert{border-radius:12px;padding:16px;font-size:13.5px;line-height:1.85;}
+  .cert.ready{background:rgba(53,201,174,.1);border:1px solid var(--teal);}
+  .cert.wait{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);}
+  .file-label{display:block;background:var(--surface-2);border:1.5px dashed var(--line);border-radius:10px;
+    padding:15px;text-align:center;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:700;font-size:13.5px;}
+  input[type=file]{display:none;}
+  .flink{display:inline-block;margin-top:10px;background:var(--surface-2);border:1px solid var(--line);
+    border-radius:9px;padding:9px 15px;text-decoration:none;font-size:13px;}
+  .flags{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;}
+  .flag{font-size:11.5px;border-radius:999px;padding:4px 11px;background:rgba(219,138,82,.14);color:var(--amber);}
+  .closed{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
+    padding:13px;font-size:13px;color:var(--muted);line-height:1.8;}
 </style>
 </head>
 <body>
 
 <div class="hero">
-  <div class="hero-inner">
-    <div class="eyebrow">جامعة القصيم · مركز الابتكار والملكية الفكرية</div>
-    <h1>بوابة المشارك</h1>
-    <div class="sub">صناع الحلول الابتكارية — Innovative Solutions Makers</div>
-  </div>
+  <h1>بوابة المشارك</h1>
+  <div class="sub">صنّاع الحلول الابتكارية · جامعة القصيم</div>
+  <div class="out"><button class="b b-ghost hide" id="outBtn" onclick="logout()">خروج</button></div>
 </div>
 
 <main>
-  <div class="card" id="lookupCard">
-    <h2>تحقق من حالتك</h2>
-    <label>البريد الإلكتروني</label>
-    <input type="email" id="email" placeholder="name@example.com" dir="ltr" style="text-align:right;">
-    <label>رقم الجوال</label>
-    <input type="tel" id="phone" placeholder="05xxxxxxxx" dir="ltr" style="text-align:right;">
-    <div class="msg error" id="errMsg" style="display:none;"></div>
-    <button class="submit" id="submitBtn" onclick="lookup()">عرض حالتي</button>
+  <div class="panel" id="checkCard">
+    <h3>الدخول</h3>
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.8;">
+      ادخل بالبريد ورقم الجوال اللي سجّلت فيهما. أول مرة بتختار كلمة مرور خاصة فيك.
+    </div>
+    <label for="email">البريد الإلكتروني</label>
+    <input type="email" id="email" dir="ltr" style="text-align:right;">
+    <label for="phone">رقم الجوال</label>
+    <input type="tel" id="phone" dir="ltr" style="text-align:right;" placeholder="05xxxxxxxx">
+    <button class="b b-teal" id="checkBtn" onclick="checkMe()">متابعة</button>
+    <div class="msg" id="checkMsg"></div>
   </div>
 
-  <div class="card hide" id="resultCard">
-    <div class="progress-timeline" id="progressTimeline"></div>
-    <div class="result-name" id="rName"></div>
-    <div class="result-track" id="rTrack"></div>
+  <div class="panel hide" id="setCard">
+    <h3>اختر كلمة مرورك</h3>
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.8;" id="setWelcome"></div>
+    <label for="sPass">كلمة المرور</label>
+    <input type="password" id="sPass" autocomplete="new-password">
+    <label for="sPass2">تأكيد كلمة المرور</label>
+    <input type="password" id="sPass2" autocomplete="new-password">
+    <div style="font-size:12px;color:var(--muted);margin-top:7px;">6 خانات على الأقل.</div>
+    <button class="b b-teal" id="setBtn" onclick="setPassword()">حفظ والدخول</button>
+    <div class="msg" id="setMsg"></div>
+    <button class="b b-ghost" style="width:100%;margin-top:10px;" onclick="backToCheck()">رجوع</button>
+  </div>
 
-    <div class="ptabs" id="ptabs">
-      <div class="ptab active" data-ptab="overview" onclick="switchPTab('overview')">نظرة عامة</div>
-      <div class="ptab" data-ptab="updates" onclick="switchPTab('updates')">التحديثات <span class="ptab-badge hide" id="updatesBadge"></span></div>
-      <div class="ptab" data-ptab="files" onclick="switchPTab('files')">المرفقات <span class="ptab-badge hide" id="filesBadge"></span></div>
+  <div class="panel hide" id="loginCard">
+    <h3>أهلًا بك</h3>
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.8;" id="loginWelcome"></div>
+    <label for="lPass">كلمة المرور</label>
+    <input type="password" id="lPass" autocomplete="current-password">
+    <button class="b b-teal" id="loginBtn" onclick="login()">دخول</button>
+    <div class="msg" id="loginMsg"></div>
+    <button class="b b-ghost" style="width:100%;margin-top:10px;" onclick="backToCheck()">رجوع</button>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="panel who">
+      <div class="nm" id="pName"></div>
+      <div class="rl" id="pRole"></div>
+      <div class="team-line" id="teamLine"></div>
     </div>
 
-    <div class="ptab-content" id="ptab-overview">
-      <div class="days" id="rDays"></div>
-      <div id="rClosingDayBox"></div>
+    <div class="panel">
+      <h3>الحضور</h3>
+      <div class="days" id="daysBox"></div>
+    </div>
 
-      <div class="hours-card" id="hoursCard">
-        <h3>ساعات التدريب المسجّلة</h3>
-        <div class="hint">3 أيام تدريبية × 4 ساعات يوميًا = 12 ساعة تدريبية كحد أقصى، تُحتسب تلقائيًا حسب حضورك الفعلي</div>
-        <div id="hourRows"></div>
-        <div class="hours-total">
-          <div class="total-line"><span>إجمالي الساعات</span><span id="totalHoursText"></span></div>
-          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        </div>
+    <div class="panel" id="projectPanel">
+      <h3>مشروع الفريق</h3>
+      <div id="projState"></div>
+      <div id="projForm" class="hide">
+        <label for="pTitle">اسم الابتكار</label>
+        <input type="text" id="pTitle">
+        <label for="pSummary">وصف المشروع</label>
+        <textarea id="pSummary"></textarea>
+        <label for="pSolution">كيف يعمل الحل تقنيًا</label>
+        <textarea id="pSolution"></textarea>
+        <label for="pImpact">الأثر المتوقع</label>
+        <textarea id="pImpact"></textarea>
+        <label for="pVideo">رابط فيديو العرض (اختياري)</label>
+        <input type="url" id="pVideo" dir="ltr" style="text-align:right;" placeholder="https://">
+        <label>ملف العرض</label>
+        <label class="file-label" id="fileLabel" for="pFile">اختر ملف PDF أو PowerPoint</label>
+        <input type="file" id="pFile" accept=".pdf,.ppt,.pptx"
+          onchange="document.getElementById('fileLabel').textContent = this.files[0] ? this.files[0].name : 'اختر ملف PDF أو PowerPoint';">
+        <button class="b b-teal" id="subBtn" onclick="submitProject()">حفظ التسليم</button>
+        <div class="msg" id="subMsg"></div>
       </div>
+    </div>
 
+    <div class="panel">
+      <h3>الشهادة</h3>
       <div id="certBox"></div>
-
-      <div class="eval-card hide" id="evalCard">
-        <h3>استبيان تقييم التدريب</h3>
-        <div class="hint">خطوة أخيرة إلزامية بعد إتمام حضورك، وبعدها تصدر شهادتك مباشرة.</div>
-
-        <label>تقييمك لمحتوى التدريب</label>
-        <div class="stars" id="s1"></div>
-        <label>تقييمك للمدرب/الميسّر</label>
-        <div class="stars" id="s2"></div>
-        <label>تقييمك للتنظيم والمرافق</label>
-        <div class="stars" id="s3"></div>
-        <label>تقييمك العام للتجربة</label>
-        <div class="stars" id="s4"></div>
-        <label>ملاحظات أو مقترحات (اختياري)</label>
-        <textarea id="evalComment" placeholder="شاركنا رأيك بحرية..."></textarea>
-
-        <div class="msg error" id="evalErr" style="display:none;"></div>
-        <button class="eval-submit" id="evalSubmitBtn" onclick="submitEvaluationInline()">إرسال التقييم وإصدار الشهادة</button>
-      </div>
     </div>
-
-    <div class="ptab-content hide" id="ptab-updates">
-      <div id="announcementsBox"></div>
-    </div>
-
-    <div class="ptab-content hide" id="ptab-files">
-      <div id="materialsBox"></div>
-    </div>
-
-    <span class="back-link" onclick="goBack()">‹ رجوع للبحث مرة أخرى</span>
   </div>
-
 </main>
 
 <script src="config.js"></script>
 <script>
-let myEmail = '', myPhone = '';
-let minAttendanceDays = 2;
+let me = null, token = localStorage.getItem('sh_participant_token') || null;
+let pending = null;   // { email, phone, full_name }
 
-// تذكّر آخر بريد وجوال بحث فيهما المشارك، حتى ما يحتاج يكتبهم كل مرة
-(function prefillSaved(){
-  try{
-    const saved = JSON.parse(localStorage.getItem('participant_lookup') || 'null');
-    if(saved){
-      document.getElementById('email').value = saved.email || '';
-      document.getElementById('phone').value = saved.phone || '';
-    }
-  } catch(_){}
-})();
+function msg(id, text, ok){
+  const el = document.getElementById(id);
+  el.className = 'msg ' + (ok ? 'ok' : 'err');
+  el.textContent = text;
+}
+function showCard(id){
+  ['checkCard','setCard','loginCard','app'].forEach(x =>
+    document.getElementById(x).classList.toggle('hide', x !== id));
+}
+function backToCheck(){ pending = null; showCard('checkCard'); }
 
-async function lookup(){
+async function checkMe(){
   const email = document.getElementById('email').value.trim();
   const phone = document.getElementById('phone').value.trim();
-  const errMsg = document.getElementById('errMsg');
-  const btn = document.getElementById('submitBtn');
-  errMsg.style.display = 'none';
+  if(!email || !phone){ msg('checkMsg','اكتب البريد ورقم الجوال.'); return; }
 
-  if(!email || !phone){ errMsg.textContent = 'أدخل البريد ورقم الجوال المسجَّلين'; errMsg.style.display = 'block'; return; }
-
-  btn.disabled = true; btn.textContent = '⏳ جاري البحث...';
-
-  const [{ data, error }, { data: settings }] = await Promise.all([
-    supabaseClient.rpc('get_my_status', { p_email: email, p_phone: phone }),
-    supabaseClient.from('app_settings').select('min_attendance_days').eq('id', 1).single()
-  ]);
-  if(settings) minAttendanceDays = settings.min_attendance_days;
-
-  btn.disabled = false; btn.textContent = 'عرض حالتي';
+  const btn = document.getElementById('checkBtn');
+  btn.disabled = true; btn.textContent = 'جاري التحقق...';
+  const { data, error } = await supabaseClient.rpc('participant_check', { p_email: email, p_phone: phone });
+  btn.disabled = false; btn.textContent = 'متابعة';
 
   if(error || !data || !data.length){
-    errMsg.textContent = 'لم يتم العثور على تسجيل بهذا البريد ورقم الجوال. تأكد من صحة البيانات.';
-    errMsg.style.display = 'block';
+    msg('checkMsg','ما لقينا تسجيلًا بهذا البريد ورقم الجوال. تأكد من البيانات أو تواصل مع فريق التنظيم.');
     return;
   }
 
-  myEmail = email; myPhone = phone;
-  try{ localStorage.setItem('participant_lookup', JSON.stringify({ email, phone })); } catch(_){}
-  renderResult(data[0]);
-  switchPTab('overview');
-  loadAnnouncements();
-  loadMaterials();
-}
-
-function switchPTab(name){
-  document.querySelectorAll('.ptab').forEach(t => t.classList.toggle('active', t.dataset.ptab === name));
-  ['overview','updates','files'].forEach(t => {
-    document.getElementById('ptab-' + t).classList.toggle('hide', t !== name);
-  });
-}
-
-async function loadAnnouncements(){
-  const { data } = await supabaseClient.rpc('get_my_announcements', { p_email: myEmail, p_phone: myPhone });
-  const box = document.getElementById('announcementsBox');
-  const badge = document.getElementById('updatesBadge');
-
-  if(!data || !data.length){
-    box.innerHTML = '<p style="color:#9ca3af;font-size:13.5px;text-align:center;padding:20px 0;">لا توجد تحديثات حاليًا</p>';
-    badge.classList.add('hide');
-    return;
-  }
-
-  badge.textContent = data.length;
-  badge.classList.remove('hide');
-  box.innerHTML = data.map(a => `
-    <div class="ann-item">
-      <div class="ann-title">📢 ${a.title}</div>
-      <div class="ann-body">${a.body}</div>
-      <div class="ann-date">${new Date(a.created_at).toLocaleDateString('ar-SA', {dateStyle:'medium'})}</div>
-    </div>
-  `).join('');
-}
-
-async function loadMaterials(){
-  const { data } = await supabaseClient.rpc('get_my_track_materials', { p_email: myEmail, p_phone: myPhone });
-  const box = document.getElementById('materialsBox');
-  const badge = document.getElementById('filesBadge');
-
-  if(!data || !data.length){
-    box.innerHTML = '<p style="color:#9ca3af;font-size:13.5px;text-align:center;padding:20px 0;">لا توجد ملفات مرفوعة لمسارك بعد</p>';
-    badge.classList.add('hide');
-    return;
-  }
-
-  badge.textContent = data.length;
-  badge.classList.remove('hide');
-  box.innerHTML = data.map(m => `
-    <div class="ann-item" style="background:#eef3ff;border-color:var(--navy);">
-      <a href="${m.url}" target="_blank" style="color:var(--navy);font-weight:700;font-size:13.5px;text-decoration:underline;">📎 ${m.file_name}</a>
-    </div>
-  `).join('');
-}
-
-
-function buildStars(containerId){
-  const el = document.getElementById(containerId);
-  let html = '';
-  for(let i = 5; i >= 1; i--){
-    html += `<input type="radio" name="${containerId}" id="${containerId}_${i}" value="${i}">
-             <label for="${containerId}_${i}">★</label>`;
-  }
-  el.innerHTML = html;
-}
-['s1','s2','s3','s4'].forEach(buildStars);
-
-function getRating(containerId){
-  const checked = document.querySelector(`input[name="${containerId}"]:checked`);
-  return checked ? parseInt(checked.value, 10) : null;
-}
-
-function renderProgressTimeline(state){
-  const steps = [
-    { key: 'registered', label: 'التسجيل', icon: '1' },
-    { key: 'closingDay', label: 'اليوم الختامي', icon: '2' },
-    { key: 'evaluation', label: 'التقييم', icon: '3' },
-    { key: 'certificate', label: 'الشهادة', icon: '4' },
-  ];
-  // نحدد أول خطوة لم تكتمل بعد لتمييزها كـ"الحالية"
-  let currentFound = false;
-  document.getElementById('progressTimeline').innerHTML = steps.map(s => {
-    const done = state[s.key];
-    const isCurrent = !done && !currentFound;
-    if(isCurrent) currentFound = true;
-    const cls = done ? 'done' : (isCurrent ? 'current' : '');
-    return `<div class="pt-step ${cls}">
-      <div class="pt-dot">${done ? '✓' : s.icon}</div>
-      <div class="pt-label">${s.label}</div>
-    </div>`;
-  }).join('');
-}
-
-function renderResult(r){
-  document.getElementById('lookupCard').classList.add('hide');
-  document.getElementById('resultCard').classList.remove('hide');
-  document.getElementById('rName').textContent = r.full_name;
-  document.getElementById('rTrack').textContent = r.track_name;
-
-  const attendedDaysCount = [r.day1_attended, r.day2_attended, r.day3_attended].filter(v => v === true).length;
-  renderProgressTimeline({
-    registered: true,
-    closingDay: r.closing_day_attended === true,
-    evaluation: !!r.evaluation_submitted,
-    certificate: !!r.certificate_issued,
-  });
-
-  const days = [
-    { label: 'اليوم الأول', date: r.day1_date, val: r.day1_attended },
-    { label: 'اليوم الثاني', date: r.day2_date, val: r.day2_attended },
-    { label: 'اليوم الثالث', date: r.day3_date, val: r.day3_attended },
-  ];
-  document.getElementById('rDays').innerHTML = days.map(d => {
-    const cls = d.val === true ? 'present' : (d.val === false ? 'absent' : 'pending');
-    const text = d.val === true ? 'حاضر ✓' : (d.val === false ? 'لم يحضر' : 'قريبًا');
-    return `<div class="day ${cls}"><div class="lbl">${d.label}</div>${text}</div>`;
-  }).join('');
-
-  {
-    const cv = r.closing_day_attended;
-    const cls = cv === true ? 'present' : (cv === false ? 'absent' : 'pending');
-    const text = cv === true ? 'حضرتَه ✓' : (cv === false ? 'لم تحضره' : 'لم يُحدَّد بعد');
-    document.getElementById('rClosingDayBox').innerHTML =
-      `<div class="day ${cls}" style="margin-top:8px;"><div class="lbl">🎓 اليوم الختامي</div>${text}</div>`;
-  }
-
-  const HOURS_PER_DAY = 4;
-  const TOTAL_POSSIBLE = days.length * HOURS_PER_DAY;
-  let earnedHours = 0;
-
-  document.getElementById('hourRows').innerHTML = days.map(d => {
-    const hours = d.val === true ? HOURS_PER_DAY : 0;
-    earnedHours += hours;
-    const chipClass = d.val === true ? 'earned' : (d.val === false ? 'zero' : 'pending');
-    const chipText = d.val === true ? `${hours} ساعات` : (d.val === false ? '0 ساعة' : 'قيد الانتظار');
-    return `<div class="hour-row"><span class="hlabel">${d.label}</span><span class="hour-chip ${chipClass}">${chipText}</span></div>`;
-  }).join('');
-
-  document.getElementById('totalHoursText').textContent = `${earnedHours} من ${TOTAL_POSSIBLE} ساعة`;
-  document.getElementById('progressFill').style.width = `${Math.round(100 * earnedHours / TOTAL_POSSIBLE)}%`;
-
-  const attendedCount = days.filter(d => d.val === true).length;
-  const certBox = document.getElementById('certBox');
-  const evalCard = document.getElementById('evalCard');
-
-  if(r.certificate_issued){
-    evalCard.classList.add('hide');
-    certBox.innerHTML = `
-      <div class="cert-box ready">
-        🎉 مبروك! شهادتك جاهزة
-        <br><a class="btn" href="certificate.html?code=${r.certificate_code}" target="_blank">عرض وتحميل الشهادة</a>
-      </div>`;
-  } else if(r.closing_day_attended !== true){
-    evalCard.classList.add('hide');
-    certBox.innerHTML = `
-      <div class="cert-box notready">
-        استبيان التقييم وإصدار الشهادة يظهران بعد تسجيل حضورك لليوم الختامي.
-      </div>`;
-  } else if(!r.evaluation_submitted){
-    certBox.innerHTML = '';
-    evalCard.classList.remove('hide');
+  pending = { email, phone, full_name: data[0].full_name };
+  if(data[0].must_set_password){
+    document.getElementById('setWelcome').textContent = `${pending.full_name} — أول دخول لك، اختر كلمة مرور.`;
+    showCard('setCard');
   } else {
-    evalCard.classList.add('hide');
-    certBox.innerHTML = `
-      <div class="cert-box action">
-        تم استلام تقييمك سابقًا، شكرًا لك. اضغط الزر لإصدار شهادتك.
-        <br><button class="btn" style="border:none;cursor:pointer;font-family:inherit;" onclick="requestCertificate()">إصدار الشهادة</button>
-        <div class="msg" id="issueMsg" style="margin-top:8px;"></div>
-      </div>`;
+    document.getElementById('loginWelcome').textContent = `${pending.full_name} — ادخل كلمة مرورك.`;
+    showCard('loginCard');
   }
 }
 
-async function submitEvaluationInline(){
-  const content = getRating('s1'), trainer = getRating('s2'), org = getRating('s3'), overall = getRating('s4');
-  const comment = document.getElementById('evalComment').value.trim();
-  const errMsg = document.getElementById('evalErr');
-  const btn = document.getElementById('evalSubmitBtn');
-  errMsg.style.display = 'none';
+async function setPassword(){
+  const p1 = document.getElementById('sPass').value;
+  const p2 = document.getElementById('sPass2').value;
+  if(p1.length < 6){ msg('setMsg','كلمة المرور 6 خانات على الأقل.'); return; }
+  if(p1 !== p2){ msg('setMsg','كلمتا المرور غير متطابقتين.'); return; }
 
-  if(!content || !trainer || !org || !overall){
-    errMsg.textContent = 'الرجاء تقييم جميع المحاور قبل الإرسال';
-    errMsg.style.display = 'block';
-    return;
-  }
-
-  btn.disabled = true; btn.textContent = 'جاري الإرسال...';
-  const { error } = await supabaseClient.rpc('submit_evaluation', {
-    p_email: myEmail, p_phone: myPhone,
-    p_content: content, p_trainer: trainer, p_org: org, p_overall: overall,
-    p_comment: comment || null
+  const btn = document.getElementById('setBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const { data, error } = await supabaseClient.rpc('participant_set_password', {
+    p_email: pending.email, p_phone: pending.phone, p_password: p1,
   });
-  btn.disabled = false; btn.textContent = 'إرسال التقييم وإصدار الشهادة';
+  btn.disabled = false; btn.textContent = 'حفظ والدخول';
 
-  if(error){
-    errMsg.textContent = 'تعذّر إرسال التقييم، حاول مرة أخرى.';
-    errMsg.style.display = 'block';
-    return;
-  }
-
-  document.getElementById('evalCard').classList.add('hide');
-  renderProgressTimeline({ registered: true, closingDay: true, evaluation: true, certificate: false });
-  await requestCertificate();
+  if(error){ msg('setMsg', error.message); return; }
+  token = data;
+  localStorage.setItem('sh_participant_token', token);
+  loadMe();
 }
 
-async function requestCertificate(){
-  const { data, error } = await supabaseClient.rpc('request_certificate', { p_email: myEmail, p_phone: myPhone });
-  const r = (data && data[0]) || {};
-  const certBox = document.getElementById('certBox');
+async function login(){
+  const pass = document.getElementById('lPass').value;
+  if(!pass){ msg('loginMsg','اكتب كلمة المرور.'); return; }
 
-  if(error || !r.success){
-    certBox.innerHTML = `<div class="cert-box notready">${(r.message) || 'تعذّر إصدار الشهادة، حاول مرة أخرى.'}</div>`;
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'جاري الدخول...';
+  const { data, error } = await supabaseClient.rpc('participant_login', {
+    p_email: pending.email, p_password: pass,
+  });
+  btn.disabled = false; btn.textContent = 'دخول';
+
+  if(error){ msg('loginMsg','كلمة المرور غير صحيحة.'); return; }
+  token = data;
+  localStorage.setItem('sh_participant_token', token);
+  loadMe();
+}
+
+async function loadMe(){
+  const { data, error } = await supabaseClient.rpc('my_status', { p_token: token });
+  if(error || !data || !data.length){ logout(); return; }
+  me = data[0];
+  render();
+}
+
+function logout(){
+  localStorage.removeItem('sh_participant_token');
+  token = null;
+  location.reload();
+}
+
+function fmt(d){
+  return d ? new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'long'}) : '—';
+}
+
+function render(){
+  showCard('app');
+  document.getElementById('outBtn').classList.remove('hide');
+
+  document.getElementById('pName').textContent = me.full_name;
+  document.getElementById('pRole').textContent =
+    [me.member_role, me.track_name].filter(Boolean).join(' · ') || '';
+
+  /* --- الفريق --- */
+  const tl = document.getElementById('teamLine');
+  if(me.team_id){
+    tl.innerHTML = `
+      <div class="tn">${me.team_name}</div>
+      <div class="code">${me.reg_no || me.team_code}</div>
+      <div class="chips">${(me.members||[]).map(m=>
+        `<span class="chip ${m.is_leader?'lead':''}">${m.full_name}${m.member_role?' · '+m.member_role:''}</span>`).join('')}</div>
+      ${me.challenge_title ? `<div class="challenge">${me.challenge_title}</div>` : ''}`;
+  } else {
+    tl.innerHTML = `<div class="closed">لم تُضمّ لفريق بعد. فريق التنظيم بيتواصل معك.</div>`;
+  }
+
+  /* --- الحضور --- */
+  const days = [
+    { n:'الأول',  d:me.day1_date, v:me.day1_attended },
+    { n:'الثاني', d:me.day2_date, v:me.day2_attended },
+  ];
+  document.getElementById('daysBox').innerHTML = days.map(x=>{
+    const cls = x.v===true?'yes':(x.v===false?'no':'wait');
+    const txt = x.v===true?'حاضر':(x.v===false?'لم تحضر':'لم يُسجَّل بعد');
+    return `<div class="day ${cls}"><div class="l">اليوم ${x.n}</div>
+      <div class="d">${fmt(x.d)}</div><div class="v">${txt}</div></div>`;
+  }).join('');
+
+  /* --- المشروع --- */
+  renderProject();
+
+  /* --- الشهادة --- */
+  renderCert();
+}
+
+function renderProject(){
+  const panel = document.getElementById('projectPanel');
+  if(!me.team_id){ panel.classList.add('hide'); return; }
+  panel.classList.remove('hide');
+
+  const p = me.project;
+  const state = document.getElementById('projState');
+  const form  = document.getElementById('projForm');
+
+  if(p){
+    document.getElementById('pTitle').value    = p.title    || '';
+    document.getElementById('pSummary').value  = p.summary  || '';
+    document.getElementById('pSolution').value = p.solution || '';
+    document.getElementById('pImpact').value   = p.impact   || '';
+    document.getElementById('pVideo').value    = p.video_url|| '';
+    if(p.file_name) document.getElementById('fileLabel').textContent = p.file_name + ' — اختر ملفًا آخر للاستبدال';
+  }
+
+  const flags = p ? [
+    p.has_commercial_register ? 'سجل تجاري' : '',
+    p.has_patent   ? 'براءة اختراع' : '',
+    p.has_prototype? 'نموذج مصغر'  : '',
+  ].filter(Boolean) : [];
+
+  const head = p ? `
+    <div style="font-family:'Tajawal';font-size:16px;font-weight:700;">${p.title||''}</div>
+    ${p.summary ? `<div style="font-size:13px;color:var(--muted);line-height:1.85;margin-top:7px;">${p.summary}</div>` : ''}
+    ${flags.length ? `<div class="flags">${flags.map(f=>`<span class="flag">${f}</span>`).join('')}</div>` : ''}
+    ${p.file_url  ? `<a class="flink" href="${p.file_url}" target="_blank" rel="noopener">ملف العرض الحالي</a>` : ''}
+    ${p.study_url ? `<a class="flink" href="${p.study_url}" target="_blank" rel="noopener">دراسة المشروع</a>` : ''}` : '';
+
+  if(!me.submission_open){
+    state.innerHTML = head + `<div class="closed" style="margin-top:13px;">${
+      p ? 'تسليم المشاريع مغلق الآن، وتسليمكم محفوظ.' : 'تسليم المشاريع لم يُفتح بعد.'}</div>`;
+    form.classList.add('hide');
     return;
   }
 
-  renderProgressTimeline({ registered: true, closingDay: true, evaluation: true, certificate: true });
-  certBox.innerHTML = `
-    <div class="cert-box ready">
-      🎉 مبروك! شهادتك جاهزة
-      <br><a class="btn" href="certificate.html?code=${r.cert_code}" target="_blank">عرض وتحميل الشهادة</a>
+  const dl = me.submission_deadline
+    ? new Date(me.submission_deadline).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'}) : null;
+  state.innerHTML = head + (dl
+    ? `<div class="closed" style="margin-top:13px;">آخر موعد للتسليم: ${dl}</div>` : '');
+  form.classList.remove('hide');
+}
+
+async function submitProject(){
+  const title = document.getElementById('pTitle').value.trim();
+  if(!title){ msg('subMsg','اكتب اسم الابتكار.'); return; }
+
+  const btn = document.getElementById('subBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  document.getElementById('subMsg').className = 'msg';
+
+  try{
+    let fileUrl = null, fileName = null;
+    const file = document.getElementById('pFile').files[0];
+    if(file){
+      if(file.size > 25*1024*1024) throw new Error('حجم الملف أكبر من 25 ميجابايت.');
+      const safe = file.name.replace(/[^\w.\-]+/g,'_');
+      const path = `${me.team_code}/${Date.now()}-${safe}`;
+      const { error: upErr } = await supabaseClient.storage.from('project-files').upload(path, file);
+      if(upErr) throw new Error('تعذّر رفع الملف: ' + upErr.message);
+      fileUrl  = supabaseClient.storage.from('project-files').getPublicUrl(path).data.publicUrl;
+      fileName = file.name;
+    }
+
+    const { error } = await supabaseClient.rpc('my_submit_project', {
+      p_token: token,
+      p_title: title,
+      p_summary:  document.getElementById('pSummary').value.trim(),
+      p_solution: document.getElementById('pSolution').value.trim(),
+      p_impact:   document.getElementById('pImpact').value.trim(),
+      p_file_url: fileUrl, p_file_name: fileName,
+      p_video_url: document.getElementById('pVideo').value.trim() || null,
+    });
+    if(error) throw new Error(error.message);
+
+    msg('subMsg','تم حفظ التسليم.', true);
+    await loadMe();
+  } catch(e){
+    msg('subMsg', e.message || 'تعذّر الحفظ.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ التسليم';
+  }
+}
+
+function renderCert(){
+  const box = document.getElementById('certBox');
+  if(me.certificate_issued){
+    box.innerHTML = `<div class="cert ready">
+      شهادتك جاهزة.
+      <div style="margin-top:12px;"><a class="flink" href="certificate.html?code=${me.certificate_code}" target="_blank">عرض الشهادة وتحميلها</a></div>
     </div>`;
+    return;
+  }
+  const days = (me.day1_attended?1:0) + (me.day2_attended?1:0);
+  const need = me.min_attendance_days ?? 1;
+  if(days >= need){
+    box.innerHTML = `<div class="cert wait">أنت مؤهل للشهادة.
+      <button class="b b-teal" onclick="getCert()" id="certBtn">إصدار الشهادة</button></div>
+      <div class="msg" id="certMsg"></div>`;
+  } else {
+    box.innerHTML = `<div class="cert wait">
+      الشهادة تُصدر بعد تسجيل حضورك ${need === 1 ? 'يومًا واحدًا' : need + ' أيام'} على الأقل.
+      سجّلنا لك ${days} حتى الآن.</div>`;
+  }
 }
 
-function goBack(){
-  document.getElementById('resultCard').classList.add('hide');
-  document.getElementById('lookupCard').classList.remove('hide');
-  document.getElementById('email').value = '';
-  document.getElementById('phone').value = '';
+async function getCert(){
+  const btn = document.getElementById('certBtn');
+  btn.disabled = true; btn.textContent = 'جاري الإصدار...';
+  const { data, error } = await supabaseClient.rpc('my_request_certificate', { p_token: token });
+  const r = (data && data[0]) || {};
+  if(error || !r.success){
+    msg('certMsg', (r.message) || 'تعذّر الإصدار، حاول لاحقًا.');
+    btn.disabled = false; btn.textContent = 'إصدار الشهادة';
+    return;
+  }
+  me.certificate_issued = true;
+  me.certificate_code = r.certificate_code;
+  renderCert();
 }
+if(token) loadMe(); else showCard('checkCard');
 </script>
 </body>
 </html>

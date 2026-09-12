@@ -191,10 +191,10 @@
       <div class="panel">
         <h3>استيراد الفرق والمشاريع</h3>
         <div class="sub">
-          ارفع ملف Excel بأعمدة: اسم الفريق · المسار · التحدي · عنوان المشروع · اسم العضو · البريد · الجوال · الجهة · الفئة.<br>
-          كرّر صفًا لكل عضو بنفس اسم الفريق. أول عضو في كل فريق يُعتبر القائد.
+          ارفع قالب الفرق كما هو — كل صف فريق كامل: رقم التسجيل، بيانات القائد، المسار،
+          اسم الابتكار ووصفه، ثم بيانات الأعضاء الإضافيين.<br>
+          يُقرأ صف العناوين تلقائيًا، وتُستورد بيانات المشروع مع الفريق والأعضاء في خطوة واحدة.
         </div>
-        <button class="b b-ghost" onclick="downloadTemplate()">تنزيل قالب فارغ</button>
         <label for="importFile" style="margin-top:16px;">ملف Excel</label>
         <input type="file" id="importFile" accept=".xlsx,.xls,.csv" onchange="previewImport()">
         <div id="importPreview" style="margin-top:16px;"></div>
@@ -476,77 +476,147 @@ async function issueAllCerts(){
 }
 
 /* ---------- الاستيراد ---------- */
-const COLS = { team:'اسم الفريق', track:'المسار', challenge:'التحدي', project:'عنوان المشروع',
-  name:'اسم العضو', email:'البريد', phone:'الجوال', org:'الجهة', category:'الفئة' };
-function downloadTemplate(){
-  const ws = XLSX.utils.json_to_sheet([{
-    [COLS.team]:'فريق المثال', [COLS.track]:'السلامة والبنية التحتية', [COLS.challenge]:'1',
-    [COLS.project]:'عنوان المشروع', [COLS.name]:'اسم القائد', [COLS.email]:'leader@example.com',
-    [COLS.phone]:'0500000000', [COLS.org]:'جامعة القصيم', [COLS.category]:'طلبة الجامعات',
-  }]);
-  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'الفرق');
-  XLSX.writeFile(wb, 'قالب-استيراد-الفرق.xlsx');
+/* قالب عريض: كل صف فريق كامل.
+   0 رقم التسجيل | 1..8 القائد | 9 المسار | 10 اسم الابتكار | 11 الوصف
+   12 سجل تجاري | 13 براءة اختراع | 14 نموذج مصغر | 15 رابط الدراسة
+   16 عدد الأعضاء | 17+ كتل من 8 أعمدة لكل عضو إضافي            */
+const MEMBER_BLOCK = 8, MEMBERS_START = 17;
+
+function yn(v){
+  const s = String(v||'').trim();
+  if(!s) return null;
+  return /^(نعم|yes|true|1)$/i.test(s);
+}
+function normTrack(v){
+  return String(v||'').replace(/\s+/g,' ').replace('مسار','').trim();
 }
 function matchTrack(v){
-  const s=String(v||'').trim();
-  return (tracks.find(t => t.name_ar.includes(s) || s.includes(t.name_ar.replace('مسار ','')) || t.id===s) || {}).id;
+  const s = normTrack(v);
+  if(!s) return null;
+  const hit = tracks.find(t => {
+    const n = normTrack(t.name_ar);
+    return n === s || n.includes(s) || s.includes(n);
+  });
+  return hit ? hit.id : null;
 }
+function member(row, i){
+  const g = n => String(row[i+n] ?? '').trim();
+  const name = g(0);
+  if(!name) return null;
+  return {
+    full_name: name, email: g(1).toLowerCase(), phone: g(2),
+    member_role: g(3) || null, category: g(4) || null,
+    city: g(5) || null, gender: g(6) || null, organization: g(7) || null,
+  };
+}
+
 function previewImport(){
-  const file=document.getElementById('importFile').files[0];
+  const file = document.getElementById('importFile').files[0];
   if(!file) return;
-  const reader=new FileReader();
+  const reader = new FileReader();
   reader.onload = e => {
-    const wb=XLSX.read(e.target.result,{type:'array'});
-    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-    const groups={};
-    rows.forEach(r=>{
-      const tn=String(r[COLS.team]||'').trim(); if(!tn) return;
-      groups[tn] = groups[tn] || { name:tn, track:matchTrack(r[COLS.track]),
-        challengeNo:String(r[COLS.challenge]||'').trim(), project:String(r[COLS.project]||'').trim(), members:[] };
-      groups[tn].members.push({
-        full_name:String(r[COLS.name]||'').trim(), email:String(r[COLS.email]||'').trim().toLowerCase(),
-        phone:String(r[COLS.phone]||'').trim(), organization:String(r[COLS.org]||'').trim()||null,
-        category:String(r[COLS.category]||'').trim()||null,
+    const wb = XLSX.read(e.target.result, { type:'array' });
+    const grid = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, defval:'' });
+
+    const hIdx = grid.findIndex(r => r.some(c => String(c).trim() === 'رقم التسجيل'));
+    if(hIdx === -1){
+      msg('importMsg','ما لقيت صف العناوين. تأكد أن الورقة الأولى فيها عمود "رقم التسجيل".');
+      return;
+    }
+
+    importRows = [];
+    for(const row of grid.slice(hIdx + 1)){
+      const g = n => String(row[n] ?? '').trim();
+      const leader = member(row, 1);
+      if(!leader && !g(0)) continue;
+      if(!leader){ continue; }
+
+      const members = [leader];
+      for(let i = MEMBERS_START; i < row.length; i += MEMBER_BLOCK){
+        const m = member(row, i);
+        if(m) members.push(m);
+      }
+
+      importRows.push({
+        reg_no: g(0) || null,
+        track: matchTrack(g(9)), trackRaw: g(9),
+        title: g(10), summary: g(11),
+        has_commercial_register: yn(g(12)),
+        has_patent: yn(g(13)),
+        has_prototype: yn(g(14)),
+        study_url: g(15) || null,
+        members,
       });
-    });
-    importRows=Object.values(groups).filter(g=>g.members.length);
-    const bad=importRows.filter(g=>!g.track);
+    }
+
+    if(!importRows.length){ msg('importMsg','ما فيه صفوف فيها بيانات قائد فريق.'); return; }
+
+    const badTrack = importRows.filter(r => !r.track);
+    const noEmail  = importRows.flatMap(r => r.members.filter(m => !m.email || !m.phone)
+                      .map(m => `${r.title || r.reg_no}: ${m.full_name}`));
+
     document.getElementById('importPreview').innerHTML = `
-      <div style="font-size:13.5px;margin-bottom:12px;">
-        ${importRows.length} فريق · ${importRows.reduce((n,g)=>n+g.members.length,0)} عضو
-        ${bad.length?`<div style="color:var(--bad);margin-top:7px;">${bad.length} فريق بمسار غير معروف: ${bad.map(b=>b.name).join('، ')}</div>`:''}
+      <div style="font-size:13.5px;margin-bottom:12px;line-height:1.9;">
+        ${importRows.length} فريق · ${importRows.reduce((n,r)=>n+r.members.length,0)} عضو
+        ${badTrack.length ? `<div style="color:var(--bad);margin-top:6px;">مسار غير معروف في ${badTrack.length} فريق: ${badTrack.map(b=>b.trackRaw||'(فارغ)').join('، ')}</div>` : ''}
+        ${noEmail.length ? `<div style="color:var(--bad);margin-top:6px;">أعضاء بلا بريد أو جوال (بيُتخطّون): ${noEmail.slice(0,6).join(' · ')}${noEmail.length>6?' …':''}</div>` : ''}
       </div>
-      <div class="table-wrap"><table><thead><tr><th>الفريق</th><th>المسار</th><th>التحدي</th><th>الأعضاء</th></tr></thead>
-      <tbody>${importRows.map(g=>`<tr><td>${g.name}</td><td>${g.track?trackPill(g.track):'<span class="pill grey">؟</span>'}</td>
-        <td>${g.challengeNo||'—'}</td><td style="font-size:12px;color:var(--muted);">${g.members.map(m=>m.full_name).join('، ')}</td></tr>`).join('')}</tbody>
+      <div class="table-wrap"><table>
+        <thead><tr><th>رقم التسجيل</th><th>الابتكار</th><th>المسار</th><th>القائد</th><th>الأعضاء</th><th>ملحقات</th></tr></thead>
+        <tbody>${importRows.map(r=>`<tr>
+          <td dir="ltr" style="text-align:right;">${r.reg_no||'—'}</td>
+          <td>${r.title||'—'}</td>
+          <td>${r.track ? trackPill(r.track) : `<span class="pill grey">${r.trackRaw||'؟'}</span>`}</td>
+          <td>${r.members[0].full_name}</td>
+          <td style="font-size:12px;color:var(--muted);">${r.members.length} — ${r.members.slice(1).map(m=>m.full_name).join('، ')||'بدون أعضاء إضافيين'}</td>
+          <td style="font-size:11.5px;color:var(--muted);">${[
+              r.has_commercial_register?'سجل':'', r.has_patent?'براءة':'', r.has_prototype?'نموذج':'',
+              r.study_url?'دراسة':''].filter(Boolean).join(' · ')||'—'}</td>
+        </tr>`).join('')}</tbody>
       </table></div>
       <button class="b b-teal" style="margin-top:14px;" onclick="runImport()">تنفيذ الاستيراد</button>`;
   };
   reader.readAsArrayBuffer(file);
 }
+
 async function runImport(){
   if(!importRows || !importRows.length) return;
-  let ok=0, fail=[];
-  for(const g of importRows){
-    if(!g.track){ fail.push(g.name+' (مسار غير معروف)'); continue; }
-    const ch = challenges.find(c=>c.track_id===g.track && String(c.number)===g.challengeNo);
+  const btn = document.querySelector('#importPreview .b-teal');
+  if(btn){ btn.disabled = true; btn.textContent = 'جاري الاستيراد...'; }
+
+  let ok = 0; const fail = [];
+  for(const r of importRows){
+    const label = r.title || r.reg_no || r.members[0].full_name;
+    if(!r.track){ fail.push(`${label} — مسار غير معروف`); continue; }
+
     const { data: code } = await supabaseClient.rpc('new_team_code');
     const { data: team, error: te } = await supabaseClient.from('teams')
-      .insert({ code, name:g.name, track_id:g.track, challenge_id: ch?ch.id:null }).select().single();
-    if(te){ fail.push(g.name+' — '+te.message); continue; }
+      .insert({ code, reg_no: r.reg_no, name: r.title || label, track_id: r.track })
+      .select().single();
+    if(te){ fail.push(`${label} — ${te.message}`); continue; }
 
-    const rows = g.members.map((m,i)=>({ ...m, track_id:g.track, challenge_id: ch?ch.id:null,
-      team_id:team.id, is_leader:i===0 }));
-    const { error: pe } = await supabaseClient.from('participants').insert(rows);
-    if(pe){ fail.push(g.name+' — '+pe.message); continue; }
-
-    if(g.project){
-      await supabaseClient.from('projects').insert({ team_id:team.id, title:g.project, submitted_at:new Date().toISOString() });
+    const rows = r.members
+      .filter(m => m.email && m.phone)
+      .map((m,i) => ({ ...m, track_id: r.track, team_id: team.id,
+                       is_leader: i === 0 || /قائد/.test(m.member_role||'') && i === 0 }));
+    if(rows.length){
+      const { error: pe } = await supabaseClient.from('participants').insert(rows);
+      if(pe){ fail.push(`${label} — ${pe.message}`); continue; }
     }
+
+    const { error: pre } = await supabaseClient.from('projects').insert({
+      team_id: team.id, title: r.title || label, summary: r.summary || null,
+      has_commercial_register: r.has_commercial_register,
+      has_patent: r.has_patent, has_prototype: r.has_prototype,
+      study_url: r.study_url, submitted_at: new Date().toISOString(),
+    });
+    if(pre){ fail.push(`${label} — المشروع: ${pre.message}`); continue; }
     ok++;
   }
-  msg('importMsg', `تم استيراد ${ok} فريق.` + (fail.length?` تعذّر: ${fail.join(' | ')}`:''), !fail.length);
-  importRows=null; document.getElementById('importPreview').innerHTML='';
+
+  msg('importMsg', `تم استيراد ${ok} فريق.` + (fail.length ? ` تعذّر ${fail.length}: ${fail.join(' | ')}` : ''), !fail.length);
+  importRows = null;
+  document.getElementById('importPreview').innerHTML = '';
   loadAll();
 }
 

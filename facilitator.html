@@ -2,208 +2,277 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة الميسّر | صناع الحلول الابتكارية 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>تسجيل الحضور — صنّاع الحلول الابتكارية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root{--navy:#0B1B3F;--gold:#14B8A6;--cream:#FBF6E9;--ink:#1c2230;--line:#e7ddc0;
-    --surface:#fff;--text:#1c2230;--table-head:#0B1B3F;}
-  body.dark{--cream:#161b2b;--surface:#1f2438;--text:#e8e6df;--line:#2e3450;--table-head:#12172a;}
-  body.dark{background:var(--cream);color:var(--text);}
-  body.dark .card, body.dark table, body.dark .loginCard{background:var(--surface);border-color:var(--line);color:var(--text);}
-  body.dark th{background:var(--table-head);}
-  body.dark input, body.dark select{background:var(--surface);color:var(--text);border-color:var(--line);}
-  .theme-toggle{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;
-    padding:6px 10px;cursor:pointer;font-size:15px;}
-
-  @media(max-width:640px){
-    button{min-height:40px;}
-    input, select{min-height:44px;font-size:16px;}
-    th, td{padding:11px 8px;font-size:13px;}
-  }
+  :root{--bg:#0E1422;--surface:#151C2E;--surface-2:#1A2236;--line:#26314A;
+    --teal:#35C9AE;--amber:#DB8A52;--text:#EAF0F8;--muted:#96A3B8;--bad:#E2706A;}
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--cream);color:var(--ink);font-family:'IBM Plex Sans Arabic',sans-serif;}
-  h1,h2,h3,.display{font-family:'Tajawal',sans-serif;}
-  .topbar{background:var(--navy);color:#fff;padding:14px 22px;display:flex;justify-content:space-between;align-items:center;}
-  .topbar h1{font-size:17px;margin:0;}
-  .topbar .right{display:flex;align-items:center;gap:12px;font-size:13px;}
-  .topbar button{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:inherit;}
-  main{max-width:900px;margin:0 auto;padding:22px 16px 60px;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Arabic',sans-serif;}
+  h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 20px;
+    display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;}
+  .topbar h1{font-size:16px;}
+  .topbar .right{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);}
+  button.b{border:none;border-radius:9px;padding:10px 16px;font-family:'Tajawal',sans-serif;
+    font-weight:700;font-size:13.5px;cursor:pointer;}
+  .b-teal{background:var(--teal);color:#0E1422;}
+  .b-ghost{background:transparent;border:1px solid var(--line);color:var(--text);padding:7px 13px;font-size:12.5px;}
+  main{max-width:840px;margin:0 auto;padding:20px 14px 80px;}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:14px;}
+  input,select{background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:11px 12px;font-family:inherit;font-size:15px;width:100%;}
+  input:focus,select:focus{outline:1.5px solid var(--teal);border-color:var(--teal);}
+  label{display:block;font-size:12.5px;color:var(--muted);margin:12px 0 5px;}
+
+  .daybar{display:flex;gap:8px;margin-bottom:14px;}
+  .daybar button{flex:1;background:var(--surface);border:1px solid var(--line);color:var(--muted);
+    border-radius:11px;padding:13px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:14.5px;cursor:pointer;}
+  .daybar button.on{background:rgba(53,201,174,.14);border-color:var(--teal);color:var(--teal);}
+  .daybar button small{display:block;font-weight:400;font-size:11.5px;opacity:.8;margin-top:3px;}
+
+  .stats{display:flex;gap:9px;margin-bottom:14px;flex-wrap:wrap;}
+  .stat{flex:1;min-width:100px;background:var(--surface);border:1px solid var(--line);
+    border-radius:11px;padding:12px 14px;}
+  .stat b{display:block;font-family:'Tajawal',sans-serif;font-size:22px;color:var(--teal);}
+  .stat span{font-size:11.5px;color:var(--muted);}
+
+  .team{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;overflow:hidden;}
+  .team .th{padding:13px 16px;border-bottom:1px solid var(--line);display:flex;
+    justify-content:space-between;align-items:center;gap:10px;background:var(--surface-2);}
+  .team .th .n{font-family:'Tajawal',sans-serif;font-weight:700;font-size:15px;}
+  .team .th .c{font-size:11.5px;color:var(--teal);direction:ltr;}
+  .team .th .count{font-size:12px;color:var(--muted);}
+  .p{display:flex;justify-content:space-between;align-items:center;gap:12px;
+    padding:12px 16px;border-bottom:1px solid var(--line);}
+  .p:last-child{border-bottom:none;}
+  .p .info .nm{font-size:14px;}
+  .p .info .rl{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .mark{display:flex;gap:6px;flex-shrink:0;}
+  .mark button{border:1px solid var(--line);background:var(--surface-2);color:var(--muted);
+    border-radius:8px;padding:8px 14px;font-size:13px;font-weight:700;cursor:pointer;font-family:'Tajawal',sans-serif;}
+  .mark button.yes.on{background:var(--teal);border-color:var(--teal);color:#0E1422;}
+  .mark button.no.on{background:var(--bad);border-color:var(--bad);color:#fff;}
+
+  .pill{display:inline-block;padding:3px 10px;border-radius:999px;font-size:11px;font-weight:600;}
+  .pill.amber{background:rgba(219,138,82,.16);color:var(--amber);}
+  .pill.teal{background:rgba(53,201,174,.14);color:var(--teal);}
+  .pill.grey{background:var(--surface-2);color:var(--muted);}
+
+  .login{max-width:360px;margin:80px auto;background:var(--surface);border:1px solid var(--line);
+    border-radius:16px;padding:26px;}
+  .msg{font-size:13px;padding:10px 12px;border-radius:9px;margin-top:12px;display:none;}
+  .msg.err{background:rgba(226,112,106,.12);color:var(--bad);display:block;}
   .hide{display:none !important;}
-
-  .loginCard{max-width:380px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;}
-  .loginCard input{width:100%;padding:12px;border:1.5px solid #dcd3b8;border-radius:10px;font-size:15px;font-family:inherit;margin-bottom:10px;}
-  .loginCard button{width:100%;background:var(--gold);color:var(--navy);border:none;border-radius:10px;padding:12px;
-    font-family:'Tajawal',sans-serif;font-weight:700;font-size:15px;cursor:pointer;}
-
-  .banner{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:16px;}
-  .banner .track-name{font-size:20px;font-weight:900;color:var(--navy);}
-  .stats{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap;}
-  .stat{background:var(--cream);border:1px solid var(--line);border-radius:10px;padding:10px 14px;font-size:13px;}
-  .stat b{display:block;font-size:20px;color:var(--navy);font-family:'Tajawal',sans-serif;}
-
-  .toolbar{display:flex;gap:10px;margin-bottom:12px;}
-  .toolbar input{flex:1;padding:10px 12px;border:1.5px solid #dcd3b8;border-radius:10px;font-family:inherit;font-size:14px;}
-
-  table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;box-shadow:0 6px 20px rgba(11,27,63,.05);}
-  th, td{padding:10px 12px;text-align:right;font-size:13.5px;border-bottom:1px solid #f0ead4;}
-  th{background:var(--navy);color:#fff;font-weight:600;}
-  .pill{display:inline-block;padding:4px 12px;border-radius:999px;font-size:12px;font-weight:600;cursor:pointer;}
-  .pill.on{background:#e8f6ec;color:#1e7a3f;}
-  .pill.off{background:#f1f1f1;color:#9ca3af;}
-  .day-btns{display:flex;gap:6px;justify-content:center;}
-  .day-btn{border:1.5px solid #dcd3b8;background:#fff;color:#9ca3af;border-radius:8px;
-    width:34px;height:30px;font-size:14px;font-weight:700;cursor:pointer;}
-  .day-btn.present.active{background:#1e7a3f;border-color:#1e7a3f;color:#fff;}
-  .day-btn.absent.active{background:#c0392b;border-color:#c0392b;color:#fff;}
-  .day-btn:disabled{opacity:.35;cursor:not-allowed;}
-  .track-name .day-status{font-size:12px;font-weight:600;color:var(--gold);margin-right:8px;}
-  .table-wrap{overflow-x:auto;}
+  .empty{text-align:center;color:var(--muted);padding:34px 16px;font-size:13.5px;line-height:1.9;}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--teal);color:#0E1422;
+    padding:11px 22px;border-radius:999px;font-size:13.5px;font-weight:700;opacity:0;transition:.2s;
+    pointer-events:none;z-index:20;font-family:'Tajawal',sans-serif;}
+  .toast.show{opacity:1;}
 </style>
 </head>
 <body>
 
-<div class="loginCard" id="loginCard">
-  <h2 style="margin-top:0;">دخول الميسّر</h2>
-  <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr" style="text-align:right;">
-  <input type="password" id="loginPass" placeholder="كلمة المرور">
-  <button onclick="login()">دخول</button>
-  <div id="loginErr" style="color:#9c2b2b;font-size:13px;margin-top:8px;"></div>
+<div class="login" id="loginCard">
+  <h2 style="font-size:19px;">تسجيل الحضور</h2>
+  <div style="font-size:12.5px;color:var(--muted);margin-top:5px;">دخول الميسّر</div>
+  <label for="le">البريد الإلكتروني</label>
+  <input type="email" id="le" dir="ltr" style="text-align:right;">
+  <label for="lp">كلمة المرور</label>
+  <input type="password" id="lp">
+  <button class="b b-teal" style="width:100%;margin-top:18px;" onclick="login()">دخول</button>
+  <div class="msg" id="loginMsg"></div>
 </div>
 
 <div id="app" class="hide">
   <div class="topbar">
-    <h1>لوحة الميسّر — صناع الحلول الابتكارية</h1>
-    <div class="right">
-      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">🌙</button>
-      <span id="whoami" dir="ltr"></span><button onclick="logout()">خروج</button>
-    </div>
+    <h1>تسجيل الحضور — صنّاع الحلول الابتكارية</h1>
+    <div class="right"><span id="whoami" dir="ltr"></span>
+      <button class="b b-ghost" onclick="logout()">خروج</button></div>
   </div>
 
   <main>
-    <div class="banner">
-      <div class="track-name" id="trackName"></div>
-      <div class="stats" id="statsRow"></div>
+    <div class="daybar" id="dayBar"></div>
+    <div class="stats" id="stats"></div>
+
+    <div class="panel">
+      <input type="search" id="q" placeholder="بحث بالاسم أو الفريق أو الجوال..." oninput="render()">
+      <div style="display:flex;gap:9px;margin-top:10px;">
+        <select id="trackFilter" onchange="render()"></select>
+        <select id="stateFilter" onchange="render()">
+          <option value="">الكل</option>
+          <option value="pending">لم يُسجَّل بعد</option>
+          <option value="present">حاضر</option>
+          <option value="absent">غائب</option>
+        </select>
+      </div>
     </div>
 
-    <div class="toolbar">
-      <input type="search" id="search" placeholder="بحث بالاسم أو البريد..." oninput="renderTable()">
-    </div>
-
-    <div class="table-wrap">
-      <table>
-        <thead><tr id="tableHead"><th>#</th><th>الاسم</th><th>البريد</th><th>الجوال</th><th>اليوم 1</th><th>اليوم 2</th><th>اليوم 3</th></tr></thead>
-        <tbody id="tbody"></tbody>
-      </table>
-    </div>
+    <div id="list"></div>
   </main>
 </div>
 
+<div class="toast" id="toast"></div>
+
 <script src="config.js"></script>
 <script>
-(function initTheme(){
-  if(localStorage.getItem('site_theme') === 'dark'){
-    document.body.classList.add('dark');
-    document.getElementById('themeToggle').textContent = '☀️';
-  }
-})();
-function toggleTheme(){
-  document.body.classList.toggle('dark');
-  const isDark = document.body.classList.contains('dark');
-  localStorage.setItem('site_theme', isDark ? 'dark' : 'light');
-  document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+let day = 1, people = [], teams = [], tracks = [], settings = {};
+
+let toastTimer;
+function toast(t){
+  const el=document.getElementById('toast'); el.textContent=t; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),1500);
 }
 
-let myTracks = [];
-let participants = [];
-
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  if(session){
-    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
-    if(!profile || profile.role !== 'facilitator' || !profile.track_ids || !profile.track_ids.length){
-      alert('هذا الحساب غير مسند كميسّر لأي مسار. تواصل مع مدير البرنامج.');
-      await supabaseClient.auth.signOut();
-      return;
-    }
-    const { data: tr } = await supabaseClient.from('tracks').select('*').in('id', profile.track_ids);
-    myTracks = tr || [];
-    document.getElementById('loginCard').classList.add('hide');
-    document.getElementById('app').classList.remove('hide');
-    document.getElementById('whoami').textContent = session.user.email;
-    document.getElementById('trackName').textContent = myTracks.map(t => t.name_ar).join('  •  ');
-    if(myTracks.length > 1){
-      const th = document.createElement('th');
-      th.textContent = 'المسار';
-      document.getElementById('tableHead').insertBefore(th, document.getElementById('tableHead').children[4]);
-    }
-    loadParticipants();
+supabaseClient.auth.onAuthStateChange(async (_e, session) => {
+  if(!session) return;
+  const { data: prof } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
+  if(!prof){
+    document.getElementById('loginMsg').className='msg err';
+    document.getElementById('loginMsg').textContent='هذا الحساب غير مضاف لفريق التنظيم.';
+    await supabaseClient.auth.signOut(); return;
   }
+  document.getElementById('loginCard').classList.add('hide');
+  document.getElementById('app').classList.remove('hide');
+  document.getElementById('whoami').textContent = session.user.email;
+  load();
 });
-
 async function login(){
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPass').value;
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if(error) document.getElementById('loginErr').textContent = 'بيانات الدخول غير صحيحة';
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: document.getElementById('le').value.trim(),
+    password: document.getElementById('lp').value,
+  });
+  if(error){
+    document.getElementById('loginMsg').className='msg err';
+    document.getElementById('loginMsg').textContent='بيانات الدخول غير صحيحة.';
+  }
 }
-function logout(){ supabaseClient.auth.signOut(); location.reload(); }
+function logout(){ supabaseClient.auth.signOut().then(()=>location.reload()); }
 
-async function loadParticipants(){
-  // RLS تحصر النتائج تلقائيًا على المسارات المُسنَدة لهذا الميسّر فقط
-  const { data } = await supabaseClient.from('participants').select('*, tracks(*)').order('full_name');
-  participants = data || [];
-  renderStats();
-  renderTable();
-}
+async function load(){
+  const [pp, tm, tr, st] = await Promise.all([
+    supabaseClient.from('participants').select('*').order('full_name'),
+    supabaseClient.from('teams').select('*').order('code'),
+    supabaseClient.from('tracks').select('*').order('sort_order'),
+    supabaseClient.from('app_settings').select('*').eq('id',1).single(),
+  ]);
+  people=pp.data||[]; teams=tm.data||[]; tracks=tr.data||[]; settings=st.data||{};
 
-function renderStats(){
-  const total = participants.length;
-  const d1 = participants.filter(p => p.day1_attended).length;
-  const d2 = participants.filter(p => p.day2_attended).length;
-  const d3 = participants.filter(p => p.day3_attended).length;
-  document.getElementById('statsRow').innerHTML = `
-    <div class="stat"><b>${total}</b>إجمالي المسجلين</div>
-    <div class="stat"><b>${d1}</b>حاضرون اليوم 1</div>
-    <div class="stat"><b>${d2}</b>حاضرون اليوم 2</div>
-    <div class="stat"><b>${d3}</b>حاضرون اليوم 3</div>
-  `;
-}
+  document.getElementById('trackFilter').innerHTML =
+    '<option value="">كل المسارات</option>' + tracks.map(t=>`<option value="${t.id}">${t.name_ar}</option>`).join('');
 
-function renderTable(){
-  const q = document.getElementById('search').value.trim().toLowerCase();
-  const filtered = participants.filter(p => !q || p.full_name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q));
-  const showTrackCol = myTracks.length > 1;
-  document.getElementById('tbody').innerHTML = filtered.map((p, i) => `
-    <tr>
-      <td>${i + 1}</td>
-      <td>${p.full_name}</td><td dir="ltr" style="text-align:right;">${p.email}</td><td dir="ltr" style="text-align:right;">${p.phone || ''}</td>
-      ${showTrackCol ? `<td>${p.tracks ? p.tracks.name_ar : ''}</td>` : ''}
-      <td>${dayCell(p,1)}</td><td>${dayCell(p,2)}</td><td>${dayCell(p,3)}</td>
-    </tr>
-  `).join('') || `<tr><td colspan="${showTrackCol?8:7}" style="text-align:center;color:#9ca3af;padding:20px;">لا يوجد مشاركون</td></tr>`;
+  // اليوم الافتراضي: طابق تاريخ اليوم مع أحد يومي الفعالية
+  const today = new Date().toISOString().slice(0,10);
+  if(settings.day2_date === today) day = 2;
+
+  renderDayBar(); render();
 }
 
-function dayCell(p, n){
-  const val = p[`day${n}_attended`]; // true | false | null
-  const track = p.tracks || myTracks.find(t => t.id === p.track_id);
-  const isActive = track && track.active_day === n;
-  const disabledAttr = isActive ? '' : 'disabled title="لم يُفعَّل هذا اليوم بعد من المدير"';
-  return `<div class="day-btns">
-    <button class="day-btn present ${val===true?'active':''}" ${disabledAttr} onclick="setDay('${p.id}', ${n}, true)">✓</button>
-    <button class="day-btn absent ${val===false?'active':''}" ${disabledAttr} onclick="setDay('${p.id}', ${n}, false)">✕</button>
-  </div>`;
+function fmt(d){
+  if(!d) return '';
+  return new Date(d).toLocaleDateString('ar-SA', { day:'numeric', month:'long' });
+}
+function renderDayBar(){
+  document.getElementById('dayBar').innerHTML = [1,2].map(n=>`
+    <button class="${day===n?'on':''}" onclick="setDay(${n})">
+      اليوم ${n===1?'الأول':'الثاني'}<small>${fmt(settings['day'+n+'_date'])||'—'}</small>
+    </button>`).join('');
+}
+function setDay(n){ day=n; renderDayBar(); render(); }
+
+function field(){ return `day${day}_attended`; }
+
+function render(){
+  const f = field();
+  const present = people.filter(p=>p[f]===true).length;
+  const absent  = people.filter(p=>p[f]===false).length;
+  const pending = people.length - present - absent;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><b>${present}</b><span>حاضر</span></div>
+    <div class="stat"><b>${absent}</b><span>غائب</span></div>
+    <div class="stat"><b>${pending}</b><span>لم يُسجَّل</span></div>
+    <div class="stat"><b>${people.length}</b><span>الإجمالي</span></div>`;
+
+  const q  = (document.getElementById('q').value||'').trim().toLowerCase();
+  const tf = document.getElementById('trackFilter').value;
+  const sf = document.getElementById('stateFilter').value;
+
+  const teamName = id => { const t=teams.find(x=>x.id===id); return t?t.name:''; };
+
+  const filtered = people.filter(p=>{
+    if(tf && p.track_id!==tf) return false;
+    if(sf==='present' && p[f]!==true)  return false;
+    if(sf==='absent'  && p[f]!==false) return false;
+    if(sf==='pending' && p[f]!=null)   return false;
+    if(q){
+      const hay = (p.full_name+' '+(p.phone||'')+' '+teamName(p.team_id)).toLowerCase();
+      if(!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  const groups = new Map();
+  filtered.forEach(p=>{
+    const k = p.team_id || '__none__';
+    if(!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(p);
+  });
+
+  const box = document.getElementById('list');
+  if(!filtered.length){ box.innerHTML = '<div class="panel"><div class="empty">ما فيه نتائج مطابقة.</div></div>'; return; }
+
+  box.innerHTML = [...groups.entries()].map(([tid, members])=>{
+    const t = teams.find(x=>x.id===tid);
+    const here = members.filter(p=>p[f]===true).length;
+    return `<div class="team">
+      <div class="th">
+        <div>
+          <div class="n">${t?t.name:'مشاركون بدون فريق'}</div>
+          ${t?`<div class="c">${t.reg_no||t.code}</div>`:''}
+        </div>
+        <div style="display:flex;align-items:center;gap:9px;">
+          <span class="count">${here} من ${members.length}</span>
+          ${t?`<span class="pill ${t.track_id==='safety'?'amber':'teal'}">${
+            (tracks.find(x=>x.id===t.track_id)||{}).name_ar?.replace('مسار ','')||''}</span>`:''}
+          ${t?`<button class="b b-ghost" onclick="markTeam('${tid}')">تحضير الكل</button>`:''}
+        </div>
+      </div>
+      ${members.map(p=>`
+        <div class="p">
+          <div class="info">
+            <div class="nm">${p.full_name}${p.is_leader?' <span class="pill teal">قائد</span>':''}</div>
+            <div class="rl">${[p.member_role, p.organization].filter(Boolean).join(' · ')||'—'}</div>
+          </div>
+          <div class="mark">
+            <button class="yes ${p[f]===true?'on':''}"  onclick="mark('${p.id}',true)">حاضر</button>
+            <button class="no  ${p[f]===false?'on':''}" onclick="mark('${p.id}',false)">غائب</button>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  }).join('');
 }
 
-async function setDay(id, n, value){
-  const p = participants.find(x => x.id === id);
-  const track = p.tracks || myTracks.find(t => t.id === p.track_id);
-  if(!track || track.active_day !== n){ alert('هذا اليوم غير مفعّل بعد. تواصل مع المدير لتفعيله قبل تسجيل الحضور.'); return; }
-  const field = `day${n}_attended`;
-  const newVal = (p[field] === value) ? null : value;
-  const { error } = await supabaseClient.from('participants').update({ [field]: newVal }).eq('id', id);
-  if(!error){ p[field] = newVal; renderStats(); renderTable(); }
+async function mark(id, value){
+  const p = people.find(x=>x.id===id);
+  const f = field();
+  const newVal = p[f]===value ? null : value;
+  const { error } = await supabaseClient.from('participants').update({ [f]:newVal }).eq('id',id);
+  if(error) return toast('تعذّر الحفظ');
+  p[f]=newVal; render();
+}
+
+async function markTeam(tid){
+  const f = field();
+  const members = people.filter(p=>p.team_id===tid && p[f]!==true);
+  if(!members.length) return toast('الفريق كامل الحضور');
+  const { error } = await supabaseClient.from('participants')
+    .update({ [f]:true }).in('id', members.map(p=>p.id));
+  if(error) return toast('تعذّر الحفظ');
+  members.forEach(p=>p[f]=true);
+  render(); toast(`تم تحضير ${members.length}`);
 }
 </script>
 </body>
