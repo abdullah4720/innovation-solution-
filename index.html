@@ -2,337 +2,318 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>التسجيل | صناع الحلول الابتكارية 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>التسجيل — صنّاع الحلول الابتكارية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root{
-    --navy:#0B1B3F; --navy-2:#132a5c; --gold:#14B8A6; --gold-2:#f7cf4d;
-    --cream:#FBF6E9; --ink:#1c2230; --line:#e7ddc0;
-  }
+  :root{--navy:#0B1B3F;--teal:#14B8A6;--bg:#FBF6E9;--line:#e7ddc0;--ink:#1c2230;--muted:#6b7280;}
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--cream);color:var(--ink);font-family:'IBM Plex Sans Arabic',sans-serif;}
-  h1,h2,h3,.display{font-family:'Tajawal',sans-serif;}
-
-  .hero{
-    position:relative;background:var(--navy);color:#fff;overflow:hidden;
-    padding:38px 20px 54px;
-  }
-  .hero::before, .hero::after{
-    content:"";position:absolute;height:3px;background:var(--gold);width:140%;
-    transform:rotate(-8deg);
-  }
-  .hero::before{top:14px;left:-40px;}
-  .hero::after{top:26px;left:-40px;opacity:.5;}
-  .hero-inner{position:relative;max-width:720px;margin:0 auto;text-align:center;padding-top:20px;}
-  .eyebrow{color:var(--gold-2);font-weight:600;letter-spacing:.5px;font-size:14px;margin-bottom:6px;}
-  .hero h1{font-size:38px;font-weight:900;margin:4px 0 2px;}
-  .hero .sub{font-size:16px;font-weight:500;opacity:.85;margin-top:4px;}
-  .badge-year{display:inline-block;margin-top:14px;background:var(--gold);color:var(--navy);
-    font-weight:700;padding:5px 18px;border-radius:999px;font-size:14px;}
-
-  main{max-width:720px;margin:-28px auto 60px;padding:0 18px;}
-  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:24px 22px;
-    box-shadow:0 10px 30px rgba(11,27,63,.07);margin-bottom:18px;}
-  .card h2{font-size:19px;margin:0 0 14px;color:var(--navy);border-right:4px solid var(--gold);padding-right:10px;}
-
-  label{display:block;font-size:14px;font-weight:600;margin:14px 0 6px;color:var(--navy-2);}
-  input, select{
-    width:100%;padding:12px 14px;border:1.5px solid #dcd3b8;border-radius:10px;
-    font-family:inherit;font-size:15px;background:#fffdf7;transition:.15s;
-  }
-  input:focus, select:focus{outline:none;border-color:var(--gold);box-shadow:0 0 0 3px rgba(231,177,10,.18);}
-
-  .tracks{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
-  @media(max-width:520px){.tracks{grid-template-columns:1fr;}}
-  .track-opt{position:relative;}
-  .track-opt input{position:absolute;opacity:0;inset:0;cursor:pointer;width:100%;height:100%;}
-  .track-opt.disabled input{cursor:not-allowed;}
-  .track-opt.disabled .track-card{opacity:.5;background:#f1f1ec;cursor:not-allowed;}
-  .track-badge{display:inline-block;background:#9ca3af;color:#fff;font-size:10.5px;font-weight:700;
-    padding:1px 7px;border-radius:999px;margin-right:6px;vertical-align:middle;}
-  .waitlist-link{margin-top:6px;font-size:11.5px;color:var(--navy);font-weight:700;text-decoration:underline;cursor:pointer;}
-
-  .waitlist-modal-bg{position:fixed;inset:0;background:rgba(11,27,63,.45);display:flex;align-items:center;
-    justify-content:center;z-index:100;padding:16px;}
-  .waitlist-modal{background:#fff;border-radius:16px;padding:22px;max-width:360px;width:100%;}
-  .waitlist-modal h3{margin:0 0 4px;color:var(--navy);}
-  .waitlist-modal label{display:block;font-size:13px;font-weight:600;margin:10px 0 5px;color:#132a5c;}
-  .waitlist-modal input{width:100%;padding:10px;border:1.5px solid #dcd3b8;border-radius:9px;font-family:inherit;font-size:14px;}
-  .track-card{
-    border:1.5px solid #dcd3b8;border-radius:12px;padding:12px 14px;background:#fffdf7;cursor:pointer;
-  }
-  .track-opt input:checked + .track-card{
-    border-color:var(--navy);background:linear-gradient(0deg,#fff,#fff),var(--navy);
-    background:#0B1B3F0d;border-color:var(--navy);box-shadow:inset 0 0 0 1.5px var(--navy);
-  }
-  .track-name{font-weight:700;font-size:14.5px;color:var(--navy);}
-  .track-dates{font-size:12.5px;color:#6b7280;margin-top:3px;}
-
-  button.submit{
-    width:100%;margin-top:20px;background:var(--gold);color:var(--navy);border:none;
-    padding:14px;border-radius:10px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:16px;
-    cursor:pointer;transition:.15s;
-  }
-  button.submit:hover{background:var(--gold-2);}
-  button.submit:disabled{opacity:.6;cursor:not-allowed;}
-
-  .msg{font-size:13.5px;margin-top:10px;padding:10px 12px;border-radius:8px;display:none;}
-  .msg.error{background:#fdecec;color:#9c2b2b;display:block;}
-
-  .success{display:none;text-align:center;}
-  .success.show{display:block;}
-  .success canvas{margin:14px auto;border:8px solid #fff;border-radius:12px;box-shadow:0 6px 20px rgba(11,27,63,.12);}
-  .success h2{border:none;padding:0;text-align:center;}
-  .note{font-size:13px;color:#6b7280;line-height:1.9;}
-  .form-wrap.hide{display:none;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Arabic',sans-serif;}
+  h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
+  .topbar{background:var(--navy);padding:30px 24px 34px;text-align:center;position:relative;overflow:hidden;}
+  .topbar::after{content:'';position:absolute;left:-40px;top:18px;width:140%;height:3px;
+    background:var(--teal);transform:rotate(-6deg);opacity:.55;}
+  .topbar h1{color:#fff;font-size:25px;position:relative;}
+  .topbar .sub{color:var(--teal);font-size:13px;font-weight:700;margin-top:8px;position:relative;}
+  .topbar .meta{color:#cfd6e4;font-size:12.5px;margin-top:10px;position:relative;}
+  main{max-width:660px;margin:0 auto;padding:22px 16px 70px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px;
+    box-shadow:0 8px 24px rgba(11,27,63,.05);}
+  label{display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin:14px 0 6px;}
+  input,select,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;
+    font-family:inherit;font-size:15px;background:#fff;color:var(--ink);}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+  .hint{font-size:12px;color:var(--muted);margin-top:5px;}
+  .modes{display:flex;gap:8px;margin-bottom:4px;}
+  .modes button{flex:1;padding:12px;border-radius:10px;border:1.5px solid var(--line);background:#fff;
+    font-family:'Tajawal',sans-serif;font-weight:700;font-size:14.5px;color:var(--navy);cursor:pointer;}
+  .modes button.on{background:var(--navy);color:#fff;border-color:var(--navy);}
+  .opt{display:block;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;margin-bottom:9px;cursor:pointer;}
+  .opt input{display:none;}
+  .opt.sel{border-color:var(--teal);background:#f2fbf9;}
+  .opt .t{font-weight:700;color:var(--navy);font-size:14.5px;}
+  .opt .d{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.65;}
+  .member{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;background:#fffdf7;}
+  .member .head{display:flex;justify-content:space-between;align-items:center;}
+  .member .head b{font-family:'Tajawal',sans-serif;color:var(--navy);font-size:14px;}
+  .member .rm{background:none;border:none;color:#9c2b2b;font-size:13px;cursor:pointer;font-family:inherit;}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  @media(max-width:520px){.grid2{grid-template-columns:1fr;}}
+  .add{width:100%;background:#fff;border:1.5px dashed var(--line);color:var(--navy);border-radius:10px;
+    padding:12px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
+  .submit{width:100%;margin-top:18px;background:var(--teal);color:#fff;border:none;border-radius:12px;
+    padding:15px;font-family:'Tajawal',sans-serif;font-size:16px;font-weight:700;cursor:pointer;}
+  .submit:disabled{opacity:.55;cursor:not-allowed;}
+  .msg{margin-top:12px;font-size:13.5px;padding:11px 13px;border-radius:9px;display:none;line-height:1.7;}
+  .msg.err{background:#fdecec;color:#9c2b2b;display:block;}
+  .hide{display:none !important;}
+  .done{text-align:center;padding:34px 20px;}
+  .done .code{font-family:'Tajawal',sans-serif;font-size:34px;font-weight:900;color:var(--navy);
+    letter-spacing:2px;margin:14px 0 6px;direction:ltr;}
+  .done .note{font-size:13.5px;color:var(--muted);line-height:1.9;}
+  .closed{text-align:center;padding:44px 24px;color:var(--muted);font-size:15px;line-height:1.9;}
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <div class="hero-inner">
-    <div class="eyebrow">جامعة القصيم · مركز الابتكار والملكية الفكرية</div>
-    <h1>صناع الحلول الابتكارية</h1>
-    <div class="sub">Innovative Solutions Makers — التسجيل في البرنامج التدريبي</div>
-    <div class="sub" style="font-size:13px;opacity:.85;margin-top:2px;">نحو حلول مبتكرة تصنع أثرًا مستدامًا</div>
-    <div class="badge-year">2026</div>
-  </div>
+<div class="topbar">
+  <h1>صنّاع الحلول الابتكارية</h1>
+  <div class="sub">نحو حلول مبتكرة تصنع أثرًا مستدامًا</div>
+  <div class="meta">جامعة القصيم · 13–14 سبتمبر · 12:30 م – 4:00 م</div>
 </div>
 
 <main>
-  <div class="card" id="closedCard" style="display:none;text-align:center;">
-    <h2 style="margin-top:0;">🌱 شكرًا لاهتمامك</h2>
-    <p id="closedMessage" style="color:#4b5563;font-size:15px;line-height:1.9;"></p>
-  </div>
+  <div class="card hide" id="closedCard"><div class="closed" id="closedMsg"></div></div>
 
-  <div class="card form-wrap" id="formWrap">
-    <h2>بيانات التسجيل</h2>
-    <form id="regForm">
-      <label>الاسم الكامل</label>
-      <input type="text" id="full_name" required placeholder="مثال: عبدالله محمد">
-
-      <label>البريد الإلكتروني</label>
-      <input type="email" id="email" required placeholder="name@example.com" dir="ltr" style="text-align:right;">
-
-      <label>رقم الجوال</label>
-      <input type="tel" id="phone" required placeholder="05xxxxxxxx" dir="ltr" style="text-align:right;">
-
-      <label>الجهة (الجامعة / الشركة)</label>
-      <input type="text" id="organization" placeholder="اختياري">
-
-      <label>اختر مسارًا واحدًا</label>
-      <div class="tracks" id="tracksGrid">
-        <!-- تُبنى ديناميكيًا من قاعدة البيانات -->
+  <div id="formWrap" class="hide">
+    <div class="card">
+      <div class="modes">
+        <button id="mTeam" class="on" onclick="setMode('team')">تسجيل فريق</button>
+        <button id="mSolo" onclick="setMode('solo')">تسجيل فردي</button>
       </div>
+      <div class="hint" id="modeHint">سجّل فريقك كاملًا الآن، وأول عضو تدخله هو قائد الفريق.</div>
+    </div>
 
-      <div class="msg error" id="errMsg" style="display:none;"></div>
-      <button class="submit" type="submit" id="submitBtn">تأكيد التسجيل</button>
-    </form>
+    <div class="card">
+      <h3 style="color:var(--navy);font-size:16px;">المسار</h3>
+      <div id="tracksBox" style="margin-top:12px;"></div>
+
+      <h3 style="color:var(--navy);font-size:16px;margin-top:22px;">التحدي</h3>
+      <div id="challengesBox" style="margin-top:12px;">
+        <div class="hint">اختر المسار أولًا.</div>
+      </div>
+    </div>
+
+    <div class="card" id="teamCard">
+      <label for="teamName">اسم الفريق</label>
+      <input type="text" id="teamName" autocomplete="off">
+
+      <div id="membersBox" style="margin-top:18px;"></div>
+      <button class="add" onclick="addMember()">+ إضافة عضو</button>
+      <div class="hint" id="sizeHint"></div>
+    </div>
+
+    <div class="card hide" id="soloCard">
+      <div id="soloBox"></div>
+      <div class="hint">بنضمّك لفريق مناسب قبل انطلاق الفعالية ونتواصل معك.</div>
+    </div>
+
+    <button class="submit" id="submitBtn" onclick="submitForm()">إتمام التسجيل</button>
+    <div class="msg" id="errMsg"></div>
   </div>
 
-  <div class="card success" id="successCard">
-    <h2>✅ تم تسجيلك بنجاح</h2>
-    <p style="text-align:center;color:#4b5563;" id="successSummary"></p>
-    <p class="note" style="text-align:center;font-weight:600;color:#0B1B3F;">
-      يمكنك دائمًا معرفة مسارك ومتابعة حالة حضورك وشهادتك عبر "بوابة المشارك" — فقط أدخل نفس البريد ورقم الجوال المسجَّلين.
-    </p>
-    <a class="submit" href="participant.html" style="display:block;text-align:center;text-decoration:none;margin-top:6px;">فتح بوابة المشارك</a>
+  <div class="card hide" id="doneCard">
+    <div class="done">
+      <div style="font-size:38px;">✅</div>
+      <h2 style="color:var(--navy);margin-top:10px;" id="doneTitle"></h2>
+      <div class="code hide" id="doneCode"></div>
+      <div class="note" id="doneNote"></div>
+    </div>
   </div>
 </main>
 
-<div class="waitlist-modal-bg hide" id="waitlistModal">
-  <div class="waitlist-modal">
-    <h3>الانضمام لقائمة الانتظار</h3>
-    <p style="font-size:13px;color:#6b7280;margin-top:-6px;">مسار: <b id="waitlistTrackName"></b></p>
-    <input type="hidden" id="waitlistTrackId">
-    <label>الاسم الكامل</label>
-    <input type="text" id="waitlistName">
-    <label>البريد الإلكتروني</label>
-    <input type="email" id="waitlistEmail" dir="ltr" style="text-align:right;">
-    <label>رقم الجوال</label>
-    <input type="tel" id="waitlistPhone" dir="ltr" style="text-align:right;" placeholder="05xxxxxxxx">
-    <div class="msg" id="waitlistMsg" style="display:none;"></div>
-    <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="submit" style="background:#fff;border:1.5px solid var(--navy);color:var(--navy);" onclick="closeWaitlist()">إغلاق</button>
-      <button class="submit" onclick="submitWaitlist()">انضمام</button>
-    </div>
-  </div>
-</div>
-
 <script src="config.js"></script>
 <script>
-let tracksData = [];
+let mode = 'team';
+let tracks = [], challenges = [], settings = {};
+let selTrack = null, selChallenge = null;
+let memberCount = 0;
 
-async function checkRegistrationStatus(){
-  const { data: settings } = await supabaseClient.from('app_settings').select('*').eq('id', 1).single();
-  if(!settings) return true; // لا إعدادات = افتراضيًا مفتوح
-
-  const now = new Date();
-  let closedMsg = null;
-  const customMsg = settings.registration_closed_message && settings.registration_closed_message.trim();
-
-  if(settings.registration_open === false){
-    closedMsg = customMsg || 'التسجيل مغلق حاليًا. تابعنا للإعلان عن الموعد القادم بإذن الله.';
-  } else if(settings.registration_opens_at && now < new Date(settings.registration_opens_at)){
-    const opensText = new Date(settings.registration_opens_at).toLocaleString('ar-SA', {dateStyle:'long', timeStyle:'short'});
-    closedMsg = customMsg || `لم يبدأ التسجيل بعد. يفتح التسجيل بإذن الله بتاريخ ${opensText}.`;
-  } else if(settings.registration_closes_at && now > new Date(settings.registration_closes_at)){
-    closedMsg = customMsg || 'عذرًا، انتهى وقت التسجيل. نتمنى نشوفكم في الفرصة القادمة!';
-  }
-
-  if(closedMsg){
-    document.getElementById('formWrap').style.display = 'none';
-    document.getElementById('closedCard').style.display = 'block';
-    document.getElementById('closedMessage').textContent = closedMsg;
-    return false;
-  }
-  return true;
+function catOptions(){
+  return '<option value="">— اختر الفئة —</option>' +
+    CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
 }
 
-async function loadTracks(){
-  const isOpen = await checkRegistrationStatus();
-  if(!isOpen) return;
+async function init(){
+  const [{ data: st }, { data: tr }, { data: ch }, { data: s }] = await Promise.all([
+    supabaseClient.rpc('registration_status'),
+    supabaseClient.from('tracks').select('*').order('sort_order'),
+    supabaseClient.from('challenges').select('*').order('track_id, number'),
+    supabaseClient.from('app_settings').select('*').eq('id', 1).single(),
+  ]);
 
-  const { data, error } = await supabaseClient.from('tracks').select('*').order('day1_date');
-  tracksData = (data && data.length) ? data : FALLBACK_TRACKS;
-
-  const { data: statusData } = await supabaseClient.rpc('get_track_registration_status');
-  const statusMap = {};
-  (statusData || []).forEach(s => { statusMap[s.track_id] = s; });
-
-  const grid = document.getElementById('tracksGrid');
-  let firstEnabledUsed = false;
-
-  grid.innerHTML = tracksData.map((t) => {
-    const tid = t.id || t.code;
-    const status = statusMap[tid];
-    const isFull = status && status.capacity != null && status.registered_count >= status.capacity;
-    const isClosed = status && status.registration_open === false;
-    const unavailable = isFull || isClosed;
-    const isFirst = !unavailable && !firstEnabledUsed;
-    if(isFirst) firstEnabledUsed = true;
-
-    const badge = isClosed ? '<span class="track-badge">مغلق</span>' : (isFull ? '<span class="track-badge">مكتمل</span>' : '');
-    const waitlistLink = unavailable ? `<div class="waitlist-link" onclick="openWaitlist(event, '${tid}', '${t.name_ar.replace(/'/g,"")}')">🕐 انضم لقائمة الانتظار</div>` : '';
-
-    return `
-    <label class="track-opt ${unavailable ? 'disabled' : ''}">
-      <input type="radio" name="track" value="${tid}" ${isFirst ? 'required' : ''} ${unavailable ? 'disabled' : ''}>
-      <div class="track-card">
-        <div class="track-name">${t.name_ar} ${badge}</div>
-        ${t.day1_date ? `<div class="track-dates">${formatRange(t.day1_date, t.day3_date)}</div>` : ''}
-        ${waitlistLink}
-      </div>
-    </label>`;
-  }).join('');
-}
-
-function openWaitlist(e, trackId, trackName){
-  e.preventDefault(); e.stopPropagation();
-  document.getElementById('waitlistTrackId').value = trackId;
-  document.getElementById('waitlistTrackName').textContent = trackName;
-  document.getElementById('waitlistModal').classList.remove('hide');
-}
-function closeWaitlist(){
-  document.getElementById('waitlistModal').classList.add('hide');
-  document.getElementById('waitlistMsg').style.display = 'none';
-}
-async function submitWaitlist(){
-  const trackId = document.getElementById('waitlistTrackId').value;
-  const full_name = document.getElementById('waitlistName').value.trim();
-  const email = document.getElementById('waitlistEmail').value.trim();
-  const phone = document.getElementById('waitlistPhone').value.trim();
-  const msg = document.getElementById('waitlistMsg');
-
-  if(!full_name || !email || !phone){
-    msg.className = 'msg error'; msg.style.display = 'block';
-    msg.textContent = 'الرجاء تعبئة كل الحقول'; return;
-  }
-
-  const { error } = await supabaseClient.from('waitlist').insert({ track_id: trackId, full_name, email, phone });
-  if(error){
-    msg.className = 'msg error'; msg.style.display = 'block';
-    msg.textContent = 'تعذّر الإضافة، حاول مرة أخرى'; return;
-  }
-  msg.className = 'msg success'; msg.style.display = 'block'; msg.style.background = '#e8f6ec'; msg.style.color = '#1e7a3f';
-  msg.textContent = 'تمت إضافتك لقائمة الانتظار، بنتواصل معك لو فتح مكان.';
-  document.getElementById('waitlistName').value = '';
-  document.getElementById('waitlistEmail').value = '';
-  document.getElementById('waitlistPhone').value = '';
-}
-
-function formatRange(d1, d3){
-  const opts = {day:'numeric', month:'short'};
-  const a = new Date(d1).toLocaleDateString('ar-SA', opts);
-  const b = new Date(d3).toLocaleDateString('ar-SA', opts);
-  return `${a} – ${b}`;
-}
-
-loadTracks();
-
-document.getElementById('regForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-  const errMsg = document.getElementById('errMsg');
-  const btn = document.getElementById('submitBtn');
-  errMsg.style.display = 'none';
-
-  const trackId = document.querySelector('input[name="track"]:checked')?.value;
-  if(!trackId){ errMsg.textContent = 'الرجاء اختيار مسار'; errMsg.style.display='block'; return; }
-
-  // تحقق أخير احتياطي: هل المسار لسه متاح (لو امتلأ أو أُغلق لحظيًا بين تحميل الصفحة والإرسال)؟
-  const { data: freshStatus } = await supabaseClient.rpc('get_track_registration_status');
-  const trackStatus = (freshStatus || []).find(s => s.track_id === trackId);
-  if(trackStatus){
-    const stillOpen = trackStatus.registration_open !== false;
-    const stillHasRoom = trackStatus.capacity == null || trackStatus.registered_count < trackStatus.capacity;
-    if(!stillOpen || !stillHasRoom){
-      errMsg.textContent = 'عذرًا، هذا المسار امتلأ أو أُغلق للتو. الرجاء اختيار مسار آخر وتحديث الصفحة.';
-      errMsg.style.display = 'block';
-      return;
-    }
-  }
-
-  const generatedToken = (crypto.randomUUID ? crypto.randomUUID().replace(/-/g,'') : String(Date.now()) + Math.random().toString(36).slice(2)).slice(0,16);
-
-  const payload = {
-    full_name: document.getElementById('full_name').value.trim(),
-    email: document.getElementById('email').value.trim(),
-    phone: document.getElementById('phone').value.trim(),
-    organization: document.getElementById('organization').value.trim() || null,
-    track_id: trackId,
-    qr_token: generatedToken,
-  };
-
-  btn.disabled = true; btn.textContent = 'جاري التسجيل...';
-  const { error } = await supabaseClient.from('participants').insert(payload);
-
-  if(error){
-    const dup = error.code === '23505';
-    errMsg.textContent = dup
-      ? 'هذا البريد أو رقم الجوال مسجّل مسبقًا في أحد المسارات. لا يمكن التسجيل في أكثر من مسار واحد.'
-      : 'تعذّر إتمام التسجيل، الرجاء المحاولة مرة أخرى. (' + error.message + ')';
-    errMsg.style.display = 'block';
-    btn.disabled = false; btn.textContent = 'تأكيد التسجيل';
+  const status = (st && st[0]) || { is_open: true };
+  if(!status.is_open){
+    document.getElementById('closedCard').classList.remove('hide');
+    document.getElementById('closedMsg').textContent = status.message || 'التسجيل غير متاح حاليًا.';
     return;
   }
 
-  const track = tracksData.find(t => (t.id || t.code) === trackId);
-  document.getElementById('formWrap').classList.add('hide');
-  const successCard = document.getElementById('successCard');
-  successCard.classList.add('show');
-  document.getElementById('successSummary').textContent =
-    `${payload.full_name} — مسار: ${track ? track.name_ar : ''}`;
+  tracks = tr || []; challenges = ch || []; settings = s || { min_team_size:2, max_team_size:5 };
+  document.getElementById('sizeHint').textContent =
+    `عدد أعضاء الفريق من ${settings.min_team_size} إلى ${settings.max_team_size}، شاملًا القائد.`;
 
-  // إرسال بريد تأكيد تلقائي (لا نعطّل الواجهة لو تأخر أو فشل الإرسال)
-  fetch(`${SUPABASE_URL}/functions/v1/send-confirmation-email`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'apikey': SUPABASE_ANON_KEY },
-    body: JSON.stringify({ email: payload.email }),
-  }).catch(() => {});
-});
+  renderTracks();
+  addMember(); addMember();
+  renderSolo();
+  document.getElementById('formWrap').classList.remove('hide');
+}
+
+function renderTracks(){
+  document.getElementById('tracksBox').innerHTML = tracks.map(t => `
+    <label class="opt ${selTrack===t.id?'sel':''}" onclick="pickTrack('${t.id}')">
+      <div class="t">${t.name_ar}</div>
+    </label>`).join('');
+}
+
+function pickTrack(id){
+  selTrack = id; selChallenge = null;
+  renderTracks(); renderChallenges();
+}
+
+function renderChallenges(){
+  const list = challenges.filter(c => c.track_id === selTrack);
+  const box = document.getElementById('challengesBox');
+  if(!list.length){ box.innerHTML = '<div class="hint">اختر المسار أولًا.</div>'; return; }
+  box.innerHTML = list.map(c => `
+    <label class="opt ${selChallenge===c.id?'sel':''}" onclick="pickChallenge('${c.id}')">
+      <div class="t">التحدي ${c.number === 1 ? 'الأول' : 'الثاني'}</div>
+      <div class="d">${c.title_ar}</div>
+    </label>`).join('');
+}
+
+function pickChallenge(id){ selChallenge = id; renderChallenges(); }
+
+function setMode(m){
+  mode = m;
+  document.getElementById('mTeam').classList.toggle('on', m === 'team');
+  document.getElementById('mSolo').classList.toggle('on', m === 'solo');
+  document.getElementById('teamCard').classList.toggle('hide', m !== 'team');
+  document.getElementById('soloCard').classList.toggle('hide', m !== 'solo');
+  document.getElementById('modeHint').textContent = m === 'team'
+    ? 'سجّل فريقك كاملًا الآن، وأول عضو تدخله هو قائد الفريق.'
+    : 'سجّل نفسك بشكل فردي، وبنضمّك لفريق قبل انطلاق الفعالية.';
+}
+
+function memberFields(i, isLeader){
+  return `
+  <div class="member" id="mem-${i}">
+    <div class="head">
+      <b>${isLeader ? 'قائد الفريق' : 'عضو ' + i}</b>
+      ${isLeader ? '' : `<button class="rm" onclick="removeMember(${i})">حذف</button>`}
+    </div>
+    <div class="grid2" style="margin-top:10px;">
+      <div><label for="n-${i}">الاسم الكامل</label><input type="text" id="n-${i}"></div>
+      <div><label for="e-${i}">البريد الإلكتروني</label><input type="email" id="e-${i}" dir="ltr" style="text-align:right;"></div>
+      <div><label for="p-${i}">رقم الجوال</label><input type="tel" id="p-${i}" dir="ltr" style="text-align:right;" placeholder="05xxxxxxxx"></div>
+      <div><label for="o-${i}">الجهة (اختياري)</label><input type="text" id="o-${i}"></div>
+    </div>
+    <label for="c-${i}">الفئة</label>
+    <select id="c-${i}">${catOptions()}</select>
+  </div>`;
+}
+
+function addMember(){
+  if(memberCount >= (settings.max_team_size || 5)){
+    showErr(`الحد الأعلى ${settings.max_team_size} أعضاء.`); return;
+  }
+  memberCount++;
+  document.getElementById('membersBox').insertAdjacentHTML('beforeend', memberFields(memberCount, memberCount === 1));
+}
+
+function removeMember(i){
+  const el = document.getElementById('mem-' + i);
+  if(el) el.remove();
+}
+
+function renderSolo(){
+  document.getElementById('soloBox').innerHTML = `
+    <div class="grid2">
+      <div><label for="sn">الاسم الكامل</label><input type="text" id="sn"></div>
+      <div><label for="se">البريد الإلكتروني</label><input type="email" id="se" dir="ltr" style="text-align:right;"></div>
+      <div><label for="sp">رقم الجوال</label><input type="tel" id="sp" dir="ltr" style="text-align:right;" placeholder="05xxxxxxxx"></div>
+      <div><label for="so">الجهة (اختياري)</label><input type="text" id="so"></div>
+    </div>
+    <label for="sc">الفئة</label>
+    <select id="sc">${catOptions()}</select>`;
+}
+
+function showErr(t){
+  const el = document.getElementById('errMsg');
+  el.className = 'msg err'; el.textContent = t;
+  el.scrollIntoView({ behavior:'smooth', block:'center' });
+}
+function clearErr(){ document.getElementById('errMsg').className = 'msg'; }
+
+function collectMembers(){
+  const out = [];
+  document.querySelectorAll('#membersBox .member').forEach(el => {
+    const i = el.id.split('-')[1];
+    const v = id => (document.getElementById(id + '-' + i) || {}).value || '';
+    const name = v('n').trim();
+    if(!name && !v('e').trim() && !v('p').trim()) return;  // صف فارغ — نتجاهله
+    out.push({
+      full_name: name, email: v('e').trim(), phone: v('p').trim(),
+      organization: v('o').trim(), category: v('c'),
+    });
+  });
+  return out;
+}
+
+async function submitForm(){
+  clearErr();
+  const btn = document.getElementById('submitBtn');
+
+  if(!selTrack)     return showErr('اختر المسار.');
+  if(!selChallenge) return showErr('اختر التحدي.');
+
+  btn.disabled = true; btn.textContent = 'جاري التسجيل...';
+
+  try{
+    if(mode === 'team'){
+      const teamName = document.getElementById('teamName').value.trim();
+      if(!teamName) throw new Error('اكتب اسم الفريق.');
+
+      const members = collectMembers();
+      if(members.length < settings.min_team_size)
+        throw new Error(`الفريق يحتاج ${settings.min_team_size} أعضاء على الأقل.`);
+      for(const m of members){
+        if(!m.full_name || !m.email || !m.phone)
+          throw new Error('كل عضو يحتاج اسمًا وبريدًا ورقم جوال.');
+      }
+
+      const { data, error } = await supabaseClient.rpc('register_team', {
+        p_team_name: teamName, p_track_id: selTrack,
+        p_challenge_id: selChallenge, p_members: members,
+      });
+      if(error) throw new Error(error.message);
+
+      const code = (data && data[0] && data[0].team_code) || '';
+      document.getElementById('formWrap').classList.add('hide');
+      document.getElementById('doneCard').classList.remove('hide');
+      document.getElementById('doneTitle').textContent = 'تم تسجيل الفريق';
+      const codeEl = document.getElementById('doneCode');
+      codeEl.textContent = code; codeEl.classList.remove('hide');
+      document.getElementById('doneNote').innerHTML =
+        'احتفظ برمز الفريق — تدخلون فيه لبوابة الفريق لتسليم المشروع.<br>' +
+        'الدخول برمز الفريق + جوال أي عضو من الأعضاء.';
+    } else {
+      const v = id => (document.getElementById(id) || {}).value || '';
+      if(!v('sn').trim() || !v('se').trim() || !v('sp').trim())
+        throw new Error('اكتب الاسم والبريد ورقم الجوال.');
+
+      const { error } = await supabaseClient.rpc('register_individual', {
+        p_full_name: v('sn').trim(), p_email: v('se').trim(), p_phone: v('sp').trim(),
+        p_organization: v('so').trim(), p_category: v('sc'),
+        p_track_id: selTrack, p_challenge_id: selChallenge,
+      });
+      if(error) throw new Error(error.message);
+
+      document.getElementById('formWrap').classList.add('hide');
+      document.getElementById('doneCard').classList.remove('hide');
+      document.getElementById('doneTitle').textContent = 'تم تسجيلك';
+      document.getElementById('doneNote').textContent =
+        'بنتواصل معك قبل انطلاق الفعالية لضمّك لفريق في المسار اللي اخترته.';
+    }
+  } catch(e){
+    showErr(e.message || 'تعذّر إتمام التسجيل، حاول مرة أخرى.');
+    btn.disabled = false; btn.textContent = 'إتمام التسجيل';
+  }
+}
+
+init();
 </script>
 </body>
 </html>

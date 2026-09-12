@@ -2,1718 +2,749 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>لوحة التحكم | صناع الحلول الابتكارية 2026</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لوحة التحكم — صنّاع الحلول الابتكارية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
 <style>
-  :root{--navy:#0B1B3F;--navy-2:#132a5c;--gold:#14B8A6;--cream:#FBF6E9;--ink:#1c2230;--line:#e7ddc0;
-    --surface:#fff;--text:#1c2230;--text-muted:#6b7280;--table-head:#0B1B3F;--row-hover:#fffdf3;}
-  body.dark{--cream:#161b2b;--surface:#1f2438;--text:#e8e6df;--text-muted:#9aa0b4;
-    --line:#2e3450;--navy-2:#3a4a7a;--table-head:#12172a;--row-hover:#252a42;}
-  body.dark{background:var(--cream);color:var(--text);}
-  body.dark .card, body.dark table, body.dark .loginCard, body.dark .modal{background:var(--surface);border-color:var(--line);color:var(--text);}
-  body.dark th{background:var(--table-head);}
-  body.dark tr:hover td{background:var(--row-hover);}
-  body.dark input, body.dark select, body.dark textarea{background:var(--surface);color:var(--text);border-color:var(--line);}
-  body.dark .stat{background:var(--surface);border-color:var(--line);}
-  body.dark .btn-outline{background:var(--surface);color:var(--gold);border-color:var(--gold);}
-  body.dark .toolbar select, body.dark .toolbar input{background:var(--surface);color:var(--text);}
-  .theme-toggle{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;
-    padding:6px 10px;cursor:pointer;font-size:15px;}
-
-  .bulk-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:#fff9e6;border:1.5px solid var(--gold);
-    border-radius:12px;padding:10px 14px;margin-bottom:14px;font-size:13.5px;font-weight:600;color:var(--navy);}
-  body.dark .bulk-bar{background:#2a2510;}
+  :root{
+    --bg:#0E1422; --surface:#151C2E; --surface-2:#1A2236; --line:#26314A;
+    --teal:#35C9AE; --amber:#DB8A52; --slate:#46586C;
+    --text:#EAF0F8; --muted:#96A3B8;
+    --ok:#35C9AE; --bad:#E2706A;
+  }
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--cream);color:var(--ink);font-family:'IBM Plex Sans Arabic',sans-serif;}
-  h1,h2,h3,.display{font-family:'Tajawal',sans-serif;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Arabic',sans-serif;font-size:14px;}
+  h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
+  a{color:var(--teal);}
 
-  .topbar{background:var(--navy);color:#fff;padding:14px 24px;display:flex;justify-content:space-between;align-items:center;
-    position:sticky;top:0;z-index:20;}
-  .topbar h1{font-size:18px;margin:0;}
-  .topbar .right{display:flex;align-items:center;gap:14px;font-size:13px;}
-  .topbar button{background:transparent;border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;
-    padding:6px 12px;cursor:pointer;font-family:inherit;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 22px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;}
+  .topbar h1{font-size:16.5px;}
+  .topbar h1 span{color:var(--teal);font-size:12px;font-weight:500;display:block;margin-top:3px;font-family:'IBM Plex Sans Arabic';}
+  .topbar .right{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);}
 
-  main{max-width:1180px;margin:0 auto;padding:22px 18px 60px;}
+  .tabs{display:flex;gap:4px;padding:0 18px;background:var(--surface);border-bottom:1px solid var(--line);
+    overflow-x:auto;scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);
+    padding:13px 15px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:14px;cursor:pointer;white-space:nowrap;}
+  .tabs button.on{color:var(--teal);border-bottom-color:var(--teal);}
 
-  .loginCard{max-width:380px;margin:60px auto;background:#fff;border:1px solid var(--line);border-radius:16px;padding:26px;}
-  .loginCard input{width:100%;padding:12px;border:1.5px solid #dcd3b8;border-radius:10px;font-size:15px;font-family:inherit;margin-bottom:10px;}
-  .loginCard button{width:100%;background:var(--gold);color:var(--navy);border:none;border-radius:10px;
-    padding:12px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:15px;cursor:pointer;}
+  main{max-width:1180px;margin:0 auto;padding:22px 16px 80px;}
+  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:16px;}
+  .panel h3{font-size:16px;margin-bottom:4px;}
+  .panel .sub{font-size:12.5px;color:var(--muted);margin-bottom:16px;line-height:1.8;}
 
-  .hide{display:none !important;}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:18px;}
+  .stat{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:16px 18px;}
+  .stat .n{font-family:'Tajawal',sans-serif;font-size:27px;font-weight:900;color:var(--teal);}
+  .stat .l{font-size:12.5px;color:var(--muted);margin-top:3px;}
 
-  .tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1.5px solid var(--line);}
-  .tab{padding:10px 16px;cursor:pointer;font-weight:600;font-size:14px;color:#6b7280;border-bottom:3px solid transparent;}
-  .tab.active{color:var(--navy);border-color:var(--gold);}
-
-  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px;}
-  .stat{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;}
-  .stat .num{font-size:26px;font-weight:900;color:var(--navy);font-family:'Tajawal',sans-serif;}
-  .stat .lbl{font-size:12.5px;color:#6b7280;margin-top:2px;}
-
-  .toolbar{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:14px;align-items:center;}
-  .toolbar input, .toolbar select{padding:10px 12px;border:1.5px solid #dcd3b8;border-radius:10px;font-family:inherit;font-size:14px;background:#fff;}
-  .toolbar input[type=search]{flex:1;min-width:180px;}
-  .btn{border:none;border-radius:10px;padding:10px 14px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
-  .btn-gold{background:var(--gold);color:var(--navy);}
-  .btn-navy{background:var(--navy);color:#fff;}
-  .btn-outline{background:#fff;border:1.5px solid var(--navy);color:var(--navy);}
-  .btn-danger{background:#fdecec;color:#9c2b2b;}
-  input[type=file]{display:none;}
-
-  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;}
-  .card h3{margin:0 0 12px;font-size:16px;color:var(--navy);}
-
-  table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;
-    box-shadow:0 6px 20px rgba(11,27,63,.05);}
-  th, td{padding:10px 12px;text-align:right;font-size:13.5px;border-bottom:1px solid #f0ead4;}
-  th{background:var(--navy);color:#fff;font-weight:600;}
-  tr:hover td{background:#fffdf3;}
-  .pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11.5px;font-weight:600;}
-  .pill.on{background:#e8f6ec;color:#1e7a3f;}
-  .pill.off{background:#f1f1f1;color:#9ca3af;}
-  .day-btns{display:flex;gap:4px;justify-content:center;}
-  .day-btn{border:1.5px solid #dcd3b8;background:#fff;color:#9ca3af;border-radius:7px;
-    width:26px;height:24px;font-size:12px;font-weight:700;cursor:pointer;line-height:1;}
-  .day-btn.present.active{background:#1e7a3f;border-color:#1e7a3f;color:#fff;}
-  .day-btn.absent.active{background:#c0392b;border-color:#c0392b;color:#fff;}
-  .day-btn:disabled{opacity:.4;cursor:not-allowed;}
-
-  .activation-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0ead4;flex-wrap:wrap;}
-  .activation-row:last-child{border-bottom:none;}
-  .activation-row .track-label{flex:1;min-width:160px;font-weight:600;font-size:13.5px;color:var(--navy);}
-  .activation-btn{border:1.5px solid #dcd3b8;background:#fff;color:#6b7280;border-radius:8px;
-    padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;}
-  .activation-btn.on{background:var(--gold);border-color:var(--gold);color:var(--navy);}
-  .trackreg-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f0ead4;flex-wrap:wrap;}
-  .trackreg-row:last-child{border-bottom:none;}
-  .trackreg-row .track-label{flex:1;min-width:150px;font-weight:600;font-size:13.5px;color:var(--navy);}
-  .trackreg-row .count-badge{font-size:12.5px;color:#6b7280;min-width:70px;}
-  .trackreg-row input[type=number]{width:70px;padding:6px 8px;border:1.5px solid #dcd3b8;border-radius:8px;font-family:inherit;font-size:13px;}
-  .toggle-btn{border:1.5px solid #dcd3b8;background:#fff;color:#6b7280;border-radius:8px;
-    padding:6px 12px;font-size:12.5px;font-weight:600;cursor:pointer;}
-  .toggle-btn.open{background:#e8f6ec;border-color:#1e7a3f;color:#1e7a3f;}
-  .toggle-btn.closed{background:#fdecec;border-color:#c0392b;color:#c0392b;}
-  .cert-pill{background:var(--gold);color:var(--navy);}
-  .small-btn{border:none;border-radius:7px;padding:5px 9px;font-size:12px;cursor:pointer;font-family:inherit;margin-left:4px;}
+  table{width:100%;border-collapse:collapse;}
+  th,td{padding:10px 11px;text-align:right;font-size:13px;border-bottom:1px solid var(--line);vertical-align:middle;}
+  th{color:var(--muted);font-weight:600;font-size:12px;white-space:nowrap;}
+  tbody tr:hover{background:var(--surface-2);}
   .table-wrap{overflow-x:auto;}
 
-  .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  @media(max-width:760px){.charts-grid{grid-template-columns:1fr;}}
+  input,select,textarea{background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:9px 11px;font-family:inherit;font-size:13.5px;width:100%;}
+  input:focus,select:focus,textarea:focus{outline:1.5px solid var(--teal);border-color:var(--teal);}
+  label{display:block;font-size:12.5px;color:var(--muted);margin:12px 0 5px;}
+  .row{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;}
 
-  @media(max-width:640px){
-    .btn, .small-btn, .activation-btn, .toggle-btn, button{min-height:38px;}
-    .small-btn{padding:8px 12px;font-size:13px;}
-    input, select, textarea{min-height:42px;font-size:16px;} /* 16px يمنع التكبير التلقائي بـ iOS */
-    th, td{padding:12px 10px;font-size:13px;}
-    .toolbar{gap:8px;}
-    .toolbar input, .toolbar select, .toolbar button{width:100%;}
-    input[type=checkbox]{width:20px;height:20px;}
-  }
+  button.b{border:none;border-radius:9px;padding:10px 16px;font-family:'Tajawal',sans-serif;
+    font-weight:700;font-size:13.5px;cursor:pointer;}
+  .b-teal{background:var(--teal);color:#0E1422;}
+  .b-ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
+  .b-danger{background:transparent;border:1px solid #6b3a37;color:var(--bad);}
+  .b-sm{padding:6px 11px;font-size:12.5px;}
 
-  /* Modal */
-  .modal-bg{position:fixed;inset:0;background:rgba(11,27,63,.45);display:flex;align-items:center;justify-content:center;z-index:50;}
-  .modal{background:#fff;border-radius:16px;padding:24px;max-width:420px;width:92%;}
-  .modal h3{margin-top:0;color:var(--navy);}
-  .modal label{display:block;font-size:13px;font-weight:600;margin:10px 0 4px;color:var(--navy-2);}
-  .modal input, .modal select{width:100%;padding:10px;border:1.5px solid #dcd3b8;border-radius:10px;font-family:inherit;font-size:14px;}
-  .modal .actions{display:flex;gap:8px;margin-top:18px;}
-  .modal .actions button{flex:1;}
-  .settings-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+  .pill{display:inline-block;padding:3px 11px;border-radius:999px;font-size:11.5px;font-weight:600;}
+  .pill.teal{background:rgba(53,201,174,.14);color:var(--teal);}
+  .pill.amber{background:rgba(219,138,82,.16);color:var(--amber);}
+  .pill.grey{background:var(--surface-2);color:var(--muted);}
 
-  .rte-toolbar{display:flex;gap:6px;margin-top:6px;}
-  .rte-toolbar button, .rte-toolbar select{border:1.5px solid #dcd3b8;background:#fff;border-radius:8px;
-    padding:6px 10px;font-size:13px;cursor:pointer;font-family:inherit;}
-  .rte-toolbar button:hover{background:#fffdf3;}
-  .rte-editor{min-height:110px;border:1.5px solid #dcd3b8;border-radius:10px;padding:10px 12px;
-    margin-top:6px;font-size:14px;line-height:1.7;outline:none;}
-  .rte-editor:empty:before{content:attr(data-placeholder);color:#9ca3af;}
-  .rte-editor ul{margin:6px 0;padding-inline-start:22px;}
+  .att{display:inline-flex;gap:4px;}
+  .att button{width:30px;height:27px;border-radius:7px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:12px;font-weight:700;}
+  .att button.yes.on{background:var(--ok);border-color:var(--ok);color:#0E1422;}
+  .att button.no.on{background:var(--bad);border-color:var(--bad);color:#fff;}
 
-  .ann-preview-shell{max-width:420px;margin:0 auto;border:1px solid var(--line);border-radius:14px;
-    overflow:hidden;box-shadow:0 6px 18px rgba(11,27,63,.08);}
-  .ann-preview-banner{background:var(--navy);padding:14px 18px;}
-  .ann-preview-body{background:#fff;padding:18px;}
-  body.dark .ann-preview-body{background:var(--surface);color:var(--text);}
+  .toggle{display:flex;justify-content:space-between;align-items:center;gap:14px;
+    padding:13px 0;border-bottom:1px solid var(--line);}
+  .toggle:last-child{border-bottom:none;}
+  .toggle .t{font-size:13.5px;font-weight:600;}
+  .toggle .d{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.7;}
+  .sw{width:46px;height:26px;border-radius:999px;background:var(--surface-2);border:1px solid var(--line);
+    position:relative;cursor:pointer;flex-shrink:0;}
+  .sw::after{content:'';position:absolute;top:2px;right:2px;width:20px;height:20px;border-radius:50%;
+    background:var(--muted);transition:.16s;}
+  .sw.on{background:rgba(53,201,174,.22);border-color:var(--teal);}
+  .sw.on::after{right:22px;background:var(--teal);}
 
-  .tpl-preview{margin-top:8px;padding:12px 14px;border:1.5px dashed var(--line);border-radius:10px;
-    background:#fffdf7;font-size:13px;color:#3a3f4b;line-height:1.7;}
-  .tpl-preview .tpl-preview-label{font-size:10.5px;color:#9ca3af;font-weight:700;margin-bottom:6px;}
-  body.dark .tpl-preview{background:var(--surface);}
-  .settings-row input{width:90px;}
+  .hide{display:none !important;}
+  .empty{text-align:center;color:var(--muted);padding:36px 18px;font-size:13.5px;line-height:1.9;}
+  .msg{font-size:13px;padding:10px 12px;border-radius:9px;margin-top:12px;display:none;line-height:1.75;}
+  .msg.err{background:rgba(226,112,106,.12);color:var(--bad);display:block;}
+  .msg.ok{background:rgba(53,201,174,.12);color:var(--teal);display:block;}
 
-  .toast-container{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);z-index:200;
-    display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;}
-  .toast{background:var(--navy);color:#fff;padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;
-    box-shadow:0 8px 24px rgba(0,0,0,.2);opacity:0;transform:translateY(10px);transition:opacity .25s, transform .25s;
-    max-width:90vw;text-align:center;}
-  .toast.show{opacity:1;transform:translateY(0);}
-  .toast.error{background:#c0392b;}
-  .toast.success{background:#1e7a3f;}
-  .toast.info{background:var(--navy);}
+  .login{max-width:370px;margin:80px auto;background:var(--surface);border:1px solid var(--line);
+    border-radius:16px;padding:28px;}
+  .login h2{font-size:19px;margin-bottom:6px;}
+  .login .sub{font-size:12.5px;color:var(--muted);margin-bottom:8px;}
+
+  .assign-grid{display:grid;gap:10px;}
+  .assign-judge{border:1px solid var(--line);border-radius:12px;padding:15px;background:var(--surface-2);}
+  .assign-judge .jn{font-family:'Tajawal',sans-serif;font-weight:700;font-size:14.5px;}
+  .assign-teams{display:flex;flex-wrap:wrap;gap:7px;margin-top:11px;}
+  .tchip{border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:12.5px;
+    cursor:pointer;color:var(--muted);background:var(--surface);user-select:none;}
+  .tchip.on{background:rgba(53,201,174,.16);border-color:var(--teal);color:var(--teal);}
+
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--teal);color:#0E1422;
+    padding:11px 22px;border-radius:999px;font-size:13.5px;font-weight:700;opacity:0;transition:.2s;
+    pointer-events:none;z-index:20;font-family:'Tajawal',sans-serif;}
+  .toast.show{opacity:1;}
+  .bar{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin-top:7px;}
+  .bar i{display:block;height:100%;background:var(--teal);}
 </style>
 </head>
 <body>
 
-<div class="loginCard" id="loginCard">
-  <h2 style="margin-top:0;">دخول فريق الإدارة</h2>
-  <input type="email" id="loginEmail" placeholder="البريد الإلكتروني" dir="ltr" style="text-align:right;">
-  <input type="password" id="loginPass" placeholder="كلمة المرور">
-  <button onclick="login()">دخول</button>
-  <div id="loginErr" style="color:#9c2b2b;font-size:13px;margin-top:8px;"></div>
+<div class="login" id="loginCard">
+  <h2>لوحة التحكم</h2>
+  <div class="sub">صنّاع الحلول الابتكارية</div>
+  <label for="le">البريد الإلكتروني</label>
+  <input type="email" id="le" dir="ltr" style="text-align:right;">
+  <label for="lp">كلمة المرور</label>
+  <input type="password" id="lp">
+  <button class="b b-teal" style="width:100%;margin-top:18px;" onclick="login()">دخول</button>
+  <div class="msg" id="loginMsg"></div>
 </div>
 
 <div id="app" class="hide">
   <div class="topbar">
-    <h1>لوحة تحكم صناع الحلول الابتكارية 2026</h1>
-    <div class="right">
-      <a href="report.html" style="text-decoration:none;"><button style="border:1px solid rgba(255,255,255,.4);background:transparent;color:#fff;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:inherit;">📊 التقرير الشامل</button></a>
-      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="الوضع الليلي">🌙</button>
-      <span id="whoami" dir="ltr"></span>
-      <button onclick="logout()">تسجيل الخروج</button>
-    </div>
+    <h1>صنّاع الحلول الابتكارية<span>جامعة القصيم × وزارة الصناعة والثروة المعدنية</span></h1>
+    <div class="right"><span id="whoami" dir="ltr"></span>
+      <button class="b b-ghost b-sm" onclick="logout()">خروج</button></div>
   </div>
 
+  <div class="tabs" id="tabs"></div>
+
   <main>
-    <div class="tabs">
-      <div class="tab active" data-tab="participants" onclick="switchTab('participants')">المشاركون</div>
-      <div class="tab" data-tab="analytics" onclick="switchTab('analytics')">التحليلات</div>
-      <div class="tab" data-tab="announcements" onclick="switchTab('announcements')">التحديثات والرسائل</div>
-      <div class="tab" data-tab="team" onclick="switchTab('team')">فريق الميسّرين</div>
-      <div class="tab" data-tab="auditlog" onclick="switchTab('auditlog')">سجل النشاط</div>
-      <div class="tab" data-tab="settings" onclick="switchTab('settings')">الإعدادات</div>
-    </div>
-
-
-    <!-- تبويب المشاركون -->
-    <div id="tab-participants">
-      <div class="card" id="todayCard">
-        <h3>📌 نظرة اليوم</h3>
-        <div class="stats" id="todayStats"></div>
+    <!-- نظرة عامة -->
+    <section id="tab-overview">
+      <div class="stats" id="statsBox"></div>
+      <div class="panel">
+        <h3>تقدّم التحكيم</h3>
+        <div class="sub">نسبة التقييمات المعتمدة من إجمالي الإسنادات.</div>
+        <div id="judgeProgress"></div>
       </div>
+    </section>
 
-      <div class="stats" id="statsRow"></div>
-
-      <div class="card" id="dayActivationCard">
-        <h3>تفعيل يوم التحضير لكل مسار</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          الميسّر لا يقدر يسجّل حضور إلا لليوم المفعّل هنا. فعّل اليوم الصحيح قبل بداية كل جلسة.
-        </p>
-        <div id="dayActivationRows"></div>
-      </div>
-
-      <div class="card" id="closingDayCard">
-        <h3>🎓 اليوم الختامي (فعالية واحدة لكل البرنامج)</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          حفل ختامي واحد لكل المشاركين بغض النظر عن مسارهم. حضوره صار شرطًا إضافيًا لإصدار الشهادة.
-        </p>
-        <div class="settings-row">
-          <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--navy-2);margin:0;cursor:pointer;">
-            <input type="checkbox" id="closingDayActiveToggle" style="width:18px;height:18px;">
-            تفعيل تسجيل الحضور لليوم الختامي الآن
-          </label>
+    <!-- الفرق -->
+    <section id="tab-teams" class="hide">
+      <div class="panel">
+        <h3>الفرق والمشاريع</h3>
+        <div class="sub">كل فريق مسجَّل، وحالة تسليمه.</div>
+        <div class="row" style="margin-bottom:14px;">
+          <input type="search" id="teamSearch" placeholder="بحث بالاسم أو الرمز..." oninput="renderTeams()">
+          <select id="teamTrackFilter" onchange="renderTeams()"></select>
+          <button class="b b-ghost" onclick="exportTeams()">تصدير Excel</button>
         </div>
-        <label>تاريخ اليوم الختامي (اختياري، للعرض فقط)</label>
-        <input type="date" id="closingDayDate">
-        <button class="btn btn-navy" style="margin-top:12px;" onclick="saveClosingDaySettings()">حفظ</button>
-        <div class="msg" id="closingDayMsg" style="margin-top:10px;font-size:13px;"></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الرمز</th><th>الفريق</th><th>المسار</th><th>التحدي</th>
+            <th>الأعضاء</th><th>المشروع</th><th>الحالة</th></tr></thead>
+          <tbody id="teamsBody"></tbody>
+        </table></div>
       </div>
+    </section>
 
-      <div class="card" id="trackRegControlCard">
-        <h3>التحكم بالتسجيل لكل مسار</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          حدّد السعة القصوى لكل مسار (يُغلق تلقائيًا عند الاكتمال)، أو أغلقه يدويًا بغض النظر عن السعة.
-        </p>
-        <div id="trackRegRows"></div>
-      </div>
-
-      <div class="toolbar">
-        <input type="search" id="search" placeholder="بحث بالاسم أو البريد... (Ctrl+K)" oninput="renderTable()">
-        <select id="trackFilter" onchange="renderTable()"><option value="">كل المسارات</option></select>
-        <button class="btn btn-outline" onclick="document.getElementById('fileImport').click()">استيراد Excel</button>
-        <input type="file" id="fileImport" accept=".xlsx,.xls,.csv" onchange="importExcel(event)">
-        <button class="btn btn-navy" onclick="exportExcel()">تصدير Excel</button>
-        <button class="btn btn-outline" onclick="printQRCodes()">طباعة رموز QR</button>
-        <button class="btn btn-gold" onclick="issueSelectedCertificates()">إصدار شهادات للمؤهّلين</button>
-      </div>
-
-      <div class="bulk-bar hide" id="bulkBar">
-        <span id="bulkCount">0 محدد</span>
-        <button class="btn btn-gold" style="padding:6px 12px;font-size:13px;" onclick="bulkIssueCertificates()">إصدار شهادات للمحددين المؤهّلين</button>
-        <button class="btn btn-outline" style="padding:6px 12px;font-size:13px;" onclick="bulkExportSelected()">تصدير المحددين</button>
-        <button class="btn btn-danger" style="padding:6px 12px;font-size:13px;" onclick="bulkDeleteSelected()">حذف المحددين</button>
-        <button class="btn btn-outline" style="padding:6px 12px;font-size:13px;" onclick="clearSelection()">إلغاء التحديد</button>
-      </div>
-
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)"></th>
-              <th>#</th><th>الاسم</th><th>البريد</th><th>الجوال</th><th>المسار</th>
-              <th>1</th><th>2</th><th>3</th><th>🎓</th><th>الشهادة</th><th>إجراءات</th>
-            </tr>
-          </thead>
-          <tbody id="tbody"></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- تبويب التحليلات -->
-    <div id="tab-analytics" class="hide">
-      <div class="card" id="surveyCard">
-        <h3>نتائج استبيان التقييم</h3>
-        <div id="surveyStats" class="stats"></div>
-        <button class="btn btn-outline" style="margin-top:12px;" onclick="exportEvaluationNotes()">تصدير ملاحظات الاستبيان (Excel)</button>
-      </div>
-
-      <div class="card">
-        <h3>مقارنة المسارات</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>المسار</th><th>مسجلون</th><th>حضور كامل</th><th>شهادات صادرة</th><th>متوسط التقييم</th></tr></thead>
-            <tbody id="compareTbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="charts-grid">
-        <div class="card"><h3>عدد المسجلين لكل مسار</h3><canvas id="chartTracks"></canvas></div>
-        <div class="card"><h3>نسبة الحضور المكتمل (يوم 1/2/3) لكل مسار</h3><canvas id="chartAttendance"></canvas></div>
-        <div class="card"><h3>نسبة المؤهّلين للشهادة لكل مسار</h3><canvas id="chartCert"></canvas></div>
-        <div class="card"><h3>أكثر الجهات تسجيلًا</h3><canvas id="chartOrgs"></canvas></div>
-      </div>
-    </div>
-
-    <!-- تبويب فريق الميسّرين -->
-    <!-- تبويب التحديثات والرسائل -->
-    <div id="tab-announcements" class="hide">
-      <div class="card">
-        <h3>إرسال تحديث/رسالة جديدة</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          تظهر الرسالة لكل المشاركين المستهدفين فور دخولهم بوابتهم (participant.html). اختر مسارًا معيّنًا أو اتركه "كل المسارات" لتصل للجميع.
-        </p>
-        <label>المسار المستهدف</label>
-        <select id="annTrack"><option value="">كل المسارات (رسالة عامة)</option></select>
-        <label>عنوان الرسالة</label>
-        <input type="text" id="annTitle" placeholder="مثال: تذكير بموعد اليوم الثاني">
-
-        <label>نص الرسالة</label>
-        <div class="rte-toolbar">
-          <button type="button" onclick="rteCmd('bold')" title="غامق"><b>B</b></button>
-          <select onchange="rteFontSize(this.value)" title="حجم الخط">
-            <option value="3">حجم عادي</option>
-            <option value="5">حجم كبير</option>
-            <option value="2">حجم صغير</option>
+    <!-- المشاركون -->
+    <section id="tab-people" class="hide">
+      <div class="panel">
+        <h3>المشاركون والحضور</h3>
+        <div class="sub">سجّل حضور اليومين وأصدر الشهادات.</div>
+        <div class="row" style="margin-bottom:14px;">
+          <input type="search" id="peopleSearch" placeholder="بحث بالاسم أو البريد..." oninput="renderPeople()">
+          <select id="peopleFilter" onchange="renderPeople()">
+            <option value="">كل المشاركين</option>
+            <option value="noteam">بدون فريق</option>
+            <option value="nocert">مؤهل ولم تُصدر شهادته</option>
           </select>
-          <button type="button" onclick="rteCmd('insertUnorderedList')" title="قائمة نقطية">•</button>
+          <button class="b b-ghost" onclick="exportPeople()">تصدير Excel</button>
+          <button class="b b-teal" onclick="issueAllCerts()">إصدار الشهادات المؤهلة</button>
         </div>
-        <div id="annBodyEditor" class="rte-editor" contenteditable="true"
-          data-placeholder="اكتب تفاصيل التحديث أو المتطلب هنا..." oninput="updateAnnPreview()"></div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الاسم</th><th>البريد</th><th>الجوال</th><th>الفريق</th>
+            <th>اليوم 1</th><th>اليوم 2</th><th>الشهادة</th></tr></thead>
+          <tbody id="peopleBody"></tbody>
+        </table></div>
+      </div>
+    </section>
 
-        <button class="btn btn-gold" style="margin-top:12px;" onclick="sendAnnouncement()">إرسال التحديث</button>
-        <div class="msg" id="annMsg" style="margin-top:10px;font-size:13px;"></div>
+    <!-- الاستيراد -->
+    <section id="tab-import" class="hide">
+      <div class="panel">
+        <h3>استيراد الفرق والمشاريع</h3>
+        <div class="sub">
+          ارفع ملف Excel بأعمدة: اسم الفريق · المسار · التحدي · عنوان المشروع · اسم العضو · البريد · الجوال · الجهة · الفئة.<br>
+          كرّر صفًا لكل عضو بنفس اسم الفريق. أول عضو في كل فريق يُعتبر القائد.
+        </div>
+        <button class="b b-ghost" onclick="downloadTemplate()">تنزيل قالب فارغ</button>
+        <label for="importFile" style="margin-top:16px;">ملف Excel</label>
+        <input type="file" id="importFile" accept=".xlsx,.xls,.csv" onchange="previewImport()">
+        <div id="importPreview" style="margin-top:16px;"></div>
+        <div class="msg" id="importMsg"></div>
+      </div>
+    </section>
+
+    <!-- التحكيم -->
+    <section id="tab-judging" class="hide">
+      <div class="panel">
+        <h3>المحكّمون</h3>
+        <div class="sub">المحكّم يدخل ببريده وجواله ثم يختار كلمة مروره بنفسه.</div>
+        <div class="row">
+          <input type="text" id="jName" placeholder="الاسم الكامل">
+          <input type="email" id="jEmail" placeholder="البريد الإلكتروني" dir="ltr" style="text-align:right;">
+          <input type="tel" id="jPhone" placeholder="رقم الجوال" dir="ltr" style="text-align:right;">
+          <input type="text" id="jOrg" placeholder="الجهة (اختياري)">
+        </div>
+        <button class="b b-teal" style="margin-top:12px;" onclick="addJudge()">إضافة محكّم</button>
+        <div class="msg" id="judgeMsg"></div>
+        <div class="table-wrap" style="margin-top:16px;"><table>
+          <thead><tr><th>الاسم</th><th>البريد</th><th>الجوال</th><th>كلمة المرور</th><th>مشاريعه</th><th></th></tr></thead>
+          <tbody id="judgesBody"></tbody>
+        </table></div>
       </div>
 
-      <div class="card">
-        <h3>معاينة الرسالة</h3>
-        <p style="font-size:12.5px;color:#6b7280;margin-top:-6px;">هذا الشكل التقريبي اللي بيوصل المشارك بالبريد وبوابته</p>
-        <div class="ann-preview-shell">
-          <div class="ann-preview-banner">
-            <div style="color:#14B8A6;font-size:18px;font-weight:900;">صناع الحلول الابتكارية</div>
-            <div style="color:#14B8A6;font-size:11px;font-weight:700;">Innovative Solutions Makers</div>
-          </div>
-          <div class="ann-preview-body">
-            <div style="font-weight:800;color:var(--navy);font-size:15px;margin-bottom:8px;" id="previewTitle">📢 عنوان الرسالة</div>
-            <div id="previewBody" style="font-size:13.5px;color:#3a3f4b;line-height:1.8;">اكتب نصًا لترى المعاينة هنا...</div>
-          </div>
+      <div class="panel">
+        <h3>معايير التقييم</h3>
+        <div class="sub">مجموع الأوزان يفضّل أن يساوي 100%.</div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>المعيار</th><th>التوضيح</th><th>الوزن %</th><th>أعلى درجة</th><th></th></tr></thead>
+          <tbody id="critBody"></tbody>
+        </table></div>
+        <div class="row" style="margin-top:14px;">
+          <input type="text" id="cName" placeholder="اسم المعيار">
+          <input type="text" id="cHint" placeholder="توضيح مختصر">
+          <input type="number" id="cWeight" placeholder="الوزن %" min="1" max="100" value="25">
+          <input type="number" id="cMax" placeholder="أعلى درجة" min="1" max="10" value="5">
         </div>
+        <button class="b b-teal" style="margin-top:12px;" onclick="addCriterion()">إضافة معيار</button>
       </div>
 
-      <div class="card">
-        <h3>التحديثات المرسَلة سابقًا</h3>
-        <div id="annList"></div>
+      <div class="panel">
+        <h3>إسناد المشاريع</h3>
+        <div class="sub">اضغط على اسم الفريق لإسناده أو إلغاء إسناده للمحكّم.</div>
+        <button class="b b-ghost" onclick="assignAll()">إسناد كل الفرق لكل المحكّمين</button>
+        <div class="assign-grid" id="assignBox" style="margin-top:16px;"></div>
       </div>
+    </section>
 
-      <div class="card">
-        <h3>ملفات ومواد المسار</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          ارفع ملفًا (عرض تقديمي، PDF، أي ملف) لمسار معيّن، ويظهر للمشاركين المسجَّلين في نفس المسار كرابط تنزيل مباشر في بوابتهم.
-        </p>
-        <label>المسار</label>
-        <select id="matTrack"></select>
-        <label style="display:inline-block;background:#fff;border:1.5px solid #dcd3b8;border-radius:8px;padding:10px 14px;
-          cursor:pointer;font-family:inherit;font-size:14px;margin-top:6px;" for="matFile" id="matFileLabel">📎 اختر الملف</label>
-        <input type="file" id="matFile" onchange="document.getElementById('matFileLabel').textContent = this.files[0] ? '📎 ' + this.files[0].name : '📎 اختر الملف';">
-        <button class="btn btn-gold" style="margin-top:12px;" onclick="uploadTrackMaterial()">رفع الملف</button>
-        <div class="msg" id="matMsg" style="margin-top:10px;font-size:13px;"></div>
+    <!-- النتائج -->
+    <section id="tab-results" class="hide">
+      <div class="panel">
+        <h3>النتائج</h3>
+        <div class="sub">المتوسط الموزون لدرجات المحكّمين المعتمَدة، مرتّبًا داخل كل مسار.</div>
+        <button class="b b-ghost" onclick="exportResults()">تصدير Excel</button>
+        <div id="resultsBox" style="margin-top:16px;"></div>
       </div>
+    </section>
 
-      <div class="card">
-        <h3>الملفات المرفوعة</h3>
-        <div id="matList"></div>
+    <!-- الإعدادات -->
+    <section id="tab-settings" class="hide">
+      <div class="panel">
+        <h3>مراحل البرنامج</h3>
+        <div class="sub">تحكّم بما هو مفتوح للمشاركين الآن.</div>
+        <div id="togglesBox"></div>
       </div>
-    </div>
-
-    <div id="tab-team" class="hide">
-      <div class="card">
-        <h3>إضافة ميسّر</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          أنشئ له حسابًا أولًا من Supabase (Authentication → Users)، ثم أدخل بريده هنا واختر مسار أو أكثر يشرف عليها.
-        </p>
-        <div class="settings-row">
-          <input type="email" id="facEmail" placeholder="بريد الميسّر الإلكتروني" dir="ltr" style="flex:1;min-width:200px;text-align:right;">
-        </div>
-        <label style="display:block;font-size:13px;font-weight:600;margin:10px 0 6px;color:var(--navy-2);">المسارات المُسنَدة (يمكن اختيار أكثر من مسار)</label>
-        <div id="facTracksChecklist" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
-        <div class="settings-row" style="margin-top:12px;">
-          <input type="text" id="facPassword" placeholder="كلمة المرور" style="flex:1;min-width:160px;">
-          <button class="btn btn-outline" onclick="document.getElementById('facPassword').value = genPassword()">توليد</button>
-          <button class="btn btn-gold" onclick="addFacilitator()">إنشاء الحساب وإضافته</button>
-        </div>
-        <div class="msg" id="facMsg" style="margin-top:10px;font-size:13px;"></div>
+      <div class="panel">
+        <h3>التواريخ والحدود</h3>
+        <div class="row" id="settingsFields"></div>
+        <label for="closedMsg">رسالة إغلاق التسجيل</label>
+        <textarea id="closedMsg" rows="2"></textarea>
+        <button class="b b-teal" style="margin-top:14px;" onclick="saveSettings()">حفظ</button>
+        <div class="msg" id="setMsg"></div>
       </div>
-      <div class="card">
-        <h3>الميسّرون الحاليون</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>الاسم/المعرّف</th><th>المسار</th><th></th></tr></thead>
-            <tbody id="facTbody"></tbody>
-          </table>
-        </div>
-      </div>
-
-      <div class="card">
-        <h3>إضافة مسؤول (صلاحية مدير كاملة)</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          أنشئ له حسابًا أولًا من Supabase (Authentication → Users)، ثم أدخل بريده هنا.
-        </p>
-        <div class="settings-row">
-          <input type="email" id="adminEmail" placeholder="بريد المسؤول الإلكتروني" dir="ltr" style="flex:1;min-width:200px;text-align:right;">
-        </div>
-        <div class="settings-row" style="margin-top:8px;">
-          <input type="text" id="adminPassword" placeholder="كلمة المرور" style="flex:1;min-width:160px;">
-          <button class="btn btn-outline" onclick="document.getElementById('adminPassword').value = genPassword()">توليد</button>
-          <button class="btn btn-gold" onclick="addAdmin()">إنشاء الحساب وإضافته</button>
-        </div>
-        <div class="msg" id="adminMsg" style="margin-top:10px;font-size:13px;"></div>
-      </div>
-      <div class="card">
-        <h3>المسؤولون الحاليون</h3>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>الاسم/المعرّف</th><th></th></tr></thead>
-            <tbody id="adminTbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- تبويب الإعدادات -->
-    <div id="tab-auditlog" class="hide">
-      <div class="card">
-        <h3>سجل النشاط</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          آخر التعديلات على الحضور والشهادات، مين سواها ومتى — للمتابعة لو أكثر من مسؤول أو ميسّر يشتغلون بالتوازي.
-        </p>
-        <div style="overflow-x:auto;">
-          <table>
-            <thead><tr><th>الوقت</th><th>المشارك</th><th>التغيير</th><th>بواسطة</th></tr></thead>
-            <tbody id="auditLogTbody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <div id="tab-settings" class="hide">
-      <div class="card">
-        <h3>معيار إصدار الشهادة</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          الحد الأدنى لعدد أيام الحضور (من أصل 3) اللازم لاعتبار المشارك مؤهّلًا لإصدار الشهادة.
-        </p>
-        <div class="settings-row">
-          <input type="number" id="minDaysInput" min="0" max="3">
-          <span>من أصل 3 أيام</span>
-          <button class="btn btn-navy" onclick="saveSettings()">حفظ</button>
-        </div>
-        <div class="msg" id="settingsMsg" style="margin-top:10px;font-size:13px;"></div>
-      </div>
-
-      <div class="card">
-        <h3>التحكم بالتسجيل</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          تحكّم فوري بفتح/إغلاق التسجيل، أو حدّد موعد فتح وإغلاق تلقائي (اتركهما فارغين لتجاهل الجدولة).
-        </p>
-
-        <div class="settings-row" style="margin-top:6px;">
-          <label style="display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:var(--navy-2);margin:0;cursor:pointer;">
-            <input type="checkbox" id="regOpenToggle" style="width:18px;height:18px;">
-            التسجيل مفتوح الآن
-          </label>
-        </div>
-
-        <label>موعد فتح التسجيل تلقائيًا (اختياري)</label>
-        <input type="datetime-local" id="regOpensAt">
-
-        <label>موعد إغلاق التسجيل تلقائيًا (اختياري)</label>
-        <input type="datetime-local" id="regClosesAt">
-
-        <label>رسالة الإغلاق المخصصة (اختياري)</label>
-        <textarea id="regClosedMessage" rows="3" placeholder="مثال: انتهى التسجيل لهذا العام، نشوفكم في صناع الحلول الابتكارية القادم بإذن الله!"
-          style="width:100%;padding:10px;border:1.5px solid #dcd3b8;border-radius:10px;font-family:inherit;font-size:14px;resize:vertical;"></textarea>
-        <p style="font-size:12px;color:#6b7280;margin-top:4px;">اتركها فارغة لاستخدام الرسائل الافتراضية المناسبة لكل حالة (مغلق يدويًا / لم يبدأ بعد / انتهى الوقت).</p>
-
-        <button class="btn btn-navy" style="margin-top:12px;" onclick="saveRegistrationControl()">حفظ إعدادات التسجيل</button>
-        <div class="msg" id="regSettingsMsg" style="margin-top:10px;font-size:13px;"></div>
-      </div>
-
-      <div class="card">
-        <h3>قوالب الرسائل الإلكترونية</h3>
-        <p style="font-size:13px;color:#6b7280;margin-top:-6px;">
-          عدّل نص أي رسالة تُرسل تلقائيًا للمشاركين. استخدم الكلمات بين قوسين ({{ }}) وتُستبدل تلقائيًا ببيانات كل مشارك.
-        </p>
-
-        <h4 style="margin:16px 0 4px;font-size:14px;color:var(--navy);">📧 رسالة تأكيد التسجيل</h4>
-        <p style="font-size:11.5px;color:#9ca3af;margin:0 0 6px;">المتاح: {{name}} الاسم، {{track}} المسار، {{dates}} التواريخ</p>
-        <label>عنوان الرسالة</label>
-        <input type="text" id="confirmSubject">
-        <label>نص الرسالة</label>
-        <div class="rte-toolbar">
-          <button type="button" onclick="rteCmd('bold','confirmBody')" title="غامق"><b>B</b></button>
-          <select onchange="rteFontSize(this.value,'confirmBody')" title="حجم الخط">
-            <option value="3">حجم عادي</option>
-            <option value="5">حجم كبير</option>
-            <option value="2">حجم صغير</option>
-          </select>
-          <button type="button" onclick="rteCmd('insertUnorderedList','confirmBody')" title="قائمة نقطية">•</button>
-        </div>
-        <div id="confirmBody" class="rte-editor" contenteditable="true"
-          data-placeholder="اكتب نص رسالة التأكيد هنا..." oninput="updateTemplatePreview('confirm')"></div>
-        <div class="tpl-preview" id="confirmPreview"></div>
-
-        <h4 style="margin:20px 0 4px;font-size:14px;color:var(--navy);">⏰ رسالة التذكير اليومي (قبل بداية المسار بيوم)</h4>
-        <p style="font-size:11.5px;color:#9ca3af;margin:0 0 6px;">المتاح: {{track}} المسار</p>
-        <label>عنوان الرسالة</label>
-        <input type="text" id="reminderSubject">
-        <label>نص الرسالة</label>
-        <div class="rte-toolbar">
-          <button type="button" onclick="rteCmd('bold','reminderBody')" title="غامق"><b>B</b></button>
-          <select onchange="rteFontSize(this.value,'reminderBody')" title="حجم الخط">
-            <option value="3">حجم عادي</option>
-            <option value="5">حجم كبير</option>
-            <option value="2">حجم صغير</option>
-          </select>
-          <button type="button" onclick="rteCmd('insertUnorderedList','reminderBody')" title="قائمة نقطية">•</button>
-        </div>
-        <div id="reminderBody" class="rte-editor" contenteditable="true"
-          data-placeholder="اكتب نص رسالة التذكير هنا..." oninput="updateTemplatePreview('reminder')"></div>
-        <div class="tpl-preview" id="reminderPreview"></div>
-
-        <p style="font-size:11.5px;color:#9ca3af;margin-top:10px;">
-          ملاحظة: رسالة "التحديثات" تُكتب مباشرة من تبويب "التحديثات والرسائل" في كل مرة، فما تحتاج قالبًا ثابتًا هنا.
-        </p>
-
-        <button class="btn btn-navy" style="margin-top:12px;" onclick="saveEmailTemplates()">حفظ القوالب</button>
-        <div class="msg" id="templatesMsg" style="margin-top:10px;font-size:13px;"></div>
-      </div>
-    </div>
+    </section>
   </main>
 </div>
 
-<!-- Modal تعديل مشارك -->
-<div class="modal-bg hide" id="editModalBg">
-  <div class="modal">
-    <h3>تعديل بيانات المشارك</h3>
-    <label>الاسم</label><input type="text" id="editName">
-    <label>البريد</label><input type="email" id="editEmail" dir="ltr" style="text-align:right;">
-    <label>الجوال</label><input type="text" id="editPhone" dir="ltr" style="text-align:right;">
-    <label>الجهة</label><input type="text" id="editOrg">
-    <label>المسار</label><select id="editTrack"></select>
-    <div class="msg" id="editMsg" style="font-size:13px;margin-top:8px;"></div>
-    <div class="actions">
-      <button class="btn btn-outline" onclick="closeEditModal()">إلغاء</button>
-      <button class="btn btn-gold" onclick="saveEdit()">حفظ التغييرات</button>
-    </div>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
 <script src="config.js"></script>
 <script>
-let participants = [];
-let tracks = [];
-let facilitators = [];
-let minAttendanceDays = 2;
-let evaluations = [];
-let evaluatedIds = new Set();
-let trackRegStatus = {};
-let selectedIds = new Set();
+const TABS = [
+  ['overview','نظرة عامة'], ['teams','الفرق'], ['people','المشاركون'],
+  ['import','الاستيراد'], ['judging','التحكيم'], ['results','النتائج'], ['settings','الإعدادات'],
+];
+let tracks=[], challenges=[], teams=[], people=[], judges=[], criteria=[],
+    assignments=[], evals=[], settings={}, results=[], importRows=null;
 
-// ---------- الوضع الليلي ----------
-(function initTheme(){
-  const saved = localStorage.getItem('admin_theme');
-  if(saved === 'dark'){
-    document.body.classList.add('dark');
-    document.getElementById('themeToggle').textContent = '☀️';
-  }
-})();
+document.getElementById('tabs').innerHTML = TABS.map(([k,l],i) =>
+  `<button id="tb-${k}" class="${i===0?'on':''}" onclick="switchTab('${k}')">${l}</button>`).join('');
 
-function toggleTheme(){
-  document.body.classList.toggle('dark');
-  const isDark = document.body.classList.contains('dark');
-  localStorage.setItem('admin_theme', isDark ? 'dark' : 'light');
-  document.getElementById('themeToggle').textContent = isDark ? '☀️' : '🌙';
+function switchTab(k){
+  TABS.forEach(([x]) => {
+    document.getElementById('tb-'+x).classList.toggle('on', x===k);
+    document.getElementById('tab-'+x).classList.toggle('hide', x!==k);
+  });
+}
+let toastTimer;
+function toast(t){
+  const el=document.getElementById('toast'); el.textContent=t; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>el.classList.remove('show'),1700);
+}
+function msg(id,text,ok){
+  const el=document.getElementById(id); el.className='msg '+(ok?'ok':'err'); el.textContent=text;
+}
+function trackPill(id){
+  const t=tracks.find(x=>x.id===id);
+  return `<span class="pill ${id==='safety'?'amber':'teal'}">${t?t.name_ar.replace('مسار ',''):'—'}</span>`;
 }
 
-// ---------- اختصارات لوحة المفاتيح ----------
-document.addEventListener('keydown', (e) => {
-  if(e.key === 'Escape'){
-    if(!document.getElementById('editModalBg').classList.contains('hide')) closeEditModal();
+/* ---------- الدخول ---------- */
+supabaseClient.auth.onAuthStateChange(async (_e, session) => {
+  if(!session) return;
+  const { data: prof } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
+  if(!prof){
+    msg('loginMsg','هذا الحساب غير مضاف لفريق التنظيم.');
+    await supabaseClient.auth.signOut(); return;
   }
-  // Ctrl/Cmd + K يركّز على مربع البحث بسرعة
-  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){
-    e.preventDefault();
-    const search = document.getElementById('search');
-    if(search){ search.focus(); search.select(); }
-  }
+  document.getElementById('loginCard').classList.add('hide');
+  document.getElementById('app').classList.remove('hide');
+  document.getElementById('whoami').textContent = session.user.email;
+  loadAll();
 });
-let editingId = null;
-let charts = {};
-
-supabaseClient.auth.onAuthStateChange(async (event, session) => {
-  if(session){
-    const { data: profile } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
-    if(!profile || profile.role !== 'admin'){
-      showToast('هذا الحساب ليس حساب مدير. استخدم صفحة الميسّر إذا كنت مسندًا لمسار معيّن.', 'error');
-      await supabaseClient.auth.signOut();
-      return;
-    }
-    document.getElementById('loginCard').classList.add('hide');
-    document.getElementById('app').classList.remove('hide');
-    document.getElementById('whoami').textContent = session.user.email;
-    loadAll();
-  }
-});
-
 async function login(){
-  const email = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPass').value;
-  const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-  if(error) document.getElementById('loginErr').textContent = 'بيانات الدخول غير صحيحة';
-}
-function logout(){ supabaseClient.auth.signOut(); location.reload(); }
-
-function switchTab(name){
-  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === name));
-  ['participants','analytics','announcements','team','auditlog','settings'].forEach(t => {
-    document.getElementById('tab-' + t).classList.toggle('hide', t !== name);
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: document.getElementById('le').value.trim(),
+    password: document.getElementById('lp').value,
   });
-  if(name === 'analytics'){ renderCharts(); renderSurveyStats(); loadTrackComparison(); }
-  if(name === 'announcements'){ loadAnnouncements(); loadTrackMaterials(); }
-  if(name === 'auditlog'){ loadAuditLog(); }
+  if(error) msg('loginMsg','بيانات الدخول غير صحيحة.');
 }
+function logout(){ supabaseClient.auth.signOut().then(()=>location.reload()); }
 
-async function loadAuditLog(){
-  const { data } = await supabaseClient.from('audit_log').select('*').order('created_at', {ascending:false}).limit(100);
-  const rows = data || [];
-  document.getElementById('auditLogTbody').innerHTML = rows.map(r => {
-    const changesText = Object.entries(r.details || {})
-      .filter(([k]) => k !== 'اسم_المشارك')
-      .map(([k,v]) => `${k}: ${v.من === null ? '—' : (v.من ? 'حاضر':'غائب/إلغاء')} ← ${v.إلى === null ? '—' : (v.إلى === true ? 'حاضر' : (v.إلى === false ? 'غائب' : v.إلى))}`)
-      .join('، ');
-    return `
-    <tr>
-      <td style="white-space:nowrap;font-size:12px;">${new Date(r.created_at).toLocaleString('ar-SA', {dateStyle:'short', timeStyle:'short'})}</td>
-      <td>${(r.details && r.details.اسم_المشارك) || '—'}</td>
-      <td style="font-size:12px;">${changesText || '—'}</td>
-      <td dir="ltr" style="text-align:right;font-size:12px;">${r.actor_email || '—'}</td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:20px;">لا يوجد نشاط مسجَّل بعد</td></tr>';
-}
-
+/* ---------- تحميل البيانات ---------- */
 async function loadAll(){
-  document.getElementById('statsRow').innerHTML = '<div class="stat"><div class="lbl" style="padding:10px 0;">⏳ جاري تحميل البيانات...</div></div>';
+  const [tr,ch,tm,pp,jd,cr,as,ev,st,rs] = await Promise.all([
+    supabaseClient.from('tracks').select('*').order('sort_order'),
+    supabaseClient.from('challenges').select('*').order('track_id, number'),
+    supabaseClient.from('teams').select('*, projects(*)').order('code'),
+    supabaseClient.from('participants').select('*').order('full_name'),
+    supabaseClient.from('judges').select('*').order('full_name'),
+    supabaseClient.from('judging_criteria').select('*').order('sort_order'),
+    supabaseClient.from('judge_assignments').select('*'),
+    supabaseClient.from('judge_evaluations').select('*'),
+    supabaseClient.from('app_settings').select('*').eq('id',1).single(),
+    supabaseClient.from('v_team_results').select('*'),
+  ]);
+  tracks=tr.data||[]; challenges=ch.data||[]; teams=tm.data||[]; people=pp.data||[];
+  judges=jd.data||[]; criteria=cr.data||[]; assignments=as.data||[]; evals=ev.data||[];
+  settings=st.data||{}; results=rs.data||[];
 
-  const { data: t } = await supabaseClient.from('tracks').select('*').order('day1_date');
-  tracks = t || [];
+  document.getElementById('teamTrackFilter').innerHTML =
+    '<option value="">كل المسارات</option>' + tracks.map(t=>`<option value="${t.id}">${t.name_ar}</option>`).join('');
 
-  const sel = document.getElementById('trackFilter');
-  sel.innerHTML = '<option value="">كل المسارات</option>' + tracks.map(tr => `<option value="${tr.id}">${tr.name_ar}</option>`).join('');
-  document.getElementById('editTrack').innerHTML = tracks.map(tr => `<option value="${tr.id}">${tr.name_ar}</option>`).join('');
-  document.getElementById('annTrack').innerHTML = '<option value="">كل المسارات (رسالة عامة)</option>' + tracks.map(tr => `<option value="${tr.id}">${tr.name_ar}</option>`).join('');
-  document.getElementById('matTrack').innerHTML = tracks.map(tr => `<option value="${tr.id}">${tr.name_ar}</option>`).join('');
-
-  // استرجاع الفلاتر المحفوظة بالرابط (لو موجودة) عند أول تحميل فقط
-  const urlParams = new URLSearchParams(window.location.search);
-  if(urlParams.get('q')) document.getElementById('search').value = urlParams.get('q');
-  if(urlParams.get('track')) sel.value = urlParams.get('track');
-
-  const { data: p } = await supabaseClient.from('participants').select('*, tracks(*)').order('full_name', {ascending:true});
-  participants = p || [];
-
-  const { data: evals } = await supabaseClient.from('evaluations').select('participant_id, rating_content, rating_trainer, rating_organization, rating_overall, comment, submitted_at, participants(full_name), tracks(name_ar)');
-  evaluations = evals || [];
-  evaluatedIds = new Set(evaluations.map(e => e.participant_id));
-
-  const { data: settings } = await supabaseClient.from('app_settings').select('*').eq('id', 1).single();
-  minAttendanceDays = settings ? settings.min_attendance_days : 2;
-  document.getElementById('minDaysInput').value = minAttendanceDays;
-
-  document.getElementById('closingDayActiveToggle').checked = !!(settings && settings.closing_day_active);
-  document.getElementById('closingDayDate').value = (settings && settings.closing_day_date) || '';
-
-  document.getElementById('regOpenToggle').checked = settings ? settings.registration_open !== false : true;
-  document.getElementById('regOpensAt').value = toDatetimeLocal(settings && settings.registration_opens_at);
-  document.getElementById('regClosesAt').value = toDatetimeLocal(settings && settings.registration_closes_at);
-  document.getElementById('regClosedMessage').value = (settings && settings.registration_closed_message) || '';
-
-  document.getElementById('confirmSubject').value = (settings && settings.confirmation_subject) || '';
-  document.getElementById('confirmBody').innerHTML = toEditorHtml(settings && settings.confirmation_body);
-  document.getElementById('reminderSubject').value = (settings && settings.reminder_subject) || '';
-  document.getElementById('reminderBody').innerHTML = toEditorHtml(settings && settings.reminder_body);
-  updateTemplatePreview('confirm');
-  updateTemplatePreview('reminder');
-
-  await loadFacilitators();
-  await loadAdmins();
-  await loadTrackRegStatus();
-  await loadWaitlistCounts();
-  renderDayActivation();
-  renderTrackRegControl();
-  renderTodayStats();
-  renderStats();
-  renderTable();
+  renderStats(); renderTeams(); renderPeople(); renderJudges();
+  renderCriteria(); renderAssign(); renderResults(); renderSettings(); renderProgress();
 }
 
-function hasEvaluation(p){ return evaluatedIds.has(p.id); }
-function closingDayEligible(p){ return p.closing_day_attended === true; }
-function isEligibleForCertificate(p){ return closingDayEligible(p) && hasEvaluation(p); }
-
-async function loadFacilitators(){
-  const { data } = await supabaseClient.from('profiles').select('*').eq('role', 'facilitator');
-  facilitators = data || [];
-  document.getElementById('facTbody').innerHTML = facilitators.map(f => {
-    const names = (f.track_ids || []).map(tid => { const t = tracks.find(x => x.id === tid); return t ? t.name_ar : null; }).filter(Boolean);
-    return `
-    <tr>
-      <td>${f.full_name || f.id}</td>
-      <td>${names.length ? names.join('، ') : '—'}</td>
-      <td>
-        <button class="small-btn btn-outline" onclick="openEditFacilitatorTracks('${f.id}')">تعديل المسارات</button>
-        <button class="small-btn btn-danger" onclick="removeFacilitator('${f.id}')">إزالة</button>
-      </td>
-    </tr>`;
-  }).join('') || '<tr><td colspan="3" style="text-align:center;color:#9ca3af;padding:14px;">لا يوجد ميسّرون بعد</td></tr>';
-
-  renderFacTracksChecklist();
-}
-
-function renderFacTracksChecklist(){
-  const box = document.getElementById('facTracksChecklist');
-  if(!box) return;
-  box.innerHTML = tracks.map(t => `
-    <label style="display:flex;align-items:center;gap:6px;background:#fffdf7;border:1.5px solid #dcd3b8;
-      border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;">
-      <input type="checkbox" class="fac-track-cb" value="${t.id}"> ${t.name_ar}
-    </label>
-  `).join('');
-}
-
-async function openEditFacilitatorTracks(facId){
-  const f = facilitators.find(x => x.id === facId);
-  const currentIds = new Set(f.track_ids || []);
-  const optionsHtml = tracks.map(t => `
-    <label style="display:flex;align-items:center;gap:6px;background:#fffdf7;border:1.5px solid #dcd3b8;
-      border-radius:8px;padding:7px 12px;font-size:13px;cursor:pointer;margin-bottom:6px;">
-      <input type="checkbox" class="edit-fac-track-cb" value="${t.id}" ${currentIds.has(t.id)?'checked':''}> ${t.name_ar}
-    </label>
-  `).join('');
-
-  const modalHtml = `
-    <div class="modal-bg" id="editFacModalBg">
-      <div class="modal">
-        <h3>تعديل مسارات الميسّر</h3>
-        <p style="font-size:13px;color:#6b7280;">${f.full_name || ''}</p>
-        <div style="max-height:260px;overflow-y:auto;">${optionsHtml}</div>
-        <div class="actions">
-          <button class="btn btn-outline" onclick="document.getElementById('editFacModalBg').remove()">إلغاء</button>
-          <button class="btn btn-gold" onclick="saveFacilitatorTracks('${facId}')">حفظ</button>
-        </div>
-      </div>
-    </div>`;
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
-}
-
-async function saveFacilitatorTracks(facId){
-  const selected = [...document.querySelectorAll('.edit-fac-track-cb:checked')].map(cb => cb.value);
-  if(!selected.length){ showToast('اختر مسارًا واحدًا على الأقل', 'error'); return; }
-
-  const { error } = await supabaseClient.from('profiles').update({ track_ids: selected }).eq('id', facId);
-  document.getElementById('editFacModalBg').remove();
-  if(error){ showToast('تعذّر الحفظ: ' + friendlyError(error), 'error'); return; }
-
-  showToast('تم تحديث مسارات الميسّر', 'success');
-  loadFacilitators();
-}
-
-function attendedCount(p){
-  return [p.day1_attended, p.day2_attended, p.day3_attended].filter(Boolean).length;
-}
-
+/* ---------- نظرة عامة ---------- */
 function renderStats(){
-  const total = participants.length;
-  const certified = participants.filter(p => p.certificate_issued).length;
-  const eligible = participants.filter(p => isEligibleForCertificate(p)).length;
-  const perTrack = tracks.map(t => ({ name: t.name_ar, count: participants.filter(p => p.track_id === t.id).length }));
-
-  let html = `
-    <div class="stat"><div class="num">${total}</div><div class="lbl">إجمالي المسجلين</div></div>
-    <div class="stat"><div class="num">${eligible}</div><div class="lbl">مؤهّلون للشهادة (حاليًا)</div></div>
-    <div class="stat"><div class="num">${certified}</div><div class="lbl">شهادات صادرة</div></div>
-  `;
-  perTrack.forEach(t => { html += `<div class="stat"><div class="num">${t.count}</div><div class="lbl">${t.name}</div></div>`; });
-  document.getElementById('statsRow').innerHTML = html;
+  const submitted = teams.filter(t=>t.projects && t.projects.submitted_at).length;
+  const d1 = people.filter(p=>p.day1_attended).length;
+  const d2 = people.filter(p=>p.day2_attended).length;
+  document.getElementById('statsBox').innerHTML = `
+    <div class="stat"><div class="n">${teams.length}</div><div class="l">فريق مسجَّل</div></div>
+    <div class="stat"><div class="n">${people.length}</div><div class="l">مشارك</div></div>
+    <div class="stat"><div class="n">${submitted}</div><div class="l">مشروع مُسلَّم</div></div>
+    <div class="stat"><div class="n">${d1}</div><div class="l">حضور اليوم الأول</div></div>
+    <div class="stat"><div class="n">${d2}</div><div class="l">حضور اليوم الثاني</div></div>
+    <div class="stat"><div class="n">${people.filter(p=>p.certificate_issued).length}</div><div class="l">شهادة صادرة</div></div>`;
 }
-
-function renderTable(){
-  const q = document.getElementById('search').value.trim().toLowerCase();
-  const trackId = document.getElementById('trackFilter').value;
-
-  // نحفظ الفلاتر في الرابط عشان ما تضيع لو تحدّثت الصفحة أو انرسل الرابط لشخص ثاني
-  const params = new URLSearchParams(window.location.search);
-  q ? params.set('q', q) : params.delete('q');
-  trackId ? params.set('track', trackId) : params.delete('track');
-  const newUrl = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
-  window.history.replaceState({}, '', newUrl);
-
-  const filtered = participants.filter(p => {
-    const matchesQ = !q || p.full_name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q);
-    const matchesTrack = !trackId || p.track_id === trackId;
-    return matchesQ && matchesTrack;
-  });
-
-  document.getElementById('tbody').innerHTML = filtered.map((p, i) => `
-    <tr>
-      <td><input type="checkbox" class="row-check" data-id="${p.id}" ${selectedIds.has(p.id)?'checked':''} onchange="toggleSelect('${p.id}', this.checked)"></td>
-      <td>${i + 1}</td>
-      <td>${p.full_name}</td>
-      <td dir="ltr" style="text-align:right;">${p.email}</td>
-      <td dir="ltr" style="text-align:right;">${p.phone || ''}</td>
-      <td>${p.tracks ? p.tracks.name_ar : ''}</td>
-      <td>${dayCell(p, 1)}</td>
-      <td>${dayCell(p, 2)}</td>
-      <td>${dayCell(p, 3)}</td>
-      <td>${closingDayCell(p)}</td>
-      <td>${p.certificate_issued
-          ? `<span class="pill cert-pill">صادرة</span>`
-          : (isEligibleForCertificate(p)
-              ? `<button class="small-btn btn-gold" onclick="issueCertificate('${p.id}')">إصدار</button>`
-              : `<span class="pill off" title="${!closingDayEligible(p) ? 'لم يحضر اليوم الختامي' : 'لم يُكمل استبيان التقييم'}">غير مؤهّل</span>`)}</td>
-      <td>
-        ${p.certificate_issued ? `<a href="certificate.html?code=${p.certificate_code}" target="_blank" class="small-btn btn-outline">عرض</a>` : ''}
-        <button class="small-btn btn-outline" onclick="openEditModal('${p.id}')">تعديل</button>
-        <button class="small-btn btn-danger" onclick="deleteParticipant('${p.id}')">حذف</button>
-      </td>
-    </tr>
-  `).join('') || '<tr><td colspan="11" style="text-align:center;color:#9ca3af;padding:20px;">لا توجد نتائج</td></tr>';
-
-  renderBulkBar();
-}
-
-// ---------- التحديد والإجراءات الجماعية ----------
-function toggleSelect(id, checked){
-  checked ? selectedIds.add(id) : selectedIds.delete(id);
-  renderBulkBar();
-}
-
-function toggleSelectAll(checked){
-  document.querySelectorAll('.row-check').forEach(cb => {
-    cb.checked = checked;
-    checked ? selectedIds.add(cb.dataset.id) : selectedIds.delete(cb.dataset.id);
-  });
-  renderBulkBar();
-}
-
-function clearSelection(){
-  selectedIds.clear();
-  document.getElementById('selectAllCheckbox').checked = false;
-  renderTable();
-}
-
-function renderBulkBar(){
-  const bar = document.getElementById('bulkBar');
-  const count = selectedIds.size;
-  document.getElementById('bulkCount').textContent = `${count} محدد`;
-  bar.classList.toggle('hide', count === 0);
-}
-
-function getSelectedParticipants(){
-  return participants.filter(p => selectedIds.has(p.id));
-}
-
-async function bulkDeleteSelected(){
-  const list = getSelectedParticipants();
-  if(!list.length) return;
-  if(!confirm(`حذف ${list.length} مشارك محدد؟ لا يمكن التراجع.`)) return;
-
-  const ids = list.map(p => p.id);
-  const { error } = await supabaseClient.from('participants').delete().in('id', ids);
-  if(error){ showToast('تعذّر الحذف: ' + friendlyError(error), 'error'); return; }
-
-  participants = participants.filter(p => !selectedIds.has(p.id));
-  selectedIds.clear();
-  renderStats(); renderTable();
-  showToast(`تم حذف ${ids.length} مشارك`, 'success');
-}
-
-function bulkExportSelected(){
-  const list = getSelectedParticipants();
-  if(!list.length) return;
-  exportParticipantsList(list, `مشاركون_محددون_${list.length}`);
-  showToast(`تم تصدير ${list.length} مشارك`, 'success');
-}
-
-async function bulkIssueCertificates(){
-  const list = getSelectedParticipants().filter(p => isEligibleForCertificate(p) && !p.certificate_issued);
-  if(!list.length){ showToast('لا يوجد بين المحددين أحد مؤهّل حاليًا لإصدار الشهادة', 'info'); return; }
-  if(!confirm(`سيتم إصدار ${list.length} شهادة للمحددين المؤهّلين. متابعة؟`)) return;
-
-  for(const p of list){
-    const code = genCertCode();
-    await supabaseClient.from('participants').update({ certificate_issued: true, certificate_code: code }).eq('id', p.id);
-    p.certificate_issued = true; p.certificate_code = code;
-  }
-  renderStats(); renderTable();
-  showToast(`تم إصدار ${list.length} شهادة`, 'success');
-}
-
-function renderDayActivation(){
-  document.getElementById('dayActivationRows').innerHTML = tracks.map(t => `
-    <div class="activation-row">
-      <div class="track-label">${t.name_ar}</div>
-      <button class="activation-btn ${t.active_day===1?'on':''}" onclick="setActiveDay('${t.id}',1)">اليوم 1</button>
-      <button class="activation-btn ${t.active_day===2?'on':''}" onclick="setActiveDay('${t.id}',2)">اليوم 2</button>
-      <button class="activation-btn ${t.active_day===3?'on':''}" onclick="setActiveDay('${t.id}',3)">اليوم 3</button>
-      <button class="activation-btn" onclick="setActiveDay('${t.id}', null)" style="color:#c0392b;">إلغاء</button>
-    </div>
-  `).join('');
-}
-
-async function setActiveDay(trackId, dayNum){
-  const track = tracks.find(t => t.id === trackId);
-  const newVal = (track.active_day === dayNum) ? null : dayNum;
-  const { error } = await supabaseClient.from('tracks').update({ active_day: newVal }).eq('id', trackId);
-  if(error){ showToast('تعذّر التحديث: ' + friendlyError(error), 'error'); return; }
-  track.active_day = newVal;
-  participants.forEach(p => { if(p.track_id === trackId && p.tracks) p.tracks.active_day = newVal; });
-  renderDayActivation();
-  renderTable();
-}
-
-async function loadTrackRegStatus(){
-  const { data } = await supabaseClient.rpc('get_track_registration_status');
-  trackRegStatus = {};
-  (data || []).forEach(s => { trackRegStatus[s.track_id] = s; });
-}
-
-function renderTodayStats(){
-  const todayStr = new Date().toISOString().slice(0,10);
-  const activeTracks = tracks.filter(t => t.day1_date === todayStr || t.day2_date === todayStr || t.day3_date === todayStr);
-  const pendingCerts = participants.filter(p => !p.certificate_issued && isEligibleForCertificate(p)).length;
-  const todayEvals = evaluations.filter(e => e.submitted_at && e.submitted_at.slice(0,10) === todayStr).length;
-
-  document.getElementById('todayStats').innerHTML = `
-    <div class="stat"><div class="num">${activeTracks.length}</div><div class="lbl">مسار نشط اليوم</div></div>
-    <div class="stat"><div class="num">${pendingCerts}</div><div class="lbl">شهادات بانتظار الإصدار</div></div>
-    <div class="stat"><div class="num">${todayEvals}</div><div class="lbl">استبيان جديد اليوم</div></div>
-  `;
-}
-
-let waitlistCounts = {};
-
-function renderTrackRegControl(){
-  document.getElementById('trackRegRows').innerHTML = tracks.map(t => {
-    const status = trackRegStatus[t.id] || {};
-    const count = status.registered_count ?? 0;
-    const capacity = t.capacity ?? '';
-    const isOpen = t.registration_open !== false;
-    const waiting = waitlistCounts[t.id] || 0;
-    return `
-    <div class="trackreg-row">
-      <div class="track-label">${t.name_ar}</div>
-      <span class="count-badge">${count} مسجَّل${capacity !== '' ? ' / ' + capacity : ''}</span>
-      <input type="number" min="0" placeholder="السعة" value="${capacity}" id="cap_${t.id}">
-      <button class="btn btn-outline" style="padding:6px 10px;font-size:12.5px;" onclick="saveTrackCapacity('${t.id}')">حفظ السعة</button>
-      <button class="toggle-btn ${isOpen ? 'open' : 'closed'}" onclick="toggleTrackReg('${t.id}')">${isOpen ? 'مفتوح' : 'مغلق'}</button>
-      ${waiting > 0 ? `<button class="small-btn btn-outline" onclick="viewWaitlist('${t.id}', '${t.name_ar.replace(/'/g,"")}')">قائمة الانتظار (${waiting})</button>` : ''}
-    </div>`;
+function renderProgress(){
+  if(!judges.length){ document.getElementById('judgeProgress').innerHTML='<div class="empty">ما فيه محكّمون بعد.</div>'; return; }
+  document.getElementById('judgeProgress').innerHTML = judges.map(j=>{
+    const total = assignments.filter(a=>a.judge_id===j.id).length;
+    const done  = evals.filter(e=>e.judge_id===j.id && e.submitted).length;
+    const pct = total ? Math.round(done*100/total) : 0;
+    return `<div style="margin-bottom:14px;">
+      <div style="display:flex;justify-content:space-between;font-size:13px;">
+        <span>${j.full_name}</span><span style="color:var(--muted);">${done} من ${total}</span>
+      </div><div class="bar"><i style="width:${pct}%"></i></div></div>`;
   }).join('');
 }
 
-async function loadWaitlistCounts(){
-  const { data } = await supabaseClient.rpc('get_waitlist_counts');
-  waitlistCounts = {};
-  (data || []).forEach(w => { waitlistCounts[w.track_id] = w.waiting_count; });
+/* ---------- الفرق ---------- */
+function renderTeams(){
+  const q=(document.getElementById('teamSearch').value||'').trim().toLowerCase();
+  const tf=document.getElementById('teamTrackFilter').value;
+  const rows = teams.filter(t =>
+    (!tf || t.track_id===tf) &&
+    (!q || t.name.toLowerCase().includes(q) || t.code.toLowerCase().includes(q)));
+
+  document.getElementById('teamsBody').innerHTML = rows.map(t=>{
+    const ch = challenges.find(c=>c.id===t.challenge_id);
+    const members = people.filter(p=>p.team_id===t.id);
+    const p = t.projects;
+    return `<tr>
+      <td dir="ltr" style="text-align:right;color:var(--teal);font-weight:600;">${t.code}</td>
+      <td>${t.name}</td>
+      <td>${trackPill(t.track_id)}</td>
+      <td style="max-width:260px;font-size:12px;color:var(--muted);">${ch?('التحدي '+(ch.number===1?'الأول':'الثاني')):'—'}</td>
+      <td>${members.length}</td>
+      <td>${p && p.submitted_at
+        ? `<span class="pill teal">مُسلَّم</span>${p.file_url?` <a href="${p.file_url}" target="_blank" rel="noopener">الملف</a>`:''}`
+        : '<span class="pill grey">لم يُسلَّم</span>'}</td>
+      <td><select style="width:120px;" onchange="setTeamStatus('${t.id}',this.value)">
+        ${['registered','shortlisted','rejected','withdrawn'].map(s=>
+          `<option value="${s}" ${t.status===s?'selected':''}>${
+            {registered:'مسجَّل',shortlisted:'مرشَّح',rejected:'مستبعد',withdrawn:'منسحب'}[s]}</option>`).join('')}
+      </select></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7"><div class="empty">لا توجد فرق.</div></td></tr>';
+}
+async function setTeamStatus(id,status){
+  const { error } = await supabaseClient.from('teams').update({ status }).eq('id',id);
+  if(error) return toast('تعذّر الحفظ');
+  const t=teams.find(x=>x.id===id); t.status=status; toast('تم التحديث');
 }
 
-async function viewWaitlist(trackId, trackName){
-  const { data } = await supabaseClient.from('waitlist').select('*').eq('track_id', trackId).order('created_at');
-  const rows = (data || []).map(w => `
-    <tr><td>${w.full_name}</td><td dir="ltr" style="text-align:right;">${w.email}</td><td dir="ltr" style="text-align:right;">${w.phone}</td>
-    <td><button class="small-btn btn-danger" onclick="removeFromWaitlist('${w.id}', '${trackId}', '${trackName.replace(/'/g,"")}')">إزالة</button></td></tr>
-  `).join('') || '<tr><td colspan="4" style="text-align:center;color:#9ca3af;padding:14px;">القائمة فاضية</td></tr>';
-
-  const modalHtml = `
-    <div class="modal-bg" id="waitlistViewModalBg">
-      <div class="modal" style="max-width:520px;">
-        <h3>قائمة الانتظار — ${trackName}</h3>
-        <div style="max-height:320px;overflow-y:auto;">
-          <table style="width:100%;"><thead><tr><th>الاسم</th><th>البريد</th><th>الجوال</th><th></th></tr></thead>
-          <tbody>${rows}</tbody></table>
-        </div>
-        <div class="actions"><button class="btn btn-outline" onclick="document.getElementById('waitlistViewModalBg').remove()">إغلاق</button></div>
-      </div>
-    </div>`;
-  document.body.insertAdjacentHTML('beforeend', modalHtml);
+/* ---------- المشاركون ---------- */
+function eligible(p){
+  const days=(p.day1_attended?1:0)+(p.day2_attended?1:0);
+  return days >= (settings.min_attendance_days||1);
 }
-
-async function removeFromWaitlist(id, trackId, trackName){
-  await supabaseClient.from('waitlist').delete().eq('id', id);
-  document.getElementById('waitlistViewModalBg').remove();
-  await loadWaitlistCounts();
-  renderTrackRegControl();
-  viewWaitlist(trackId, trackName);
-}
-
-async function saveTrackCapacity(trackId){
-  const input = document.getElementById(`cap_${trackId}`);
-  const val = input.value === '' ? null : parseInt(input.value, 10);
-  const { error } = await supabaseClient.from('tracks').update({ capacity: val }).eq('id', trackId);
-  if(error){ showToast('تعذّر الحفظ: ' + friendlyError(error), 'error'); return; }
-  const t = tracks.find(x => x.id === trackId);
-  t.capacity = val;
-  renderTrackRegControl();
-  showToast('تم حفظ السعة', 'success');
-}
-
-async function toggleTrackReg(trackId){
-  const t = tracks.find(x => x.id === trackId);
-  const currentlyOpen = t.registration_open !== false;
-  const newVal = !currentlyOpen;
-  const { error } = await supabaseClient.from('tracks').update({ registration_open: newVal }).eq('id', trackId);
-  if(error){ showToast('تعذّر التحديث: ' + friendlyError(error), 'error'); return; }
-  t.registration_open = newVal;
-  renderTrackRegControl();
-  showToast(newVal ? 'تم فتح التسجيل للمسار' : 'تم إغلاق التسجيل للمسار', 'success');
-}
-
-function dayCell(p, n){
-  const val = p[`day${n}_attended`]; // true | false | null
-  return `<div class="day-btns">
-    <button class="day-btn present ${val===true?'active':''}" title="حاضر" onclick="setDay('${p.id}', ${n}, true)">✓</button>
-    <button class="day-btn absent ${val===false?'active':''}" title="لم يحضر" onclick="setDay('${p.id}', ${n}, false)">✕</button>
-  </div>`;
-}
-
-function closingDayCell(p){
-  const val = p.closing_day_attended; // true | false | null
-  return `<div class="day-btns">
-    <button class="day-btn present ${val===true?'active':''}" title="حضر اليوم الختامي" onclick="setClosingDayAttendance('${p.id}', true)">✓</button>
-    <button class="day-btn absent ${val===false?'active':''}" title="لم يحضر اليوم الختامي" onclick="setClosingDayAttendance('${p.id}', false)">✕</button>
-  </div>`;
-}
-
-async function setClosingDayAttendance(id, value){
-  const p = participants.find(x => x.id === id);
-  const newVal = (p.closing_day_attended === value) ? null : value;
-  const { error } = await supabaseClient.from('participants').update({ closing_day_attended: newVal }).eq('id', id);
-  if(!error){ p.closing_day_attended = newVal; renderStats(); renderTable(); }
-  else showToast('تعذّر الحفظ: ' + friendlyError(error), 'error');
-}
-
-async function setDay(id, n, value){
-  const p = participants.find(x => x.id === id);
-  const field = `day${n}_attended`;
-  // الضغط على نفس الحالة الحالية مرة ثانية يلغيها (يرجع لحالة "لم يُحدّد")
-  const newVal = (p[field] === value) ? null : value;
-  const { error } = await supabaseClient.from('participants').update({ [field]: newVal }).eq('id', id);
-  if(!error){ p[field] = newVal; renderStats(); renderTable(); }
-}
-
-function genCertCode(){ return 'INV-2026-' + Math.random().toString(36).slice(2,7).toUpperCase(); }
-
-async function issueCertificate(id){
-  const p = participants.find(x => x.id === id);
-  if(!closingDayEligible(p)){
-    showToast(`لا يمكن إصدار الشهادة: ${p.full_name} لم يحضر اليوم الختامي.`, 'error');
-    return;
-  }
-  if(!hasEvaluation(p)){
-    showToast(`لا يمكن إصدار الشهادة: ${p.full_name} لم يُكمل استبيان التقييم الإلزامي بعد.`, 'error');
-    return;
-  }
-  const code = genCertCode();
-  const { error } = await supabaseClient.from('participants').update({ certificate_issued: true, certificate_code: code }).eq('id', id);
-  if(error){ showToast(friendlyError(error), 'error'); return; }
-  p.certificate_issued = true; p.certificate_code = code; renderStats(); renderTable();
-}
-
-async function issueSelectedCertificates(){
-  const eligible = participants.filter(p => isEligibleForCertificate(p) && !p.certificate_issued);
-  if(!eligible.length){ showToast('لا يوجد مشاركون مؤهّلون حاليًا (شرط الإصدار: حضور اليوم الختامي + إكمال الاستبيان)', 'info'); return; }
-  if(!confirm(`سيتم إصدار ${eligible.length} شهادة (حضور اليوم الختامي + استبيان مكتمل). متابعة؟`)) return;
-
-  for(const p of eligible){
-    const code = genCertCode();
-    await supabaseClient.from('participants').update({ certificate_issued: true, certificate_code: code }).eq('id', p.id);
-    p.certificate_issued = true; p.certificate_code = code;
-  }
-  renderStats(); renderTable();
-}
-
-// ---------- تعديل / حذف ----------
-function openEditModal(id){
-  const p = participants.find(x => x.id === id);
-  editingId = id;
-  document.getElementById('editName').value = p.full_name;
-  document.getElementById('editEmail').value = p.email;
-  document.getElementById('editPhone').value = p.phone;
-  document.getElementById('editOrg').value = p.organization || '';
-  document.getElementById('editTrack').value = p.track_id;
-  document.getElementById('editMsg').textContent = '';
-  document.getElementById('editModalBg').classList.remove('hide');
-}
-function closeEditModal(){ document.getElementById('editModalBg').classList.add('hide'); editingId = null; }
-
-async function saveEdit(){
-  const payload = {
-    full_name: document.getElementById('editName').value.trim(),
-    email: document.getElementById('editEmail').value.trim(),
-    phone: document.getElementById('editPhone').value.trim(),
-    organization: document.getElementById('editOrg').value.trim() || null,
-    track_id: document.getElementById('editTrack').value,
-  };
-  const { error } = await supabaseClient.from('participants').update(payload).eq('id', editingId);
-  const msg = document.getElementById('editMsg');
-  if(error){
-    msg.style.color = '#9c2b2b';
-    msg.textContent = 'تعذّر الحفظ: ' + friendlyError(error);
-    return;
-  }
-  closeEditModal();
-  loadAll();
-  showToast('تم حفظ التعديلات بنجاح', 'success');
-}
-
-async function deleteParticipant(id){
-  const p = participants.find(x => x.id === id);
-  if(!confirm(`حذف تسجيل "${p.full_name}"؟ لا يمكن التراجع.`)) return;
-  const { error } = await supabaseClient.from('participants').delete().eq('id', id);
-  if(!error){
-    participants = participants.filter(x => x.id !== id);
-    renderStats(); renderTable();
-    showToast('تم حذف المشارك', 'success');
-  } else {
-    showToast('تعذّر الحذف: ' + friendlyError(error), 'error');
-  }
-}
-
-// ---------- Excel ----------
-async function printQRCodes(){
-  const q = document.getElementById('search').value.trim().toLowerCase();
-  const trackId = document.getElementById('trackFilter').value;
-  const list = participants.filter(p => {
-    const matchesQ = !q || p.full_name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q);
-    const matchesTrack = !trackId || p.track_id === trackId;
-    return matchesQ && matchesTrack;
+function renderPeople(){
+  const q=(document.getElementById('peopleSearch').value||'').trim().toLowerCase();
+  const f=document.getElementById('peopleFilter').value;
+  const rows = people.filter(p=>{
+    if(q && !(p.full_name.toLowerCase().includes(q) || (p.email||'').toLowerCase().includes(q))) return false;
+    if(f==='noteam' && p.team_id) return false;
+    if(f==='nocert' && (p.certificate_issued || !eligible(p))) return false;
+    return true;
   });
-
-  if(!list.length){ showToast('لا يوجد مشاركون مطابقون للعرض الحالي', 'info'); return; }
-  if(!confirm(`سيتم توليد ${list.length} رمز QR للطباعة. متابعة؟`)) return;
-
-  const cards = [];
-  for(const p of list){
-    const dataUrl = await QRCode.toDataURL(p.qr_token, { width: 180, margin: 1, color:{ dark:'#0B1B3F', light:'#ffffff' } });
-    cards.push(`
-      <div class="qr-card">
-        <img src="${dataUrl}">
-        <div class="qc-name">${p.full_name}</div>
-        <div class="qc-track">${p.tracks ? p.tracks.name_ar : ''}</div>
-      </div>
-    `);
-  }
-
-  const win = window.open('', '_blank');
-  win.document.write(`
-    <html lang="ar" dir="rtl"><head><meta charset="UTF-8"><title>رموز QR — صناع الحلول الابتكارية 2026</title>
-    <style>
-      body{font-family:sans-serif;padding:20px;}
-      .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:16px;}
-      .qr-card{border:1px solid #ddd;border-radius:10px;padding:12px;text-align:center;page-break-inside:avoid;}
-      .qr-card img{width:140px;height:140px;}
-      .qc-name{font-weight:700;margin-top:6px;font-size:13px;}
-      .qc-track{font-size:11px;color:#666;margin-top:2px;}
-      @media print{ body{padding:0;} }
-    </style></head>
-    <body>
-      <h2 style="text-align:center;">رموز QR — صناع الحلول الابتكارية 2026 (${list.length})</h2>
-      <div class="grid">${cards.join('')}</div>
-      <script>window.onload = () => window.print();<\/script>
-    </body></html>
-  `);
-  win.document.close();
+  document.getElementById('peopleBody').innerHTML = rows.map(p=>{
+    const t=teams.find(x=>x.id===p.team_id);
+    return `<tr>
+      <td>${p.full_name}</td>
+      <td dir="ltr" style="text-align:right;font-size:12px;">${p.email}</td>
+      <td dir="ltr" style="text-align:right;font-size:12px;">${p.phone}</td>
+      <td>${t?`<span style="color:var(--teal);">${t.code}</span> ${t.name}`:'<span class="pill grey">بدون فريق</span>'}</td>
+      <td>${attCell(p,1)}</td><td>${attCell(p,2)}</td>
+      <td>${p.certificate_issued
+        ? `<a href="certificate.html?code=${p.certificate_code}" target="_blank" dir="ltr">${p.certificate_code}</a>`
+        : (eligible(p) ? `<button class="b b-ghost b-sm" onclick="issueCert('${p.id}')">إصدار</button>`
+                       : '<span class="pill grey">غير مؤهل</span>')}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7"><div class="empty">لا يوجد مشاركون.</div></td></tr>';
+}
+function attCell(p,n){
+  const v=p[`day${n}_attended`];
+  return `<div class="att">
+    <button class="yes ${v===true?'on':''}" onclick="setAtt('${p.id}',${n},true)">✓</button>
+    <button class="no ${v===false?'on':''}" onclick="setAtt('${p.id}',${n},false)">✕</button></div>`;
+}
+async function setAtt(id,n,val){
+  const p=people.find(x=>x.id===id);
+  const field=`day${n}_attended`;
+  const newVal = p[field]===val ? null : val;
+  const { error } = await supabaseClient.from('participants').update({ [field]:newVal }).eq('id',id);
+  if(error) return toast('تعذّر الحفظ');
+  p[field]=newVal; renderPeople(); renderStats();
+}
+function certCode(){ return 'SH-' + Math.random().toString(36).slice(2,10).toUpperCase(); }
+async function issueCert(id){
+  const code=certCode();
+  const { error } = await supabaseClient.from('participants')
+    .update({ certificate_issued:true, certificate_code:code }).eq('id',id);
+  if(error) return toast('تعذّر الإصدار');
+  const p=people.find(x=>x.id===id); p.certificate_issued=true; p.certificate_code=code;
+  renderPeople(); renderStats(); toast('تم إصدار الشهادة');
+}
+async function issueAllCerts(){
+  const list=people.filter(p=>!p.certificate_issued && eligible(p));
+  if(!list.length) return toast('ما فيه مشاركون مؤهلون');
+  if(!confirm(`إصدار ${list.length} شهادة؟`)) return;
+  for(const p of list) await issueCert(p.id);
+  toast('تم إصدار الشهادات');
 }
 
-function exportExcel(){
-  exportParticipantsList(participants, 'صيف_الابتكار_2026');
+/* ---------- الاستيراد ---------- */
+const COLS = { team:'اسم الفريق', track:'المسار', challenge:'التحدي', project:'عنوان المشروع',
+  name:'اسم العضو', email:'البريد', phone:'الجوال', org:'الجهة', category:'الفئة' };
+function downloadTemplate(){
+  const ws = XLSX.utils.json_to_sheet([{
+    [COLS.team]:'فريق المثال', [COLS.track]:'السلامة والبنية التحتية', [COLS.challenge]:'1',
+    [COLS.project]:'عنوان المشروع', [COLS.name]:'اسم القائد', [COLS.email]:'leader@example.com',
+    [COLS.phone]:'0500000000', [COLS.org]:'جامعة القصيم', [COLS.category]:'طلبة الجامعات',
+  }]);
+  const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, 'الفرق');
+  XLSX.writeFile(wb, 'قالب-استيراد-الفرق.xlsx');
 }
-
-function exportParticipantsList(list, filename){
-  const rows = list.map(p => ({
-    'الاسم': p.full_name, 'البريد': p.email, 'الجوال': p.phone, 'الجهة': p.organization || '',
-    'المسار': p.tracks ? p.tracks.name_ar : '', 'اليوم 1': p.day1_attended ? 'حضر' : '',
-    'اليوم 2': p.day2_attended ? 'حضر' : '', 'اليوم 3': p.day3_attended ? 'حضر' : '',
-    'الشهادة': p.certificate_issued ? 'صادرة' : '', 'كود الشهادة': p.certificate_code || '',
-    'تاريخ التسجيل': p.registered_at
-  }));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'المشاركون');
-  XLSX.writeFile(wb, `${filename}.xlsx`);
+function matchTrack(v){
+  const s=String(v||'').trim();
+  return (tracks.find(t => t.name_ar.includes(s) || s.includes(t.name_ar.replace('مسار ','')) || t.id===s) || {}).id;
 }
-
-async function importExcel(e){
-  const file = e.target.files[0];
+function previewImport(){
+  const file=document.getElementById('importFile').files[0];
   if(!file) return;
-  const buf = await file.arrayBuffer();
-  const wb = XLSX.read(buf, { type: 'array' });
-  const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-
-  function findTrack(row){
-    // نقبل أي اسم عمود شائع للمسار
-    const raw = (row['رمز_المسار'] || row['track_code'] || row['المسار'] || row['المسار الدراسي'] || row['track'] || '')
-      .toString().trim().toLowerCase();
-    if(!raw) return null;
-    // 1) مطابقة مباشرة بالرمز الإنجليزي
-    let track = tracks.find(t => t.code.toLowerCase() === raw);
-    if(track) return track;
-    // 2) مطابقة باسم المسار العربي (تطابق كامل أو جزئي بالاتجاهين)
-    track = tracks.find(t => t.name_ar.trim() === row_raw_original(row));
-    if(track) return track;
-    track = tracks.find(t => t.name_ar.includes(raw) || raw.includes(t.name_ar.toLowerCase()));
-    return track || null;
-  }
-  function row_raw_original(row){
-    return (row['رمز_المسار'] || row['track_code'] || row['المسار'] || row['المسار الدراسي'] || row['track'] || '').toString().trim();
-  }
-
-  let success = 0, failed = 0, dup = 0;
-  const failedNames = [];
-  for(const row of rows){
-    const track = findTrack(row);
-    if(!track){ failed++; failedNames.push(row['الاسم'] || row['full_name'] || '؟'); continue; }
-
-    const { error } = await supabaseClient.from('participants').insert({
-      full_name: row['الاسم'] || row['full_name'] || '',
-      email: row['البريد'] || row['email'] || '',
-      phone: String(row['الجوال'] || row['phone'] || ''),
-      organization: row['الجهة'] || row['organization'] || null,
-      track_id: track.id
+  const reader=new FileReader();
+  reader.onload = e => {
+    const wb=XLSX.read(e.target.result,{type:'array'});
+    const rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+    const groups={};
+    rows.forEach(r=>{
+      const tn=String(r[COLS.team]||'').trim(); if(!tn) return;
+      groups[tn] = groups[tn] || { name:tn, track:matchTrack(r[COLS.track]),
+        challengeNo:String(r[COLS.challenge]||'').trim(), project:String(r[COLS.project]||'').trim(), members:[] };
+      groups[tn].members.push({
+        full_name:String(r[COLS.name]||'').trim(), email:String(r[COLS.email]||'').trim().toLowerCase(),
+        phone:String(r[COLS.phone]||'').trim(), organization:String(r[COLS.org]||'').trim()||null,
+        category:String(r[COLS.category]||'').trim()||null,
+      });
     });
-    if(error){ error.code === '23505' ? dup++ : failed++; } else success++;
+    importRows=Object.values(groups).filter(g=>g.members.length);
+    const bad=importRows.filter(g=>!g.track);
+    document.getElementById('importPreview').innerHTML = `
+      <div style="font-size:13.5px;margin-bottom:12px;">
+        ${importRows.length} فريق · ${importRows.reduce((n,g)=>n+g.members.length,0)} عضو
+        ${bad.length?`<div style="color:var(--bad);margin-top:7px;">${bad.length} فريق بمسار غير معروف: ${bad.map(b=>b.name).join('، ')}</div>`:''}
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>الفريق</th><th>المسار</th><th>التحدي</th><th>الأعضاء</th></tr></thead>
+      <tbody>${importRows.map(g=>`<tr><td>${g.name}</td><td>${g.track?trackPill(g.track):'<span class="pill grey">؟</span>'}</td>
+        <td>${g.challengeNo||'—'}</td><td style="font-size:12px;color:var(--muted);">${g.members.map(m=>m.full_name).join('، ')}</td></tr>`).join('')}</tbody>
+      </table></div>
+      <button class="b b-teal" style="margin-top:14px;" onclick="runImport()">تنفيذ الاستيراد</button>`;
+  };
+  reader.readAsArrayBuffer(file);
+}
+async function runImport(){
+  if(!importRows || !importRows.length) return;
+  let ok=0, fail=[];
+  for(const g of importRows){
+    if(!g.track){ fail.push(g.name+' (مسار غير معروف)'); continue; }
+    const ch = challenges.find(c=>c.track_id===g.track && String(c.number)===g.challengeNo);
+    const { data: code } = await supabaseClient.rpc('new_team_code');
+    const { data: team, error: te } = await supabaseClient.from('teams')
+      .insert({ code, name:g.name, track_id:g.track, challenge_id: ch?ch.id:null }).select().single();
+    if(te){ fail.push(g.name+' — '+te.message); continue; }
+
+    const rows = g.members.map((m,i)=>({ ...m, track_id:g.track, challenge_id: ch?ch.id:null,
+      team_id:team.id, is_leader:i===0 }));
+    const { error: pe } = await supabaseClient.from('participants').insert(rows);
+    if(pe){ fail.push(g.name+' — '+pe.message); continue; }
+
+    if(g.project){
+      await supabaseClient.from('projects').insert({ team_id:team.id, title:g.project, submitted_at:new Date().toISOString() });
+    }
+    ok++;
   }
-  let msg = `تم استيراد ${success} مشارك`;
-  if(dup) msg += ` — تخطّي ${dup} مكرر (بريد/جوال)`;
-  if(failed) msg += ` — تعذّر استيراد ${failed}${failedNames.length ? ' (' + failedNames.slice(0,5).join('، ') + ')' : ''}`;
-  showToast(msg, 'success');
-  e.target.value = '';
+  msg('importMsg', `تم استيراد ${ok} فريق.` + (fail.length?` تعذّر: ${fail.join(' | ')}`:''), !fail.length);
+  importRows=null; document.getElementById('importPreview').innerHTML='';
   loadAll();
 }
 
-// ---------- فريق الميسّرين ----------
-function genPassword(){
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789';
-  let out = '';
-  for(let i = 0; i < 10; i++) out += chars[Math.floor(Math.random() * chars.length)];
-  return out;
+/* ---------- التحكيم ---------- */
+function renderJudges(){
+  document.getElementById('judgesBody').innerHTML = judges.map(j=>{
+    const n=assignments.filter(a=>a.judge_id===j.id).length;
+    return `<tr>
+      <td>${j.full_name}</td>
+      <td dir="ltr" style="text-align:right;font-size:12px;">${j.email}</td>
+      <td dir="ltr" style="text-align:right;font-size:12px;">${j.phone}</td>
+      <td>${j.must_set_password?'<span class="pill grey">لم يُعيّنها</span>':'<span class="pill teal">جاهز</span>'}</td>
+      <td>${n}</td>
+      <td><button class="b b-danger b-sm" onclick="removeJudge('${j.id}')">حذف</button></td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="6"><div class="empty">أضف المحكّمين من الحقول أعلاه.</div></td></tr>';
 }
-
-async function callCreateUser(payload){
-  const { data: sessionData } = await supabaseClient.auth.getSession();
-  try {
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionData.session.access_token}`,
-        'apikey': SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify(payload),
-    });
-    if(res.status === 404){ return { ok: false, fallback: true }; }
-    let result;
-    try { result = await res.json(); } catch(_){ return { ok: false, fallback: true }; }
-    return { ok: res.ok, result };
-  } catch(_){
-    return { ok: false, fallback: true };
+async function addJudge(){
+  const full_name=document.getElementById('jName').value.trim();
+  const email=document.getElementById('jEmail').value.trim().toLowerCase();
+  const phone=document.getElementById('jPhone').value.trim();
+  const organization=document.getElementById('jOrg').value.trim()||null;
+  if(!full_name||!email||!phone) return msg('judgeMsg','الاسم والبريد والجوال مطلوبة.');
+  const { error } = await supabaseClient.from('judges').insert({ full_name,email,phone,organization });
+  if(error) return msg('judgeMsg', error.code==='23505'?'هذا البريد مضاف مسبقًا.':error.message);
+  ['jName','jEmail','jPhone','jOrg'].forEach(id=>document.getElementById(id).value='');
+  msg('judgeMsg','تمت الإضافة. أرسل له رابط judge.html.',true);
+  loadAll();
+}
+async function removeJudge(id){
+  if(!confirm('حذف المحكّم وكل تقييماته؟')) return;
+  await supabaseClient.from('judges').delete().eq('id',id);
+  loadAll(); toast('تم الحذف');
+}
+function renderCriteria(){
+  const total=criteria.reduce((n,c)=>n+c.weight,0);
+  document.getElementById('critBody').innerHTML = criteria.map(c=>`
+    <tr><td>${c.name_ar}</td><td style="font-size:12px;color:var(--muted);">${c.hint_ar||'—'}</td>
+    <td>${c.weight}%</td><td>${c.max_score}</td>
+    <td><button class="b b-danger b-sm" onclick="removeCriterion('${c.id}')">حذف</button></td></tr>`).join('')
+    + `<tr><td colspan="2" style="color:var(--muted);">المجموع</td>
+       <td style="color:${total===100?'var(--teal)':'var(--bad)'};font-weight:700;">${total}%</td><td colspan="2"></td></tr>`;
+}
+async function addCriterion(){
+  const name_ar=document.getElementById('cName').value.trim();
+  if(!name_ar) return toast('اكتب اسم المعيار');
+  await supabaseClient.from('judging_criteria').insert({
+    name_ar, hint_ar:document.getElementById('cHint').value.trim()||null,
+    weight:parseInt(document.getElementById('cWeight').value||'25',10),
+    max_score:parseInt(document.getElementById('cMax').value||'5',10),
+    sort_order:criteria.length+1,
+  });
+  ['cName','cHint'].forEach(id=>document.getElementById(id).value='');
+  loadAll(); toast('تمت الإضافة');
+}
+async function removeCriterion(id){
+  if(!confirm('حذف المعيار وكل درجاته؟')) return;
+  await supabaseClient.from('judging_criteria').delete().eq('id',id);
+  loadAll();
+}
+function renderAssign(){
+  if(!judges.length){ document.getElementById('assignBox').innerHTML='<div class="empty">أضف محكّمين أولًا.</div>'; return; }
+  document.getElementById('assignBox').innerHTML = judges.map(j=>`
+    <div class="assign-judge">
+      <div class="jn">${j.full_name}</div>
+      <div class="assign-teams">
+        ${teams.map(t=>{
+          const on=assignments.some(a=>a.judge_id===j.id && a.team_id===t.id);
+          return `<span class="tchip ${on?'on':''}" onclick="toggleAssign('${j.id}','${t.id}')">${t.code} · ${t.name}</span>`;
+        }).join('') || '<span style="color:var(--muted);font-size:12.5px;">لا توجد فرق.</span>'}
+      </div>
+    </div>`).join('');
+}
+async function toggleAssign(judge_id, team_id){
+  const ex=assignments.find(a=>a.judge_id===judge_id && a.team_id===team_id);
+  if(ex){
+    await supabaseClient.from('judge_assignments').delete().eq('id',ex.id);
+    assignments=assignments.filter(a=>a.id!==ex.id);
+  } else {
+    const { data } = await supabaseClient.from('judge_assignments')
+      .insert({ judge_id, team_id }).select().single();
+    if(data) assignments.push(data);
   }
+  renderAssign(); renderJudges(); renderProgress();
 }
-
-function facilitatorFallbackSql(email, trackCodes){
-  const codesArr = (trackCodes || []).map(c => `'${c}'`).join(', ');
-  return `insert into profiles (id, role, track_ids, full_name)
-select u.id, 'facilitator',
-  (select array_agg(id) from tracks where code in (${codesArr})),
-  u.email
-from auth.users u
-where u.email = '${email}'
-on conflict (id) do update set role = 'facilitator', track_ids = excluded.track_ids;`;
-}
-
-function adminFallbackSql(email){
-  return `insert into profiles (id, role, full_name)
-select id, 'admin', email
-from auth.users
-where email = '${email}'
-on conflict (id) do update set role = 'admin';`;
-}
-
-function showFallbackSql(msgEl, email, sql){
-  msgEl.style.color = '#132a5c';
-  msgEl.innerHTML = `
-    <div>الإنشاء التلقائي غير مفعّل حاليًا (Edge Function غير منشورة). أنشئ الحساب يدويًا:</div>
-    <div style="margin:6px 0;">1) من Supabase → Authentication → Users → Add user → بالبريد: <b>${email}</b></div>
-    <div>2) نفّذ هذا في SQL Editor:</div>
-    <pre style="background:#f5f4ef;padding:8px;border-radius:8px;font-size:12px;white-space:pre-wrap;margin-top:6px;">${sql}</pre>
-  `;
-}
-
-async function addFacilitator(){
-  const email = document.getElementById('facEmail').value.trim();
-  const trackIds = [...document.querySelectorAll('.fac-track-cb:checked')].map(cb => cb.value);
-  const password = document.getElementById('facPassword').value.trim();
-  const msg = document.getElementById('facMsg');
-  msg.style.color = '#9c2b2b';
-  msg.innerHTML = '';
-
-  if(!email || !password){ msg.textContent = 'أدخل البريد وكلمة المرور (أو اضغط توليد)'; return; }
-  if(!trackIds.length){ msg.textContent = 'اختر مسارًا واحدًا على الأقل'; return; }
-
-  const { ok, result, fallback } = await callCreateUser({ email, password, role: 'facilitator', track_ids: trackIds, full_name: email });
-
-  if(fallback){
-    const codes = trackIds.map(id => { const t = tracks.find(x => x.id === id); return t ? t.code : null; }).filter(Boolean);
-    showFallbackSql(msg, email, facilitatorFallbackSql(email, codes));
-    return;
-  }
-  if(!ok){ msg.textContent = 'تعذّر الإنشاء: ' + (result.error || 'خطأ غير معروف'); return; }
-
-  msg.style.color = '#1e7a3f';
-  msg.textContent = `تم إنشاء حساب الميسّر بنجاح. البريد: ${email} — كلمة المرور: ${password} (أرسلها له الآن، لن تظهر مرة أخرى)`;
-  document.getElementById('facEmail').value = '';
-  document.getElementById('facPassword').value = '';
-  loadFacilitators();
-}
-
-async function removeFacilitator(id){
-  if(!confirm('إزالة صلاحية الميسّر لهذا الحساب؟')) return;
-  await supabaseClient.from('profiles').delete().eq('id', id);
-  loadFacilitators();
-}
-
-// ---------- المسؤولون (المديرون) ----------
-async function loadAdmins(){
-  const { data } = await supabaseClient.from('profiles').select('*').eq('role', 'admin');
-  const admins = data || [];
-  document.getElementById('adminTbody').innerHTML = admins.map(a => `
-    <tr>
-      <td>${a.full_name || a.id}</td>
-      <td>${admins.length > 1 ? `<button class="small-btn btn-danger" onclick="removeAdmin('${a.id}')">إزالة</button>` : '<span style="color:#9ca3af;font-size:12px;">لا يمكن إزالة آخر مسؤول</span>'}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="2" style="text-align:center;color:#9ca3af;padding:14px;">لا يوجد مسؤولون</td></tr>';
-}
-
-async function addAdmin(){
-  const email = document.getElementById('adminEmail').value.trim();
-  const password = document.getElementById('adminPassword').value.trim();
-  const msg = document.getElementById('adminMsg');
-  msg.style.color = '#9c2b2b';
-  msg.innerHTML = '';
-
-  if(!email || !password){ msg.textContent = 'أدخل البريد وكلمة المرور (أو اضغط توليد)'; return; }
-
-  const { ok, result, fallback } = await callCreateUser({ email, password, role: 'admin', full_name: email });
-
-  if(fallback){
-    showFallbackSql(msg, email, adminFallbackSql(email));
-    return;
-  }
-  if(!ok){ msg.textContent = 'تعذّر الإنشاء: ' + (result.error || 'خطأ غير معروف'); return; }
-
-  msg.style.color = '#1e7a3f';
-  msg.textContent = `تم إنشاء حساب المسؤول بنجاح. البريد: ${email} — كلمة المرور: ${password} (أرسلها له الآن، لن تظهر مرة أخرى)`;
-  document.getElementById('adminEmail').value = '';
-  document.getElementById('adminPassword').value = '';
-  loadAdmins();
-}
-
-async function removeAdmin(id){
-  if(!confirm('إزالة صلاحية المدير لهذا الحساب؟')) return;
-  await supabaseClient.from('profiles').delete().eq('id', id);
-  loadAdmins();
-}
-
-// ---------- الإعدادات ----------
-async function saveSettings(){
-  const val = parseInt(document.getElementById('minDaysInput').value, 10);
-  const msg = document.getElementById('settingsMsg');
-  const { error } = await supabaseClient.from('app_settings').update({ min_attendance_days: val }).eq('id', 1);
-  if(error){ msg.style.color = '#9c2b2b'; msg.textContent = 'تعذّر الحفظ: ' + friendlyError(error); return; }
-  minAttendanceDays = val;
-  msg.style.color = '#1e7a3f';
-  msg.textContent = 'تم الحفظ';
-  renderStats();
-}
-
-async function saveClosingDaySettings(){
-  const active = document.getElementById('closingDayActiveToggle').checked;
-  const dateVal = document.getElementById('closingDayDate').value || null;
-  const msg = document.getElementById('closingDayMsg');
-  const { error } = await supabaseClient.from('app_settings').update({
-    closing_day_active: active, closing_day_date: dateVal
-  }).eq('id', 1);
-  if(error){ msg.style.color = '#9c2b2b'; msg.textContent = 'تعذّر الحفظ: ' + friendlyError(error); return; }
-  msg.style.color = '#1e7a3f';
-  msg.textContent = 'تم الحفظ';
-  showToast('تم حفظ إعدادات اليوم الختامي', 'success');
-  renderStats(); renderTable();
-}
-
-// تحويل تاريخ ISO (من قاعدة البيانات) لصيغة datetime-local (بتوقيت الجهاز المحلي)
-function toDatetimeLocal(isoString){
-  if(!isoString) return '';
-  const d = new Date(isoString);
-  const offsetMs = d.getTimezoneOffset() * 60000;
-  return new Date(d.getTime() - offsetMs).toISOString().slice(0, 16);
-}
-
-async function saveRegistrationControl(){
-  const msg = document.getElementById('regSettingsMsg');
-  const isOpen = document.getElementById('regOpenToggle').checked;
-  const opensVal = document.getElementById('regOpensAt').value;
-  const closesVal = document.getElementById('regClosesAt').value;
-  const customMsg = document.getElementById('regClosedMessage').value.trim();
-
-  const payload = {
-    registration_open: isOpen,
-    registration_opens_at: opensVal ? new Date(opensVal).toISOString() : null,
-    registration_closes_at: closesVal ? new Date(closesVal).toISOString() : null,
-    registration_closed_message: customMsg || null,
-  };
-
-  const { error } = await supabaseClient.from('app_settings').update(payload).eq('id', 1);
-  if(error){ msg.style.color = '#9c2b2b'; msg.textContent = 'تعذّر الحفظ: ' + friendlyError(error); return; }
-  msg.style.color = '#1e7a3f';
-  msg.textContent = 'تم حفظ إعدادات التسجيل';
-}
-
-async function saveEmailTemplates(){
-  const msg = document.getElementById('templatesMsg');
-  const payload = {
-    confirmation_subject: document.getElementById('confirmSubject').value.trim() || null,
-    confirmation_body: document.getElementById('confirmBody').innerHTML.trim() || null,
-    reminder_subject: document.getElementById('reminderSubject').value.trim() || null,
-    reminder_body: document.getElementById('reminderBody').innerHTML.trim() || null,
-  };
-
-  const { error } = await supabaseClient.from('app_settings').update(payload).eq('id', 1);
-  if(error){ msg.style.color = '#9c2b2b'; msg.textContent = 'تعذّر الحفظ: ' + friendlyError(error); return; }
-  msg.style.color = '#1e7a3f';
-  msg.textContent = 'تم حفظ القوالب — التعديل يسري على الرسائل القادمة فورًا';
-  showToast('تم حفظ قوالب الرسائل', 'success');
-}
-
-// ---------- التحليلات ----------
-function exportEvaluationNotes(){
-  if(!evaluations.length){ showToast('لا توجد تقييمات لتصديرها بعد', 'info'); return; }
-
-  const rows = evaluations.map(e => ({
-    'اسم المشارك': e.participants ? e.participants.full_name : '',
-    'المسار': e.tracks ? e.tracks.name_ar : '',
-    'تقييم المحتوى': e.rating_content,
-    'تقييم المدرب': e.rating_trainer,
-    'تقييم التنظيم': e.rating_organization,
-    'التقييم العام': e.rating_overall,
-    'الملاحظات': e.comment || '',
-    'تاريخ التقييم': e.submitted_at,
+async function assignAll(){
+  if(!judges.length || !teams.length) return;
+  if(!confirm('إسناد كل الفرق لكل المحكّمين؟')) return;
+  const rows=[];
+  judges.forEach(j=>teams.forEach(t=>{
+    if(!assignments.some(a=>a.judge_id===j.id && a.team_id===t.id))
+      rows.push({ judge_id:j.id, team_id:t.id });
   }));
-  const ws = XLSX.utils.json_to_sheet(rows);
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, 'ملاحظات الاستبيان');
-  XLSX.writeFile(wb, 'ملاحظات_استبيان_صيف_الابتكار_2026.xlsx');
+  if(rows.length) await supabaseClient.from('judge_assignments').insert(rows);
+  loadAll(); toast('تم الإسناد');
 }
 
-function renderSurveyStats(){
-  const box = document.getElementById('surveyStats');
-  const total = evaluations.length;
-  if(!total){
-    box.innerHTML = '<div class="stat"><div class="num">0</div><div class="lbl">لا توجد تقييمات بعد</div></div>';
-    return;
-  }
-  const avg = key => (evaluations.reduce((s,e) => s + (e[key]||0), 0) / total).toFixed(1);
-  box.innerHTML = `
-    <div class="stat"><div class="num">${total}</div><div class="lbl">عدد التقييمات المستلمة</div></div>
-    <div class="stat"><div class="num">${avg('rating_overall')}</div><div class="lbl">متوسط التقييم العام (5)</div></div>
-    <div class="stat"><div class="num">${avg('rating_content')}</div><div class="lbl">متوسط تقييم المحتوى</div></div>
-    <div class="stat"><div class="num">${avg('rating_trainer')}</div><div class="lbl">متوسط تقييم المدرب</div></div>
-    <div class="stat"><div class="num">${avg('rating_organization')}</div><div class="lbl">متوسط تقييم التنظيم</div></div>
-  `;
+/* ---------- النتائج ---------- */
+function renderResults(){
+  const box=document.getElementById('resultsBox');
+  if(!results.length){ box.innerHTML='<div class="empty">لا توجد نتائج بعد.</div>'; return; }
+  box.innerHTML = tracks.map(tr=>{
+    const rows=results.filter(r=>r.track_id===tr.id)
+      .sort((a,b)=>(b.final_score??-1)-(a.final_score??-1));
+    if(!rows.length) return '';
+    return `<h3 style="margin:18px 0 10px;font-size:15px;">${tr.name_ar}</h3>
+      <div class="table-wrap"><table>
+      <thead><tr><th>#</th><th>الفريق</th><th>المشروع</th><th>المحكّمون</th><th>النتيجة</th></tr></thead>
+      <tbody>${rows.map((r,i)=>`<tr>
+        <td style="color:${i===0?'var(--teal)':'var(--muted)'};font-weight:700;">${i+1}</td>
+        <td>${r.name}</td>
+        <td style="font-size:12.5px;color:var(--muted);">${r.project_title||'—'}</td>
+        <td>${r.judges_count}</td>
+        <td style="font-weight:700;color:var(--teal);">${r.final_score!=null?r.final_score+'%':'—'}</td>
+      </tr>`).join('')}</tbody></table></div>`;
+  }).join('');
 }
 
-async function loadTrackComparison(){
-  const { data } = await supabaseClient.rpc('get_track_report');
-  const rows = data || [];
-  document.getElementById('compareTbody').innerHTML = rows.map(r => `
-    <tr>
-      <td>${r.track_name}</td>
-      <td>${r.participant_count}</td>
-      <td>${r.full_attendance_count}</td>
-      <td>${r.certified_count}</td>
-      <td>${r.avg_rating ?? '—'}</td>
-    </tr>
-  `).join('') || '<tr><td colspan="5" style="text-align:center;color:#9ca3af;padding:16px;">لا توجد بيانات بعد</td></tr>';
+/* ---------- الإعدادات ---------- */
+const TOGGLES = [
+  ['registration_open','التسجيل مفتوح','صفحة التسجيل تستقبل فرقًا جديدة.'],
+  ['submission_open','تسليم المشاريع مفتوح','الفرق تقدر ترفع ملفاتها من بوابة الفريق.'],
+  ['judging_open','التحكيم مفتوح','المحكّمون يقدرون يحفظون الدرجات.'],
+  ['results_published','النتائج منشورة','النتائج تظهر في الصفحة العامة.'],
+];
+function renderSettings(){
+  document.getElementById('togglesBox').innerHTML = TOGGLES.map(([k,t,d])=>`
+    <div class="toggle">
+      <div><div class="t">${t}</div><div class="d">${d}</div></div>
+      <div class="sw ${settings[k]?'on':''}" id="sw-${k}" onclick="toggleSetting('${k}')"></div>
+    </div>`).join('');
+
+  document.getElementById('settingsFields').innerHTML = `
+    <div><label for="d1">تاريخ اليوم الأول</label><input type="date" id="d1" value="${settings.day1_date||''}"></div>
+    <div><label for="d2">تاريخ اليوم الثاني</label><input type="date" id="d2" value="${settings.day2_date||''}"></div>
+    <div><label for="regClose">إغلاق التسجيل</label><input type="datetime-local" id="regClose" value="${toLocal(settings.registration_closes_at)}"></div>
+    <div><label for="subDl">آخر موعد للتسليم</label><input type="datetime-local" id="subDl" value="${toLocal(settings.submission_deadline)}"></div>
+    <div><label for="minAtt">أيام الحضور للشهادة</label><input type="number" id="minAtt" min="0" max="2" value="${settings.min_attendance_days??1}"></div>
+    <div><label for="minT">أقل عدد أعضاء</label><input type="number" id="minT" min="1" max="10" value="${settings.min_team_size??2}"></div>
+    <div><label for="maxT">أكثر عدد أعضاء</label><input type="number" id="maxT" min="1" max="10" value="${settings.max_team_size??5}"></div>`;
+  document.getElementById('closedMsg').value = settings.registration_closed_message||'';
+}
+function toLocal(ts){
+  if(!ts) return '';
+  const d=new Date(ts); const p=n=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+}
+async function toggleSetting(k){
+  const v=!settings[k];
+  const { error } = await supabaseClient.from('app_settings').update({ [k]:v }).eq('id',1);
+  if(error) return toast('تعذّر الحفظ');
+  settings[k]=v; document.getElementById('sw-'+k).classList.toggle('on',v); toast('تم الحفظ');
+}
+async function saveSettings(){
+  const val=id=>document.getElementById(id).value;
+  const payload={
+    day1_date: val('d1')||null, day2_date: val('d2')||null,
+    registration_closes_at: val('regClose')? new Date(val('regClose')).toISOString():null,
+    submission_deadline:    val('subDl')  ? new Date(val('subDl')).toISOString():null,
+    min_attendance_days: parseInt(val('minAtt')||'1',10),
+    min_team_size: parseInt(val('minT')||'2',10),
+    max_team_size: parseInt(val('maxT')||'5',10),
+    registration_closed_message: document.getElementById('closedMsg').value.trim()||null,
+  };
+  const { error } = await supabaseClient.from('app_settings').update(payload).eq('id',1);
+  if(error) return msg('setMsg', error.message);
+  Object.assign(settings,payload); msg('setMsg','تم الحفظ.',true); toast('تم الحفظ');
 }
 
-function renderCharts(){
-  Object.values(charts).forEach(c => c.destroy());
-
-  const labels = tracks.map(t => t.name_ar);
-  const gold = '#14B8A6', navy = '#0B1B3F';
-
-  charts.tracks = new Chart(document.getElementById('chartTracks'), {
-    type: 'bar',
-    data: { labels, datasets: [{ data: tracks.map(t => participants.filter(p => p.track_id === t.id).length), backgroundColor: gold }] },
-    options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, ticks:{precision:0}}} }
-  });
-
-  const fullAttendPct = tracks.map(t => {
-    const inTrack = participants.filter(p => p.track_id === t.id);
-    if(!inTrack.length) return 0;
-    return Math.round(100 * inTrack.filter(p => attendedCount(p) === 3).length / inTrack.length);
-  });
-  charts.attendance = new Chart(document.getElementById('chartAttendance'), {
-    type: 'bar',
-    data: { labels, datasets: [{ data: fullAttendPct, backgroundColor: navy }] },
-    options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, max:100}} }
-  });
-
-  const eligiblePct = tracks.map(t => {
-    const inTrack = participants.filter(p => p.track_id === t.id);
-    if(!inTrack.length) return 0;
-    return Math.round(100 * inTrack.filter(p => isEligibleForCertificate(p)).length / inTrack.length);
-  });
-  charts.cert = new Chart(document.getElementById('chartCert'), {
-    type: 'bar',
-    data: { labels, datasets: [{ data: eligiblePct, backgroundColor: gold }] },
-    options: { plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true, max:100}} }
-  });
-
-  const orgCounts = {};
-  participants.forEach(p => { const o = p.organization || 'غير محدد'; orgCounts[o] = (orgCounts[o]||0)+1; });
-  const topOrgs = Object.entries(orgCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
-  charts.orgs = new Chart(document.getElementById('chartOrgs'), {
-    type: 'pie',
-    data: { labels: topOrgs.map(o=>o[0]), datasets: [{ data: topOrgs.map(o=>o[1]), backgroundColor: ['#0B1B3F','#14B8A6','#5b6b98','#f0cf6b','#8a99c4','#c9a544'] } ] },
-    options: { plugins:{legend:{position:'bottom', labels:{font:{size:11}}}} }
-  });
+/* ---------- التصدير ---------- */
+function save(rows,name){
+  const ws=XLSX.utils.json_to_sheet(rows); const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'بيانات'); XLSX.writeFile(wb,name);
 }
-
-// ---------- التحديثات والرسائل ----------
-// ---------- محرر التنسيق البسيط للتحديثات ----------
-function rteCmd(command, targetId){
-  const id = targetId || 'annBodyEditor';
-  document.getElementById(id).focus();
-  document.execCommand(command, false, null);
-  if(id === 'annBodyEditor') updateAnnPreview();
+function exportTeams(){
+  save(teams.map(t=>({
+    'الرمز':t.code,'الفريق':t.name,
+    'المسار':(tracks.find(x=>x.id===t.track_id)||{}).name_ar||'',
+    'التحدي':(challenges.find(c=>c.id===t.challenge_id)||{}).title_ar||'',
+    'الأعضاء':people.filter(p=>p.team_id===t.id).map(p=>p.full_name).join('، '),
+    'المشروع':(t.projects&&t.projects.title)||'','الملف':(t.projects&&t.projects.file_url)||'',
+    'الحالة':t.status,
+  })),'الفرق.xlsx');
 }
-function rteFontSize(size, targetId){
-  const id = targetId || 'annBodyEditor';
-  document.getElementById(id).focus();
-  document.execCommand('fontSize', false, size);
-  if(id === 'annBodyEditor') updateAnnPreview();
+function exportPeople(){
+  save(people.map(p=>{
+    const t=teams.find(x=>x.id===p.team_id);
+    return {'الاسم':p.full_name,'البريد':p.email,'الجوال':p.phone,'الجهة':p.organization||'',
+      'الفئة':p.category||'','الفريق':t?t.name:'',
+      'اليوم 1':p.day1_attended===true?'حاضر':(p.day1_attended===false?'غائب':''),
+      'اليوم 2':p.day2_attended===true?'حاضر':(p.day2_attended===false?'غائب':''),
+      'الشهادة':p.certificate_code||''};
+  }),'المشاركون.xlsx');
 }
-function updateAnnPreview(){
-  const title = document.getElementById('annTitle').value.trim();
-  const body = document.getElementById('annBodyEditor').innerHTML.trim();
-  document.getElementById('previewTitle').textContent = '📢 ' + (title || 'عنوان الرسالة');
-  document.getElementById('previewBody').innerHTML = body || 'اكتب نصًا لترى المعاينة هنا...';
-}
-const titleInputForPreview = document.getElementById('annTitle');
-if(titleInputForPreview) titleInputForPreview.addEventListener('input', updateAnnPreview);
-
-// تحويل نص عادي قديم (بفواصل أسطر) إلى HTML متوافق مع المحرر، أو إبقاء HTML كما هو لو كان جاهزًا مسبقًا
-function toEditorHtml(value){
-  if(!value) return '';
-  if(value.includes('<')) return value; // محتوى HTML مُنسّق مسبقًا
-  return value.split('\n').filter(l => l.trim()).map(l => `<div>${l}</div>`).join('');
-}
-
-const TEMPLATE_SAMPLE = { name: 'عبدالله صالح', track: 'ريادة الأعمال', dates: '27 يوليو إلى 29 يوليو' };
-
-function updateTemplatePreview(which){
-  const body = document.getElementById(which + 'Body').innerHTML.trim();
-  const filled = body
-    .replaceAll('{{name}}', TEMPLATE_SAMPLE.name)
-    .replaceAll('{{track}}', TEMPLATE_SAMPLE.track)
-    .replaceAll('{{dates}}', TEMPLATE_SAMPLE.dates);
-  document.getElementById(which + 'Preview').innerHTML =
-    '<div class="tpl-preview-label">معاينة (ببيانات تجريبية)</div>' + (filled || '<span style="color:#9ca3af;">اكتب نصًا لترى المعاينة هنا...</span>');
-}
-
-async function loadAnnouncements(){
-  const { data } = await supabaseClient.from('announcements').select('*, tracks(name_ar)').order('created_at', {ascending:false});
-  const list = data || [];
-  document.getElementById('annList').innerHTML = list.map(a => `
-    <div class="trackreg-row">
-      <div style="flex:1;">
-        <div style="font-weight:700;color:var(--navy);font-size:13.5px;">${a.title} <span style="font-weight:400;color:#9ca3af;font-size:11.5px;">— ${a.tracks ? a.tracks.name_ar : 'الكل'}</span></div>
-        <div style="font-size:12.5px;color:#6b7280;margin-top:2px;">${a.body}</div>
-      </div>
-      <button class="small-btn btn-danger" onclick="deleteAnnouncement('${a.id}')">حذف</button>
-    </div>
-  `).join('') || '<p style="color:#9ca3af;font-size:13px;">لا توجد تحديثات مرسلة بعد</p>';
-}
-
-async function sendAnnouncement(){
-  const trackId = document.getElementById('annTrack').value || null;
-  const title = document.getElementById('annTitle').value.trim();
-  const editor = document.getElementById('annBodyEditor');
-  const body = editor.innerHTML.trim();
-  const msg = document.getElementById('annMsg');
-
-  if(!title || !editor.textContent.trim()){ msg.style.color = '#9c2b2b'; msg.textContent = 'أدخل عنوان الرسالة ونصها'; return; }
-
-  const { data: inserted, error } = await supabaseClient.from('announcements').insert({ track_id: trackId, title, body }).select().single();
-  if(error){ msg.style.color = '#9c2b2b'; msg.textContent = 'تعذّر الإرسال: ' + friendlyError(error); return; }
-
-  msg.style.color = '#1e7a3f';
-  msg.textContent = 'تم نشر التحديث، جاري إرسال البريد للمشاركين...';
-  document.getElementById('annTitle').value = '';
-  editor.innerHTML = '';
-  updateAnnPreview();
-  showToast('تم نشر التحديث للمشاركين', 'success');
-  loadAnnouncements();
-
-  // إرسال بريد إلكتروني لكل المشاركين المستهدفين بهذا التحديث
-  try{
-    const { data: sessionData } = await supabaseClient.auth.getSession();
-    const res = await fetch(`${SUPABASE_URL}/functions/v1/send-announcement-email`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionData.session.access_token}`,
-        'apikey': SUPABASE_ANON_KEY,
-      },
-      body: JSON.stringify({ announcement_id: inserted.id }),
-    });
-    const result = await res.json();
-    if(res.ok) showToast(`تم إرسال البريد لـ ${result.sent} مشارك`, 'success');
-    else showToast('التحديث نُشر لكن تعذّر إرسال البريد: ' + (result.error || ''), 'error');
-  } catch(_){
-    showToast('التحديث نُشر لكن تعذّر إرسال البريد (تأكد من نشر دالة send-announcement-email)', 'error');
-  }
-}
-
-async function deleteAnnouncement(id){
-  if(!confirm('حذف هذا التحديث؟')) return;
-  await supabaseClient.from('announcements').delete().eq('id', id);
-  loadAnnouncements();
-  showToast('تم حذف التحديث', 'success');
-}
-
-// ---------- ملفات ومواد المسار ----------
-async function loadTrackMaterials(){
-  const { data } = await supabaseClient.from('track_materials').select('*, tracks(name_ar)').order('uploaded_at', {ascending:false});
-  const list = data || [];
-  document.getElementById('matList').innerHTML = list.map(m => `
-    <div class="trackreg-row">
-      <div style="flex:1;">
-        <a href="${m.url}" target="_blank" style="font-weight:700;color:var(--navy);font-size:13.5px;text-decoration:none;">📎 ${m.file_name}</a>
-        <span style="font-weight:400;color:#9ca3af;font-size:11.5px;"> — ${m.tracks ? m.tracks.name_ar : ''}</span>
-      </div>
-      <button class="small-btn btn-danger" onclick="deleteTrackMaterial('${m.id}')">حذف</button>
-    </div>
-  `).join('') || '<p style="color:#9ca3af;font-size:13px;">لا توجد ملفات مرفوعة بعد</p>';
-}
-
-async function uploadTrackMaterial(){
-  const trackId = document.getElementById('matTrack').value;
-  const fileInput = document.getElementById('matFile');
-  const file = fileInput.files[0];
-  const msg = document.getElementById('matMsg');
-
-  if(!trackId){ msg.style.color = '#9c2b2b'; msg.textContent = 'اختر المسار'; return; }
-  if(!file){ msg.style.color = '#9c2b2b'; msg.textContent = 'اختر ملفًا للرفع'; return; }
-
-  msg.style.color = '#132a5c'; msg.textContent = 'جاري الرفع...';
-
-  const path = `${Date.now()}-${Math.random().toString(36).slice(2)}-${file.name}`;
-  const { error: uploadErr } = await supabaseClient.storage.from('track-materials').upload(path, file);
-  if(uploadErr){ msg.style.color = '#9c2b2b'; msg.textContent = 'تعذّر الرفع: ' + friendlyError(uploadErr); return; }
-
-  const { data: urlData } = supabaseClient.storage.from('track-materials').getPublicUrl(path);
-  const { error: insertErr } = await supabaseClient.from('track_materials').insert({
-    track_id: trackId, file_name: file.name, url: urlData.publicUrl
-  });
-
-  if(insertErr){ msg.style.color = '#9c2b2b'; msg.textContent = 'تعذّر الحفظ: ' + friendlyError(insertErr); return; }
-
-  msg.style.color = '#1e7a3f'; msg.textContent = 'تم رفع الملف بنجاح';
-  fileInput.value = '';
-  showToast('تم رفع الملف للمشاركين', 'success');
-  loadTrackMaterials();
-}
-
-async function deleteTrackMaterial(id){
-  if(!confirm('حذف هذا الملف؟')) return;
-  await supabaseClient.from('track_materials').delete().eq('id', id);
-  loadTrackMaterials();
-  showToast('تم حذف الملف', 'success');
-}
-
-function friendlyError(error){
-  if(!error) return 'حدث خطأ غير متوقع';
-  const code = error.code;
-  const msg = error.message || '';
-
-  if(code === '23505') return 'هذا البريد أو رقم الجوال مستخدم مسبقًا لمشارك آخر';
-  if(code === '23503') return 'تعذّر تنفيذ العملية بسبب ارتباط هذا السجل ببيانات أخرى';
-  if(code === '23514') return 'قيمة غير صالحة، تحقق من البيانات المدخلة';
-  if(msg.includes('JWT') || msg.includes('token')) return 'انتهت صلاحية الجلسة، الرجاء تسجيل الدخول من جديد';
-  if(msg.includes('network') || msg.includes('fetch')) return 'تعذّر الاتصال بالخادم، تحقق من الإنترنت وحاول مرة أخرى';
-  return msg || 'حدث خطأ غير متوقع، حاول مرة أخرى';
-}
-
-function showToast(message, type = 'info'){
-  const container = document.getElementById('toastContainer');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  requestAnimationFrame(() => toast.classList.add('show'));
-  setTimeout(() => {
-    toast.classList.remove('show');
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
+function exportResults(){
+  save(results.map(r=>({'المسار':r.track_name,'الفريق':r.name,'المشروع':r.project_title||'',
+    'عدد المحكّمين':r.judges_count,'النتيجة %':r.final_score})),'النتائج.xlsx');
 }
 </script>
-
-<div id="toastContainer" class="toast-container"></div>
 </body>
 </html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>بوابة الفريق — صنّاع الحلول الابتكارية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--navy:#0B1B3F;--teal:#14B8A6;--bg:#FBF6E9;--line:#e7ddc0;--ink:#1c2230;--muted:#6b7280;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Arabic',sans-serif;}
+  h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
+  .topbar{background:var(--navy);color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .topbar h1{font-size:17px;}
+  .topbar button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;
+    padding:6px 12px;cursor:pointer;font-family:inherit;font-size:13px;}
+  main{max-width:680px;margin:0 auto;padding:22px 16px 70px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px;
+    box-shadow:0 8px 24px rgba(11,27,63,.05);}
+  label{display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin:14px 0 6px;}
+  input,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;
+    font-family:inherit;font-size:15px;background:#fff;color:var(--ink);}
+  textarea{resize:vertical;min-height:90px;line-height:1.8;}
+  input:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+  .hint{font-size:12px;color:var(--muted);margin-top:5px;line-height:1.7;}
+  button.primary{width:100%;background:var(--teal);color:#fff;border:none;border-radius:12px;padding:14px;
+    font-family:'Tajawal',sans-serif;font-weight:700;font-size:15.5px;cursor:pointer;margin-top:16px;}
+  button.primary:disabled{opacity:.55;cursor:not-allowed;}
+  .msg{margin-top:12px;font-size:13.5px;padding:11px 13px;border-radius:9px;display:none;line-height:1.7;}
+  .msg.err{background:#fdecec;color:#9c2b2b;display:block;}
+  .msg.ok{background:#e8f6ec;color:#1e7a3f;display:block;}
+  .hide{display:none !important;}
+  .head{border-bottom:1px solid var(--line);padding-bottom:14px;margin-bottom:14px;}
+  .head .code{font-family:'Tajawal',sans-serif;font-size:13px;color:var(--teal);font-weight:700;direction:ltr;display:inline-block;}
+  .head h2{color:var(--navy);font-size:21px;margin-top:4px;}
+  .head .track{font-size:13px;color:var(--muted);margin-top:5px;}
+  .challenge{background:#f7f4e8;border-radius:10px;padding:13px;font-size:13px;line-height:1.8;color:#3b4252;margin-top:12px;}
+  .members{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;}
+  .chip{background:#f2fbf9;border:1px solid #cdeee8;color:#0f7a68;border-radius:999px;padding:5px 13px;font-size:12.5px;}
+  .chip.lead{background:var(--navy);border-color:var(--navy);color:#fff;}
+  .file-label{display:block;background:#fffdf7;border:1.5px dashed var(--line);border-radius:10px;padding:16px;
+    text-align:center;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:700;color:var(--navy);font-size:14px;}
+  input[type=file]{display:none;}
+  .status{display:flex;align-items:center;gap:9px;font-size:13.5px;background:#e8f6ec;color:#1e7a3f;
+    border-radius:10px;padding:11px 13px;margin-bottom:16px;}
+  .closed-note{background:#fdf4e3;color:#8a6210;border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.8;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>بوابة الفريق — صنّاع الحلول الابتكارية</h1>
+  <button onclick="logout()" id="logoutBtn" class="hide">خروج</button>
+</div>
+
+<main>
+  <div class="card" id="loginCard">
+    <h2 style="color:var(--navy);font-size:19px;">دخول الفريق</h2>
+    <div class="hint" style="margin-top:6px;">ادخل برمز الفريق ورقم جوال أي عضو من أعضائه.</div>
+    <label for="code">رمز الفريق</label>
+    <input type="text" id="code" placeholder="SH-0000" dir="ltr" style="text-align:right;" autocomplete="off">
+    <label for="phone">رقم الجوال</label>
+    <input type="tel" id="phone" placeholder="05xxxxxxxx" dir="ltr" style="text-align:right;">
+    <button class="primary" onclick="login()" id="loginBtn">دخول</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="card">
+      <div class="head">
+        <span class="code" id="tCode"></span>
+        <h2 id="tName"></h2>
+        <div class="track" id="tTrack"></div>
+      </div>
+      <div class="challenge" id="tChallenge"></div>
+      <div class="members" id="tMembers"></div>
+    </div>
+
+    <div class="card">
+      <h3 style="color:var(--navy);font-size:17px;">تسليم المشروع</h3>
+      <div id="subState"></div>
+
+      <div id="subForm">
+        <label for="pTitle">عنوان المشروع</label>
+        <input type="text" id="pTitle">
+
+        <label for="pSummary">فكرة الحل باختصار</label>
+        <textarea id="pSummary" placeholder="اشرح الفكرة في فقرة قصيرة..."></textarea>
+
+        <label for="pSolution">كيف يعمل الحل تقنيًا</label>
+        <textarea id="pSolution" placeholder="التقنيات المستخدمة وآلية العمل..."></textarea>
+
+        <label for="pImpact">الأثر المتوقع</label>
+        <textarea id="pImpact" placeholder="ماذا يتغير في القطاع لو طُبّق الحل؟"></textarea>
+
+        <label for="pVideo">رابط فيديو العرض (اختياري)</label>
+        <input type="url" id="pVideo" dir="ltr" style="text-align:right;" placeholder="https://">
+
+        <label>ملف العرض</label>
+        <label class="file-label" id="fileLabel" for="pFile">اختر ملف PDF أو PowerPoint</label>
+        <input type="file" id="pFile" accept=".pdf,.ppt,.pptx"
+          onchange="document.getElementById('fileLabel').textContent = this.files[0] ? this.files[0].name : 'اختر ملف PDF أو PowerPoint';">
+        <div class="hint">الحد الأقصى 25 ميجابايت. تقدرون تحدّثون التسليم قبل الإغلاق.</div>
+
+        <button class="primary" onclick="submitProject()" id="subBtn">حفظ التسليم</button>
+        <div class="msg" id="subMsg"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="config.js"></script>
+<script>
+let team = null, creds = null;
+
+(function restore(){
+  try{
+    const saved = JSON.parse(localStorage.getItem('sh_team_login') || 'null');
+    if(saved){
+      document.getElementById('code').value  = saved.code;
+      document.getElementById('phone').value = saved.phone;
+      login(true);
+    }
+  }catch(_){}
+})();
+
+function msg(id, text, ok){
+  const el = document.getElementById(id);
+  el.className = 'msg ' + (ok ? 'ok' : 'err');
+  el.textContent = text;
+}
+
+async function login(silent){
+  const code  = document.getElementById('code').value.trim();
+  const phone = document.getElementById('phone').value.trim();
+  if(!code || !phone){ if(!silent) msg('loginMsg', 'اكتب رمز الفريق ورقم الجوال.'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'جاري التحقق...';
+
+  const { data, error } = await supabaseClient.rpc('get_team', { p_code: code, p_phone: phone });
+  btn.disabled = false; btn.textContent = 'دخول';
+
+  if(error || !data || !data.length){
+    localStorage.removeItem('sh_team_login');
+    if(!silent) msg('loginMsg', 'رمز الفريق أو رقم الجوال غير صحيح.');
+    return;
+  }
+
+  team = data[0]; creds = { code, phone };
+  localStorage.setItem('sh_team_login', JSON.stringify(creds));
+  render();
+}
+
+function logout(){
+  localStorage.removeItem('sh_team_login');
+  location.reload();
+}
+
+function render(){
+  document.getElementById('loginCard').classList.add('hide');
+  document.getElementById('app').classList.remove('hide');
+  document.getElementById('logoutBtn').classList.remove('hide');
+
+  document.getElementById('tCode').textContent  = team.code;
+  document.getElementById('tName').textContent  = team.name;
+  document.getElementById('tTrack').textContent = team.track_name || '';
+  document.getElementById('tChallenge').textContent = team.challenge_title || 'لم يُحدَّد تحدٍّ بعد.';
+
+  document.getElementById('tMembers').innerHTML = (team.members || [])
+    .map(m => `<span class="chip ${m.is_leader ? 'lead' : ''}">${m.full_name}${m.is_leader ? ' · قائد' : ''}</span>`)
+    .join('');
+
+  const p = team.project;
+  const stateBox = document.getElementById('subState');
+  const form = document.getElementById('subForm');
+
+  if(p){
+    document.getElementById('pTitle').value    = p.title    || '';
+    document.getElementById('pSummary').value  = p.summary  || '';
+    document.getElementById('pSolution').value = p.solution || '';
+    document.getElementById('pImpact').value   = p.impact   || '';
+    document.getElementById('pVideo').value    = p.video_url|| '';
+    if(p.file_name) document.getElementById('fileLabel').textContent = p.file_name + ' — اختر ملفًا آخر للاستبدال';
+  }
+
+  if(!team.submission_open){
+    stateBox.innerHTML = p
+      ? `<div class="status">تم استلام تسليمكم. التعديل مغلق الآن.</div>`
+      : `<div class="closed-note">تسليم المشاريع لم يُفتح بعد. بيُفتح لكم أثناء الفعالية.</div>`;
+    form.classList.add('hide');
+    return;
+  }
+
+  form.classList.remove('hide');
+  const dl = team.submission_deadline
+    ? new Date(team.submission_deadline).toLocaleString('ar-SA', { dateStyle:'medium', timeStyle:'short' })
+    : null;
+  stateBox.innerHTML = p
+    ? `<div class="status">تم استلام تسليمكم${dl ? ` — تقدرون تعدّلونه حتى ${dl}` : ''}.</div>`
+    : (dl ? `<div class="closed-note">آخر موعد للتسليم: ${dl}</div>` : '');
+}
+
+async function submitProject(){
+  const btn = document.getElementById('subBtn');
+  const title = document.getElementById('pTitle').value.trim();
+  if(!title){ msg('subMsg', 'اكتب عنوان المشروع.'); return; }
+
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  document.getElementById('subMsg').className = 'msg';
+
+  try{
+    let fileUrl = null, fileName = null;
+    const file = document.getElementById('pFile').files[0];
+
+    if(file){
+      if(file.size > 25 * 1024 * 1024) throw new Error('حجم الملف أكبر من 25 ميجابايت.');
+      const safe = file.name.replace(/[^\w.\-]+/g, '_');
+      const path = `${team.code}/${Date.now()}-${safe}`;
+      const { error: upErr } = await supabaseClient.storage.from('project-files').upload(path, file);
+      if(upErr) throw new Error('تعذّر رفع الملف: ' + upErr.message);
+      fileUrl  = supabaseClient.storage.from('project-files').getPublicUrl(path).data.publicUrl;
+      fileName = file.name;
+    }
+
+    const { error } = await supabaseClient.rpc('submit_project', {
+      p_code: creds.code, p_phone: creds.phone,
+      p_title: title,
+      p_summary:  document.getElementById('pSummary').value.trim(),
+      p_solution: document.getElementById('pSolution').value.trim(),
+      p_impact:   document.getElementById('pImpact').value.trim(),
+      p_file_url: fileUrl, p_file_name: fileName,
+      p_video_url: document.getElementById('pVideo').value.trim() || null,
+    });
+    if(error) throw new Error(error.message);
+
+    msg('subMsg', 'تم حفظ التسليم.', true);
+    await login(true);
+  } catch(e){
+    msg('subMsg', e.message || 'تعذّر الحفظ، حاول مرة أخرى.');
+  } finally {
+    btn.disabled = false; btn.textContent = 'حفظ التسليم';
+  }
+}
+</script>
+</body>
+</html>

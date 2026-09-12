@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>بوابة المحكّم — صنّاع الحلول الابتكارية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--navy:#0B1B3F;--teal:#14B8A6;--bg:#FBF6E9;--line:#e7ddc0;--ink:#1c2230;--muted:#6b7280;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'IBM Plex Sans Arabic',sans-serif;}
+  h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
+  .topbar{background:var(--navy);color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .topbar h1{font-size:17px;}
+  .topbar .right{display:flex;align-items:center;gap:10px;font-size:13px;}
+  .topbar button{background:transparent;border:1px solid rgba(255,255,255,.35);color:#fff;border-radius:8px;
+    padding:6px 12px;cursor:pointer;font-family:inherit;font-size:13px;}
+  main{max-width:760px;margin:0 auto;padding:22px 16px 70px;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:22px;margin-bottom:16px;
+    box-shadow:0 8px 24px rgba(11,27,63,.05);}
+  label{display:block;font-size:13.5px;font-weight:700;color:var(--navy);margin:14px 0 6px;}
+  input,textarea{width:100%;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;
+    font-family:inherit;font-size:15px;background:#fff;color:var(--ink);}
+  textarea{resize:vertical;min-height:80px;line-height:1.8;}
+  input:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal);}
+  .hint{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.75;}
+  button.primary{width:100%;background:var(--teal);color:#fff;border:none;border-radius:12px;padding:14px;
+    font-family:'Tajawal',sans-serif;font-weight:700;font-size:15.5px;cursor:pointer;margin-top:16px;}
+  button.primary:disabled{opacity:.55;cursor:not-allowed;}
+  .msg{margin-top:12px;font-size:13.5px;padding:11px 13px;border-radius:9px;display:none;line-height:1.7;}
+  .msg.err{background:#fdecec;color:#9c2b2b;display:block;}
+  .msg.ok{background:#e8f6ec;color:#1e7a3f;display:block;}
+  .hide{display:none !important;}
+
+  .team{border:1px solid var(--line);border-radius:16px;background:#fff;padding:20px;margin-bottom:16px;}
+  .team .code{font-size:12.5px;color:var(--teal);font-weight:700;direction:ltr;display:inline-block;}
+  .team h3{color:var(--navy);font-size:18px;margin-top:4px;}
+  .team .meta{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.8;}
+  .team .ptitle{font-family:'Tajawal',sans-serif;font-weight:700;color:var(--navy);font-size:15px;margin-top:14px;}
+  .team .ptext{font-size:13.5px;line-height:1.9;color:#3b4252;margin-top:7px;white-space:pre-wrap;}
+  .flink{display:inline-block;margin-top:12px;background:#f2fbf9;border:1px solid #cdeee8;color:#0f7a68;
+    border-radius:10px;padding:9px 15px;text-decoration:none;font-size:13.5px;font-weight:600;}
+  .crit{border-top:1px solid #f0ead4;padding-top:14px;margin-top:16px;}
+  .crit-row{margin-bottom:14px;}
+  .crit-row .t{font-size:14px;font-weight:700;color:var(--navy);}
+  .crit-row .h{font-size:12px;color:var(--muted);margin-top:3px;}
+  .scale{display:flex;gap:7px;margin-top:9px;flex-wrap:wrap;}
+  .scale button{flex:1;min-width:46px;border:1.5px solid var(--line);background:#fff;color:var(--muted);
+    border-radius:10px;padding:11px 0;font-family:'Tajawal',sans-serif;font-weight:700;font-size:15px;cursor:pointer;}
+  .scale button.on{background:var(--teal);border-color:var(--teal);color:#fff;}
+  .scale button:disabled{opacity:.5;cursor:not-allowed;}
+  .done{background:#e8f6ec;color:#1e7a3f;border-radius:10px;padding:12px 14px;font-size:13.5px;margin-top:14px;}
+  .toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;
+    padding:11px 20px;border-radius:999px;font-size:13.5px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:9;}
+  .toast.show{opacity:1;}
+  .empty{text-align:center;color:var(--muted);padding:40px 20px;font-size:14.5px;line-height:1.9;}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>بوابة المحكّم — صنّاع الحلول الابتكارية</h1>
+  <div class="right">
+    <span id="whoami"></span>
+    <button onclick="logout()" id="logoutBtn" class="hide">خروج</button>
+  </div>
+</div>
+
+<main>
+  <!-- التحقق الأول: بريد + جوال -->
+  <div class="card" id="checkCard">
+    <h2 style="color:var(--navy);font-size:19px;">دخول المحكّم</h2>
+    <div class="hint">ادخل بريدك ورقم جوالك المسجَّلين لدى فريق التنظيم.</div>
+    <label for="cEmail">البريد الإلكتروني</label>
+    <input type="email" id="cEmail" dir="ltr" style="text-align:right;">
+    <label for="cPhone">رقم الجوال</label>
+    <input type="tel" id="cPhone" dir="ltr" style="text-align:right;" placeholder="05xxxxxxxx">
+    <button class="primary" onclick="checkJudge()" id="checkBtn">متابعة</button>
+    <div class="msg" id="checkMsg"></div>
+  </div>
+
+  <!-- أول مرة: تعيين كلمة المرور -->
+  <div class="card hide" id="setCard">
+    <h2 style="color:var(--navy);font-size:19px;">اختر كلمة مرورك</h2>
+    <div class="hint" id="setWelcome"></div>
+    <label for="sPass">كلمة المرور</label>
+    <input type="password" id="sPass" autocomplete="new-password">
+    <label for="sPass2">تأكيد كلمة المرور</label>
+    <input type="password" id="sPass2" autocomplete="new-password">
+    <div class="hint">6 خانات على الأقل. بتستخدمها في الدخول لاحقًا.</div>
+    <button class="primary" onclick="setPassword()" id="setBtn">حفظ والدخول</button>
+    <div class="msg" id="setMsg"></div>
+  </div>
+
+  <!-- الدخول بكلمة المرور -->
+  <div class="card hide" id="loginCard">
+    <h2 style="color:var(--navy);font-size:19px;">أهلًا بك</h2>
+    <div class="hint" id="loginWelcome"></div>
+    <label for="lPass">كلمة المرور</label>
+    <input type="password" id="lPass" autocomplete="current-password">
+    <button class="primary" onclick="login()" id="loginBtn">دخول</button>
+    <div class="msg" id="loginMsg"></div>
+  </div>
+
+  <div id="app" class="hide">
+    <div class="card" id="introCard">
+      <h2 style="color:var(--navy);font-size:18px;">المشاريع المسندة لك</h2>
+      <div class="hint" id="introHint"></div>
+    </div>
+    <div id="teamsBox"></div>
+  </div>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script src="config.js"></script>
+<script>
+let token = localStorage.getItem('sh_judge_token') || null;
+let pending = null;          // { email, phone, full_name }
+let criteria = [], teams = [];
+
+function msg(id, text, ok){
+  const el = document.getElementById(id);
+  el.className = 'msg ' + (ok ? 'ok' : 'err');
+  el.textContent = text;
+}
+function show(id){
+  ['checkCard','setCard','loginCard','app'].forEach(x =>
+    document.getElementById(x).classList.toggle('hide', x !== id));
+}
+let toastTimer = null;
+function toast(text){
+  const el = document.getElementById('toast');
+  el.textContent = text; el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 1600);
+}
+
+async function checkJudge(){
+  const email = document.getElementById('cEmail').value.trim();
+  const phone = document.getElementById('cPhone').value.trim();
+  if(!email || !phone){ msg('checkMsg', 'اكتب البريد ورقم الجوال.'); return; }
+
+  const btn = document.getElementById('checkBtn');
+  btn.disabled = true; btn.textContent = 'جاري التحقق...';
+  const { data, error } = await supabaseClient.rpc('judge_check', { p_email: email, p_phone: phone });
+  btn.disabled = false; btn.textContent = 'متابعة';
+
+  if(error || !data || !data.length){
+    msg('checkMsg', 'هذا البريد أو الجوال غير مسجَّل كمحكّم. تواصل مع فريق التنظيم.');
+    return;
+  }
+
+  pending = { email, phone, full_name: data[0].full_name };
+  if(data[0].must_set_password){
+    document.getElementById('setWelcome').textContent = `${pending.full_name} — أول دخول لك، اختر كلمة مرور.`;
+    show('setCard');
+  } else {
+    document.getElementById('loginWelcome').textContent = `${pending.full_name} — ادخل كلمة مرورك.`;
+    show('loginCard');
+  }
+}
+
+async function setPassword(){
+  const p1 = document.getElementById('sPass').value;
+  const p2 = document.getElementById('sPass2').value;
+  if(p1.length < 6){ msg('setMsg', 'كلمة المرور 6 خانات على الأقل.'); return; }
+  if(p1 !== p2){ msg('setMsg', 'كلمتا المرور غير متطابقتين.'); return; }
+
+  const btn = document.getElementById('setBtn');
+  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+  const { data, error } = await supabaseClient.rpc('judge_set_password', {
+    p_email: pending.email, p_phone: pending.phone, p_password: p1,
+  });
+  btn.disabled = false; btn.textContent = 'حفظ والدخول';
+
+  if(error){ msg('setMsg', error.message); return; }
+  token = data;
+  localStorage.setItem('sh_judge_token', token);
+  loadWorkspace();
+}
+
+async function login(){
+  const pass = document.getElementById('lPass').value;
+  if(!pass){ msg('loginMsg', 'اكتب كلمة المرور.'); return; }
+
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = 'جاري الدخول...';
+  const { data, error } = await supabaseClient.rpc('judge_login', {
+    p_email: pending.email, p_password: pass,
+  });
+  btn.disabled = false; btn.textContent = 'دخول';
+
+  if(error){ msg('loginMsg', 'كلمة المرور غير صحيحة.'); return; }
+  token = data;
+  localStorage.setItem('sh_judge_token', token);
+  loadWorkspace();
+}
+
+function logout(){
+  localStorage.removeItem('sh_judge_token');
+  location.reload();
+}
+
+async function loadWorkspace(){
+  const [{ data: crit }, { data: tms }] = await Promise.all([
+    supabaseClient.rpc('judge_criteria', { p_token: token }),
+    supabaseClient.rpc('judge_projects', { p_token: token }),
+  ]);
+
+  if(crit === null && tms === null){ logout(); return; }
+
+  criteria = crit || [];
+  teams    = tms  || [];
+
+  if(pending) document.getElementById('whoami').textContent = pending.full_name;
+  document.getElementById('logoutBtn').classList.remove('hide');
+  show('app');
+  renderTeams();
+}
+
+function renderTeams(){
+  const done = teams.filter(t => t.submitted).length;
+  document.getElementById('introHint').textContent = teams.length
+    ? `اعتمدتَ ${done} من ${teams.length}. الدرجات تُحفظ تلقائيًا، والاعتماد نهائي ولا يمكن تعديله.`
+    : '';
+
+  const box = document.getElementById('teamsBox');
+  if(!teams.length){
+    box.innerHTML = '<div class="card"><div class="empty">ما فيه مشاريع مسندة لك بعد.<br>تواصل مع فريق التنظيم.</div></div>';
+    return;
+  }
+
+  box.innerHTML = teams.map(t => {
+    const p = t.project || {};
+    const scores = t.my_scores || {};
+    const locked = t.submitted;
+
+    const critHtml = criteria.map(c => {
+      const val = scores[c.id];
+      const buttons = Array.from({ length: c.max_score }, (_, i) => i + 1).map(n =>
+        `<button class="${Number(val) === n ? 'on' : ''}" ${locked ? 'disabled' : ''}
+           onclick="setScore('${t.team_id}','${c.id}',${n})">${n}</button>`).join('');
+      return `<div class="crit-row">
+          <div class="t">${c.name_ar} <span style="color:var(--muted);font-weight:400;">· ${c.weight}%</span></div>
+          ${c.hint_ar ? `<div class="h">${c.hint_ar}</div>` : ''}
+          <div class="scale" id="sc-${t.team_id}-${c.id}">${buttons}</div>
+        </div>`;
+    }).join('');
+
+    return `
+    <div class="team" id="team-${t.team_id}">
+      <span class="code">${t.team_code}</span>
+      <h3>${t.team_name}</h3>
+      <div class="meta">${t.track_name}${t.challenge_title ? ' · ' + t.challenge_title : ''}</div>
+      <div class="meta">الأعضاء: ${(t.members || []).join('، ')}</div>
+
+      ${p.title ? `<div class="ptitle">${p.title}</div>` : '<div class="ptitle" style="color:var(--muted);">لم يُسلَّم مشروع بعد</div>'}
+      ${p.summary  ? `<div class="ptext">${p.summary}</div>` : ''}
+      ${p.solution ? `<div class="ptext"><b>الحل تقنيًا:</b> ${p.solution}</div>` : ''}
+      ${p.impact   ? `<div class="ptext"><b>الأثر المتوقع:</b> ${p.impact}</div>` : ''}
+      ${p.file_url ? `<a class="flink" href="${p.file_url}" target="_blank" rel="noopener">فتح ملف العرض</a>` : ''}
+      ${p.video_url ? `<a class="flink" href="${p.video_url}" target="_blank" rel="noopener">فتح الفيديو</a>` : ''}
+
+      <div class="crit">
+        ${critHtml}
+        <label for="cm-${t.team_id}">ملاحظاتك للفريق</label>
+        <textarea id="cm-${t.team_id}" ${locked ? 'disabled' : ''}>${t.my_comment || ''}</textarea>
+        ${locked
+          ? `<div class="done">تم اعتماد تقييمك لهذا المشروع.</div>`
+          : `<button class="primary" onclick="submitTeam('${t.team_id}')">اعتماد التقييم نهائيًا</button>`}
+        <div class="msg" id="tm-${t.team_id}"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+async function setScore(teamId, critId, value){
+  const { error } = await supabaseClient.rpc('judge_save_score', {
+    p_token: token, p_team_id: teamId, p_criterion_id: critId, p_score: value,
+  });
+  if(error){ msg('tm-' + teamId, error.message); return; }
+
+  const t = teams.find(x => x.team_id === teamId);
+  t.my_scores = t.my_scores || {};
+  t.my_scores[critId] = value;
+
+  const box = document.getElementById(`sc-${teamId}-${critId}`);
+  [...box.children].forEach((b, i) => b.classList.toggle('on', i + 1 === value));
+  toast('تم الحفظ');
+}
+
+async function submitTeam(teamId){
+  const t = teams.find(x => x.team_id === teamId);
+  const missing = criteria.filter(c => !(t.my_scores && t.my_scores[c.id]));
+  if(missing.length){
+    msg('tm-' + teamId, 'قيّم كل المعايير قبل الاعتماد: ' + missing.map(c => c.name_ar).join('، '));
+    return;
+  }
+  if(!confirm('الاعتماد نهائي ولا يمكن تعديل الدرجات بعده. متأكد؟')) return;
+
+  const comment = document.getElementById('cm-' + teamId).value.trim();
+  const { error } = await supabaseClient.rpc('judge_submit', {
+    p_token: token, p_team_id: teamId, p_comment: comment || null,
+  });
+  if(error){ msg('tm-' + teamId, error.message); return; }
+
+  t.submitted = true; t.my_comment = comment;
+  renderTeams();
+  toast('تم اعتماد التقييم');
+}
+
+if(token) loadWorkspace(); else show('checkCard');
+</script>
+</body>
+</html>
