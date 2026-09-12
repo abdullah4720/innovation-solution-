@@ -574,6 +574,15 @@ function previewImport(){
 
     const badTrack = importRows.filter(r => !r.track);
     const noReg    = importRows.filter(r => !r.reg_no);
+
+    // بريد واحد في أكثر من فريق
+    const seen = new Map(), dupes = [];
+    importRows.forEach(r => r.members.forEach(m => {
+      if(!m.email) return;
+      const where = r.title || r.reg_no;
+      if(seen.has(m.email)) dupes.push(`${m.full_name} (${m.email}) — ${seen.get(m.email)} و${where}`);
+      else seen.set(m.email, where);
+    }));
     const noEmail  = importRows.flatMap(r => r.members.filter(m => !m.email || !m.phone)
                       .map(m => `${r.title || r.reg_no}: ${m.full_name}`));
 
@@ -582,6 +591,7 @@ function previewImport(){
         ${importRows.length} فريق · ${importRows.reduce((n,r)=>n+r.members.length,0)} عضو
         ${badTrack.length ? `<div style="color:var(--bad);margin-top:6px;">مسار غير معروف في ${badTrack.length} فريق: ${badTrack.map(b=>b.trackRaw||'(فارغ)').join('، ')}</div>` : ''}
         ${noReg.length ? `<div style="color:var(--bad);margin-top:6px;">${noReg.length} فريق بلا رقم تسجيل (بيُتخطّى): ${noReg.map(b=>b.title||'(بلا عنوان)').join('، ')}</div>` : ''}
+        ${dupes.length ? `<div style="color:var(--amber);margin-top:6px;">بريد مكرر في أكثر من فريق — بيُضاف لأول فريق فقط:<br>${dupes.join('<br>')}</div>` : ''}
         ${noEmail.length ? `<div style="color:var(--bad);margin-top:6px;">أعضاء بلا بريد أو جوال (بيُتخطّون): ${noEmail.slice(0,6).join(' · ')}${noEmail.length>6?' …':''}</div>` : ''}
       </div>
       <div class="table-wrap"><table>
@@ -607,7 +617,7 @@ async function runImport(){
   const btn = document.querySelector('#importPreview .b-teal');
   if(btn){ btn.disabled = true; btn.textContent = 'جاري الاستيراد...'; }
 
-  let ok = 0; const fail = [];
+  let ok = 0; const fail = [], skipped = [];
   for(const r of importRows){
     const label = r.title || r.reg_no || r.members[0].full_name;
     if(!r.track){ fail.push(`${label} — مسار غير معروف`); continue; }
@@ -624,14 +634,23 @@ async function runImport(){
       continue;
     }
 
-    const rows = r.members
-      .filter(m => m.email && m.phone)
-      .map((m,i) => ({ ...m, track_id: r.track, team_id: team.id,
-                       is_leader: i === 0 || /قائد/.test(m.member_role||'') && i === 0 }));
-    if(rows.length){
-      const { error: pe } = await supabaseClient.from('participants').insert(rows);
-      if(pe){ fail.push(`${label} — ${pe.message}`); continue; }
+    // نُدخل الأعضاء واحدًا واحدًا حتى لا يسقط الفريق كله بسبب عضو مكرر
+    let added = 0;
+    const usable = r.members.filter(m => m.email && m.phone);
+    for(let i = 0; i < usable.length; i++){
+      const m = usable[i];
+      const { error: pe } = await supabaseClient.from('participants').insert({
+        ...m, track_id: r.track, team_id: team.id, is_leader: added === 0,
+      });
+      if(pe){
+        skipped.push(pe.code === '23505'
+          ? `${m.full_name} — مسجَّل مسبقًا في فريق آخر (${label})`
+          : `${m.full_name} (${label}) — ${pe.message}`);
+        continue;
+      }
+      added++;
     }
+    if(!added) fail.push(`${label} — ما دخل أي عضو`);
 
     const { error: pre } = await supabaseClient.from('projects').insert({
       team_id: team.id, title: r.title || label, summary: r.summary || null,
@@ -643,7 +662,11 @@ async function runImport(){
     ok++;
   }
 
-  msg('importMsg', `تم استيراد ${ok} فريق.` + (fail.length ? ` تعذّر ${fail.length}: ${fail.join(' | ')}` : ''), !fail.length);
+  msg('importMsg',
+    `تم استيراد ${ok} فريق.`
+    + (skipped.length ? ` تُخطّي ${skipped.length} عضو: ${skipped.join(' | ')}` : '')
+    + (fail.length ? ` تعذّر ${fail.length}: ${fail.join(' | ')}` : ''),
+    !fail.length && !skipped.length);
   importRows = null;
   document.getElementById('importPreview').innerHTML = '';
   loadAll();
