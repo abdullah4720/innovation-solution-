@@ -65,9 +65,9 @@
 
 <div class="topbar">
   <div style="display:flex;justify-content:center;margin-bottom:18px;position:relative;"><div class="brandmark">
-      <img src="logo-qu.png" alt="جامعة القصيم">
+      <img data-logo="qu" alt="جامعة القصيم">
       <span class="sep"></span>
-      <img src="logo-mim.png" alt="وزارة الصناعة والثروة المعدنية">
+      <img data-logo="mim" alt="وزارة الصناعة والثروة المعدنية">
     </div></div>
   <h1>صنّاع الحلول الابتكارية</h1>
   <div class="sub">نحو حلول مبتكرة تصنع أثرًا مستدامًا</div>
@@ -274,7 +274,7 @@ async function submitForm(){
   try{
     if(mode === 'team'){
       const teamName = document.getElementById('teamName').value.trim();
-      if(!teamName) throw new Error('اكتب اسم الفريق.');
+      if(!teamName) throw new Error('يُرجى إدخال اسم الفريق.');
 
       const members = collectMembers();
       if(members.length < settings.min_team_size)

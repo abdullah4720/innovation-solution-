@@ -164,7 +164,7 @@
   <!-- ============ الدخول ============ -->
   <div class="auth card" id="checkCard">
     <h3>الدخول</h3>
-    <div class="note">ادخل بالبريد ورقم الجوال اللي سجّلت فيهما. أول مرة بتختار كلمة مرور خاصة فيك.</div>
+    <div class="note">ادخل بالبريد ورقم الجوال المسجَّلين. في أول دخول ستختار كلمة مرور خاصة بك.</div>
     <label for="email">البريد الإلكتروني</label>
     <input type="email" id="email" dir="ltr" style="text-align:right;">
     <label for="phone">رقم الجوال</label>
@@ -244,7 +244,7 @@ function backToCheck(){ pending = null; showCard('checkCard'); }
 async function checkMe(){
   const email = document.getElementById('email').value.trim();
   const phone = document.getElementById('phone').value.trim();
-  if(!email || !phone){ msg('checkMsg','اكتب البريد ورقم الجوال.'); return; }
+  if(!email || !phone){ msg('checkMsg','يُرجى إدخال البريد ورقم الجوال.'); return; }
 
   const btn = document.getElementById('checkBtn');
   btn.disabled = true; btn.textContent = 'جاري التحقق...';
@@ -252,15 +252,15 @@ async function checkMe(){
   btn.disabled = false; btn.textContent = 'متابعة';
 
   if(error || !data || !data.length){
-    msg('checkMsg','ما لقينا تسجيلًا بهذا البريد ورقم الجوال. تأكد من البيانات أو تواصل مع فريق التنظيم.');
+    msg('checkMsg','لم نعثر على تسجيل بهذا البريد ورقم الجوال. يُرجى التأكد من البيانات أو اليُرجى التواصل مع فريق التنظيم.');
     return;
   }
   pending = { email, phone, full_name: data[0].full_name };
   if(data[0].must_set_password){
-    document.getElementById('setWelcome').textContent = `${pending.full_name} — أول دخول لك، اختر كلمة مرور.`;
+    document.getElementById('setWelcome').textContent = `${pending.full_name} — هذا أول دخول لك، فاختر كلمة مرور.`;
     showCard('setCard');
   } else {
-    document.getElementById('loginWelcome').textContent = `${pending.full_name} — ادخل كلمة مرورك.`;
+    document.getElementById('loginWelcome').textContent = `${pending.full_name} — أدخل كلمة مرورك.`;
     showCard('loginCard');
   }
 }
@@ -282,7 +282,7 @@ async function setPassword(){
 
 async function login(){
   const pass = document.getElementById('lPass').value;
-  if(!pass){ msg('loginMsg','اكتب كلمة المرور.'); return; }
+  if(!pass){ msg('loginMsg','يُرجى إدخال كلمة المرور.'); return; }
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = 'جاري الدخول...';
   const { data, error } = await supabaseClient.rpc('participant_login', {
@@ -387,8 +387,8 @@ function renderHome(){
       <h3>المطلوب منك</h3>
       <ul style="margin:10px 0 0;padding-inline-start:20px;line-height:2.1;font-size:13.5px;">
         ${todo.map(x=>`<li>${x}</li>`).join('')}</ul>
-    </div>` : `<div class="card"><h3>كل شي تمام</h3>
-      <div class="note" style="margin:8px 0 0;">ما عليك مطلوب حاليًا.</div></div>`}
+    </div>` : `<div class="card"><h3>لا مهام معلّقة</h3>
+      <div class="note" style="margin:8px 0 0;">لا يوجد إجراء مطلوب منك حاليًا.</div></div>`}
 
     <div class="card">
       <h3>الحضور</h3>
@@ -407,7 +407,7 @@ function renderHome(){
         <div class="mat"><div class="t">${a.title}</div>
           <div class="d">${a.body}</div>
           <div class="d" style="opacity:.7;margin-top:6px;">${fmtFull(a.created_at)}</div></div>`).join('')
-        : '<div class="empty">ما فيه تحديثات حاليًا.</div>'}
+        : '<div class="empty">لا توجد تحديثات حاليًا.</div>'}
     </div>`;
 }
 
@@ -416,7 +416,7 @@ function renderTeam(){
   const box = document.getElementById('tab-team');
   if(!me.team_id){
     box.innerHTML = `<div class="card"><div class="empty">
-      لم تُضمّ لفريق بعد.<br>فريق التنظيم بيتواصل معك.</div></div>`;
+      لم تُضَمّ إلى فريق حتى الآن.<br>سيتواصل معك فريق التنظيم.</div></div>`;
     return;
   }
   box.innerHTML = `
@@ -459,7 +459,7 @@ function renderProject(){
       ${flags.length ? `<div class="chips">${flags.map(f=>`<span class="chip">${f}</span>`).join('')}</div>` : ''}
       ${p.study_url ? `<a class="flink" href="${p.study_url}" target="_blank" rel="noopener">دراسة المشروع</a>` : ''}
       <div class="note" style="margin:14px 0 0;">
-        بيانات المشروع مسجَّلة لدى فريق التنظيم. لتعديلها تواصل معهم.
+        بيانات المشروع مسجَّلة لدى فريق التنظيم، ولتعديلها يُرجى التواصل معهم.
       </div>
     </div>
 
@@ -467,7 +467,7 @@ function renderProject(){
       <h3>العرض التقديمي</h3>
       <div class="note">${me.presentation_open
         ? (pdl ? `ارفعوا العرض الذي ستقدّمونه أمام اللجنة. آخر موعد: ${pdl}`
-               : 'ارفعوا العرض الذي ستقدّمونه أمام اللجنة. تقدرون تستبدلونه قبل الإغلاق.')
+               : 'ارفعوا العرض الذي ستقدّمونه أمام اللجنة، ويمكنكم استبداله قبل الإغلاق.')
         : 'رفع العروض التقديمية لم يُفتح بعد.'}</div>
 
       ${p.presentation_url ? `
@@ -526,7 +526,7 @@ function renderFiles(){
           ${m.file_url ? `<a class="flink" href="${m.file_url}" target="_blank" rel="noopener">${m.file_name || 'تحميل'}</a>` : ''}
           ${m.link_url ? `<a class="flink" href="${m.link_url}" target="_blank" rel="noopener">فتح الرابط</a>` : ''}
         </div>`).join('')
-      : '<div class="empty">ما فيه ملفات منشورة حاليًا.</div>'}
+      : '<div class="empty">لا توجد ملفات منشورة حاليًا.</div>'}
     </div>`;
 }
 
@@ -536,7 +536,7 @@ function renderJudging(){
   document.getElementById('tab-judging').innerHTML = `
     <div class="card">
       <h3>معايير التحكيم</h3>
-      <div class="note">على هذي المعايير تُقيَّم مشاريعكم. النتيجة متوسط موزون لدرجات المحكّمين.</div>
+      <div class="note">على هذه المعايير تُقيَّم مشاريعكم. النتيجة متوسط موزون لدرجات المحكّمين.</div>
       ${cs.length ? cs.map(c => `
         <div class="crit">
           <div class="t"><span>${c.name_ar}</span><span class="w">${c.weight}%</span></div>
@@ -569,8 +569,8 @@ function renderCert(){
   const needSurvey = me.require_survey && !me.survey_submitted;
   const unmet = [];
   if(days < need) unmet.push(need === 2
-    ? `حضور اليومين — سجّلنا لك ${days} من 2`
-    : `حضور يوم واحد على الأقل — سجّلنا لك ${days}`);
+    ? `حضور اليومين — المسجَّل لك ${days} من 2`
+    : `حضور يوم واحد على الأقل — المسجَّل لك ${days}`);
   if(needSurvey) unmet.push('تعبئة استبيان التقييم');
 
   let certHtml;
@@ -608,7 +608,7 @@ function renderSurvey(){
   if(!me.survey_open){ box.innerHTML = `<div class="closed">الاستبيان مغلق حاليًا.</div>`; return; }
 
   box.innerHTML = `
-    <div class="note">رأيك يساعدنا نطوّر البرنامج.${me.require_survey ? ' وتعبئته شرط لإصدار شهادتك.' : ''}</div>
+    <div class="note">رأيك يساعدنا على تطوير البرنامج.${me.require_survey ? ' وتعبئته شرط لإصدار شهادتك.' : ''}</div>
     ${SURVEY_Q.map(([k,q]) => `
       <div class="q"><div class="qt">${q}</div>
         <div class="stars" id="st-${k}">
@@ -620,7 +620,7 @@ function renderSurvey(){
         <button id="rec-no"  onclick="setRecommend(false)">لا</button>
       </div></div>
     <label for="svComment">ملاحظات أو مقترحات (اختياري)</label>
-    <textarea id="svComment" placeholder="شاركنا رأيك بحرية..."></textarea>
+    <textarea id="svComment" placeholder="شاركنا رأيك بحرية…"></textarea>
     <button class="b b-teal" id="svBtn" onclick="submitSurvey()">إرسال التقييم</button>
     <div class="msg" id="svMsg"></div>`;
 }

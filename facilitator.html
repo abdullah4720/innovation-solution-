@@ -96,9 +96,9 @@
   <div class="topbar">
     <div style="display:flex;align-items:center;gap:14px;">
       <div class="brandmark">
-      <img src="logo-qu.png" alt="جامعة القصيم">
+      <img data-logo="qu" alt="جامعة القصيم">
       <span class="sep"></span>
-      <img src="logo-mim.png" alt="وزارة الصناعة والثروة المعدنية">
+      <img data-logo="mim" alt="وزارة الصناعة والثروة المعدنية">
     </div>
       <h1>تسجيل الحضور</h1>
     </div>
@@ -144,7 +144,7 @@ supabaseClient.auth.onAuthStateChange(async (_e, session) => {
   const { data: prof } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
   if(!prof){
     document.getElementById('loginMsg').className='msg err';
-    document.getElementById('loginMsg').textContent='هذا الحساب غير مضاف لفريق التنظيم.';
+    document.getElementById('loginMsg').textContent='هذا الحساب غير مُضاف إلى فريق التنظيم.';
     await supabaseClient.auth.signOut(); return;
   }
   document.getElementById('loginCard').classList.add('hide');
@@ -185,7 +185,7 @@ async function load(){
 
 function fmt(d){
   if(!d) return '';
-  return new Date(d).toLocaleDateString('ar-SA', { day:'numeric', month:'long' });
+  return new Date(d).toLocaleDateString('ar-SA-u-ca-gregory', { day:'numeric', month:'long' });
 }
 function renderDayBar(){
   document.getElementById('dayBar').innerHTML = [1,2].map(n=>`
@@ -234,7 +234,7 @@ function render(){
   });
 
   const box = document.getElementById('list');
-  if(!filtered.length){ box.innerHTML = '<div class="panel"><div class="empty">ما فيه نتائج مطابقة.</div></div>'; return; }
+  if(!filtered.length){ box.innerHTML = '<div class="panel"><div class="empty">لا توجد نتائج مطابقة.</div></div>'; return; }
 
   box.innerHTML = [...groups.entries()].map(([tid, members])=>{
     const t = teams.find(x=>x.id===tid);

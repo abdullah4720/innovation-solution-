@@ -181,7 +181,7 @@ async function lookup(code){
   if(!c) return;
   const { data, error } = await supabaseClient.rpc('get_certificate', { p_code: c });
   if(error || !data || !data.length){
-    msg.className = 'msg err'; msg.textContent = 'ما فيه شهادة بهذا الرمز.'; return;
+    msg.className = 'msg err'; msg.textContent = 'لا توجد شهادة بهذا الرمز.'; return;
   }
   fill(data[0], c);
   document.getElementById('lookup').classList.add('hide');

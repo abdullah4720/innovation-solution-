@@ -276,7 +276,7 @@
 
       <div class="panel">
         <h3>لجان التحكيم</h3>
-        <div class="sub">اللجنة تضم محكّمين، والمشروع يُسند للجنة واحدة فيقيّمه كل أعضائها.</div>
+        <div class="sub">تضم اللجنة عددًا من المحكّمين، ويُسنَد المشروع إلى لجنة واحدة يقيّمه جميع أعضائها.</div>
         <div class="row">
           <input type="text" id="comName" placeholder="اسم اللجنة — مثال: اللجنة الأولى">
           <input type="text" id="comNotes" placeholder="ملاحظة (اختياري)">
@@ -308,8 +308,8 @@
       <div class="panel">
         <h3>ملفات ومواد للمشاركين</h3>
         <div class="sub">
-          ما ترفعه هنا يظهر للمشاركين في تبويب «الملفات» ببوابتهم — القوالب والأدلة والجداول.<br>
-          اترك المسار فارغًا ليظهر الملف لكل المشاركين.
+          ما تنشره هنا يظهر للمشاركين في تبويب «الملفات» ببوابتهم: القوالب والأدلة والجداول.<br>
+          اترك المسار فارغًا ليظهر الملف لجميع المشاركين.
         </div>
         <div class="row">
           <input type="text" id="mTitle" placeholder="عنوان الملف — مثال: قالب العرض التقديمي">
@@ -402,7 +402,7 @@ supabaseClient.auth.onAuthStateChange(async (_e, session) => {
   if(!session) return;
   const { data: prof } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
   if(!prof){
-    msg('loginMsg','هذا الحساب غير مضاف لفريق التنظيم.');
+    msg('loginMsg','هذا الحساب غير مُضاف إلى فريق التنظيم.');
     await supabaseClient.auth.signOut(); return;
   }
   document.getElementById('loginCard').classList.add('hide');
@@ -470,7 +470,7 @@ function renderStats(){
     <div class="stat"><div class="n">${people.filter(eligible).length}</div><div class="l">مؤهل للشهادة</div></div>`;
 }
 function renderProgress(){
-  if(!judges.length){ document.getElementById('judgeProgress').innerHTML='<div class="empty">ما فيه محكّمون بعد.</div>'; return; }
+  if(!judges.length){ document.getElementById('judgeProgress').innerHTML='<div class="empty">لا يوجد محكّمون حتى الآن.</div>'; return; }
   document.getElementById('judgeProgress').innerHTML = judges.map(j=>{
     const myComs = comMembersRows.filter(m=>m.judge_id===j.id).map(m=>m.committee_id);
     const total = teams.filter(t=>myComs.includes(t.committee_id)).length;
@@ -487,7 +487,7 @@ function renderSurvey(){
   const box = document.getElementById('surveyBox');
   const s = surveyStats;
   if(!s.responses){
-    box.innerHTML = '<div class="empty">ما وصلت ردود بعد.</div>';
+    box.innerHTML = '<div class="empty">لم تصل ردود حتى الآن.</div>';
     return;
   }
   const rows = [
@@ -558,14 +558,14 @@ function renderTeams(){
   }).join('') || '<tr><td colspan="8"><div class="empty">لا توجد فرق.</div></td></tr>';
 }
 async function resetTeamPassword(id, name){
-  if(!confirm(`تصفير كلمة مرور كل أعضاء "${name}"؟\n\nبيخرجون من البوابة، وكل عضو بيختار كلمة مرور جديدة بالبريد والجوال.`)) return;
+  if(!confirm(`تصفير كلمة مرور كل أعضاء "${name}"؟\n\nسيخرجون من البوابة، ويختار كل عضو كلمة مرور جديدة عبر البريد والجوال.`)) return;
   const { data, error } = await supabaseClient.rpc('admin_reset_team_password', { p_team_id: id });
   if(error) return toast('تعذّر التصفير: ' + error.message);
   toast(`تم تصفير ${data ?? 0} عضو`);
 }
 
 async function deleteTeam(id, name){
-  if(!confirm(`حذف فريق "${name}" نهائيًا؟\n\nبيُحذف معه الأعضاء والمشروع والملفات المرتبطة ودرجات التحكيم. لا يمكن التراجع.`)) return;
+  if(!confirm(`حذف فريق "${name}" نهائيًا؟\n\nسيُحذف معه الأعضاء والمشروع والملفات المرتبطة ودرجات التحكيم، ولا يمكن التراجع.`)) return;
   if(!confirm('تأكيد أخير — احذف الفريق؟')) return;
   const { data, error } = await supabaseClient.rpc('admin_delete_team', { p_team_id: id });
   if(error) return toast('تعذّر الحذف: ' + error.message);
@@ -615,7 +615,7 @@ function renderPeople(){
   }).join('') || '<tr><td colspan="9"><div class="empty">لا يوجد مشاركون.</div></td></tr>';
 }
 async function resetPersonPassword(id, name){
-  if(!confirm(`تصفير كلمة مرور ${name}؟ بيختار كلمة مرور جديدة عند دخوله.`)) return;
+  if(!confirm(`تصفير كلمة مرور ${name}؟ سيختار كلمة مرور جديدة عند دخوله.`)) return;
   const { error } = await supabaseClient.rpc('admin_reset_participant_password', { p_participant_id: id });
   if(error) return toast('تعذّر التصفير: ' + error.message);
   toast('تم التصفير');
@@ -646,7 +646,7 @@ async function issueCert(id){
 }
 async function issueAllCerts(){
   const list=people.filter(p=>!p.certificate_issued && eligible(p));
-  if(!list.length) return toast('ما فيه مشاركون مؤهلون');
+  if(!list.length) return toast('لا يوجد مشاركون مستوفون للشروط');
   if(!confirm(`إصدار ${list.length} شهادة لكل من استوفى الشروط؟`)) return;
   const { data, error } = await supabaseClient.rpc('admin_issue_certificates');
   if(error) return toast('تعذّر الإصدار: ' + error.message);
@@ -749,13 +749,13 @@ function previewImport(){
 
     const hIdx = grid.findIndex(r => r.some(c => norm(c) === 'رقم التسجيل'));
     if(hIdx === -1){
-      msg('importMsg','ما لقيت صف العناوين. تأكد أن الورقة الأولى فيها عمود "رقم التسجيل".');
+      msg('importMsg','تعذّر العثور على صف العناوين. تأكد أن الورقة الأولى فيها عمود "رقم التسجيل".');
       return;
     }
 
     const map = buildMap(grid[hIdx]);
     if(!map.blocks.length){
-      msg('importMsg','ما لقيت أعمدة أعضاء. لازم يكون عنوان كل عضو "الاسم".');
+      msg('importMsg','تعذّر العثور على أعمدة الأعضاء. يجب أن يكون عنوان كل عضو "الاسم".');
       return;
     }
 
@@ -778,7 +778,7 @@ function previewImport(){
       });
     }
 
-    if(!importRows.length){ msg('importMsg','ما فيه صفوف فيها أعضاء.'); return; }
+    if(!importRows.length){ msg('importMsg','لا توجد صفوف تتضمن أعضاء.'); return; }
 
     const badTrack = importRows.filter(r => !r.track);
     const noReg    = importRows.filter(r => !r.reg_no);
@@ -800,9 +800,9 @@ function previewImport(){
         ${importRows.length} فريق · ${importRows.reduce((n,r)=>n+r.members.length,0)} عضو
         · ${map.blocks.length} خانة عضو في القالب
         ${badTrack.length ? `<div style="color:var(--bad);margin-top:6px;">مسار غير معروف في ${badTrack.length} فريق: ${badTrack.map(b=>b.trackRaw||'(فارغ)').join('، ')}</div>` : ''}
-        ${noReg.length ? `<div style="color:var(--bad);margin-top:6px;">${noReg.length} فريق بلا رقم تسجيل (بيُتخطّى): ${noReg.map(b=>b.title||'(بلا عنوان)').join('، ')}</div>` : ''}
-        ${dupes.length ? `<div style="color:var(--amber);margin-top:6px;">بريد مكرر في أكثر من فريق — بيُضاف لأول فريق فقط:<br>${dupes.join('<br>')}</div>` : ''}
-        ${noContact.length ? `<div style="color:var(--amber);margin-top:6px;">أعضاء بلا بريد أو جوال (بيُتخطّون): ${noContact.join(' · ')}</div>` : ''}
+        ${noReg.length ? `<div style="color:var(--bad);margin-top:6px;">${noReg.length} فريق بلا رقم تسجيل (سيُتخطَّى): ${noReg.map(b=>b.title||'(بلا عنوان)').join('، ')}</div>` : ''}
+        ${dupes.length ? `<div style="color:var(--amber);margin-top:6px;">بريد مكرر في أكثر من فريق — يُضاف إلى أول فريق فقط:<br>${dupes.join('<br>')}</div>` : ''}
+        ${noContact.length ? `<div style="color:var(--amber);margin-top:6px;">أعضاء بلا بريد أو جوال (سيُتخطَّون): ${noContact.join(' · ')}</div>` : ''}
       </div>
       <div class="table-wrap"><table>
         <thead><tr><th>رقم التسجيل</th><th>الابتكار</th><th>المسار</th><th>القائد</th><th>الأعضاء</th><th>ملحقات</th></tr></thead>
@@ -860,7 +860,7 @@ async function runImport(){
       }
       added++;
     }
-    if(!added) fail.push(`${label} — ما دخل أي عضو`);
+    if(!added) fail.push(`${label} — لم يُدرَج أي عضو`);
 
     const { error: pre } = await supabaseClient.from('projects').insert({
       team_id: team.id, title: r.title || label, summary: r.summary || null,
@@ -906,13 +906,13 @@ async function addJudge(){
   const organization=document.getElementById('jOrg').value.trim()||null;
   if(!full_name||!email||!phone) return msg('judgeMsg','الاسم والبريد والجوال مطلوبة.');
   const { error } = await supabaseClient.from('judges').insert({ full_name,email,phone,organization });
-  if(error) return msg('judgeMsg', error.code==='23505'?'هذا البريد مضاف مسبقًا.':error.message);
+  if(error) return msg('judgeMsg', error.code==='23505'?'هذا البريد مُضاف مسبقًا.':error.message);
   ['jName','jEmail','jPhone','jOrg'].forEach(id=>document.getElementById(id).value='');
-  msg('judgeMsg','تمت الإضافة. أرسل له رابط judge.html.',true);
+  msg('judgeMsg','تمت الإضافة. أرسل إليه رابط judge.html.',true);
   loadAll();
 }
 async function resetJudgePassword(id){
-  if(!confirm('تصفير كلمة مرور المحكّم؟ بيختار كلمة مرور جديدة عند دخوله.')) return;
+  if(!confirm('تصفير كلمة مرور المحكّم؟ سيختار كلمة مرور جديدة عند دخوله.')) return;
   const { error } = await supabaseClient.rpc('admin_reset_judge_password', { p_judge_id: id });
   if(error) return toast('تعذّر التصفير: ' + error.message);
   loadAll(); toast('تم التصفير');
@@ -934,7 +934,7 @@ function renderCriteria(){
 }
 async function addCriterion(){
   const name_ar=document.getElementById('cName').value.trim();
-  if(!name_ar) return toast('اكتب اسم المعيار');
+  if(!name_ar) return toast('يُرجى إدخال اسم المعيار');
   await supabaseClient.from('judging_criteria').insert({
     name_ar, hint_ar:document.getElementById('cHint').value.trim()||null,
     weight:parseInt(document.getElementById('cWeight').value||'25',10),
@@ -957,7 +957,7 @@ function comMembers(cid){
 function renderCommittees(){
   const box = document.getElementById('comBox');
   if(!committees.length){
-    box.innerHTML = '<div class="empty">ما فيه لجان بعد. أضف لجنة وابدأ بضم المحكّمين.</div>';
+    box.innerHTML = '<div class="empty">لا توجد لجان حتى الآن. أضف لجنة ثم ضُمّ إليها المحكّمين.</div>';
   } else {
     box.innerHTML = committees.map(c => {
       const mem = comMembers(c.id);
@@ -1023,10 +1023,10 @@ function renderAssign(){
 
 async function addCommittee(){
   const name = document.getElementById('comName').value.trim();
-  if(!name) return msg('comMsg','اكتب اسم اللجنة.');
+  if(!name) return msg('comMsg','يُرجى إدخال اسم اللجنة.');
   const { error } = await supabaseClient.from('judging_committees')
     .insert({ name, notes: document.getElementById('comNotes').value.trim() || null });
-  if(error) return msg('comMsg', error.code==='23505' ? 'فيه لجنة بنفس الاسم.' : error.message);
+  if(error) return msg('comMsg', error.code==='23505' ? 'توجد لجنة بالاسم نفسه.' : error.message);
   document.getElementById('comName').value = '';
   document.getElementById('comNotes').value = '';
   msg('comMsg','تمت الإضافة.', true);
@@ -1034,7 +1034,7 @@ async function addCommittee(){
 }
 
 async function removeCommittee(id, name){
-  if(!confirm(`حذف "${name}"؟ مشاريعها بترجع بلا لجنة، ودرجات محكّميها تبقى محفوظة.`)) return;
+  if(!confirm(`حذف "${name}"؟ ستعود مشاريعها بلا لجنة، وتبقى درجات محكّميها محفوظة.`)) return;
   const { error } = await supabaseClient.from('judging_committees').delete().eq('id', id);
   if(error) return toast('تعذّر الحذف: ' + error.message);
   loadAll(); toast('تم الحذف');
@@ -1079,8 +1079,8 @@ async function bulkAssign(){
   const tid = document.getElementById('bulkTrack').value;
   if(!cid) return toast('اختر اللجنة');
   const list = teams.filter(t => !tid || t.track_id === tid);
-  if(!list.length) return toast('ما فيه مشاريع مطابقة');
-  if(!confirm(`إسناد ${list.length} مشروعًا لهذه اللجنة؟ الإسناد السابق بيُستبدل.`)) return;
+  if(!list.length) return toast('لا توجد مشاريع مطابقة');
+  if(!confirm(`إسناد ${list.length} مشروعًا لهذه اللجنة؟ سيُستبدل الإسناد السابق.`)) return;
   const { error } = await supabaseClient.from('teams')
     .update({ committee_id: cid }).in('id', list.map(t => t.id));
   if(error) return toast('تعذّر الإسناد: ' + error.message);
@@ -1120,12 +1120,12 @@ function renderMaterials(){
       <td><span class="pill ${m.published?'teal':'grey'}" style="cursor:pointer;"
         onclick="togglePublish('${m.id}',${!m.published})">${m.published?'منشور':'مخفي'}</span></td>
       <td><button class="b b-danger b-sm" onclick="removeMaterial('${m.id}')">حذف</button></td>
-    </tr>`).join('') || '<tr><td colspan="5"><div class="empty">ما فيه ملفات منشورة بعد.</div></td></tr>';
+    </tr>`).join('') || '<tr><td colspan="5"><div class="empty">لا توجد ملفات منشورة حتى الآن.</div></td></tr>';
 }
 
 async function addMaterial(){
   const title = document.getElementById('mTitle').value.trim();
-  if(!title) return msg('mMsg','اكتب عنوان الملف.');
+  if(!title) return msg('mMsg','يُرجى إدخال عنوان الملف.');
   const file = document.getElementById('mFile').files[0];
   const link = document.getElementById('mLink').value.trim();
   if(!file && !link) return msg('mMsg','ارفع ملفًا أو ضع رابطًا.');
@@ -1152,7 +1152,7 @@ async function addMaterial(){
     if(error) throw new Error(error.message);
     ['mTitle','mDesc','mLink'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('mFile').value = '';
-    msg('mMsg','تم النشر، والمشاركون يشوفونه الآن.', true);
+    msg('mMsg','تم النشر، وأصبح ظاهرًا للمشاركين.', true);
     loadAll();
   } catch(e){ msg('mMsg', e.message); }
   finally { btn.disabled = false; btn.textContent = 'نشر الملف'; }
@@ -1199,8 +1199,8 @@ const TOGGLES = [
   ['presentation_open','رفع العروض التقديمية مفتوح','قسم منفصل لملف العرض الذي يُقدَّم أمام اللجنة.'],
   ['judging_open','التحكيم مفتوح','المحكّمون يقدرون يحفظون الدرجات.'],
   ['results_published','النتائج منشورة','النتائج تظهر في الصفحة العامة.'],
-  ['survey_open','استبيان التقييم مفتوح','المشاركون يقدرون يعبّون الاستبيان من بوابتهم.'],
-  ['require_survey','الاستبيان شرط للشهادة','ما تُصدر الشهادة إلا بعد تعبئة الاستبيان.'],
+  ['survey_open','استبيان التقييم مفتوح','يستطيع المشاركون تعبئة الاستبيان من بوابتهم.'],
+  ['require_survey','الاستبيان شرط للشهادة','لا تُصدَر الشهادة إلا بعد تعبئة الاستبيان.'],
 ];
 function renderSettings(){
   document.getElementById('togglesBox').innerHTML = TOGGLES.map(([k,t,d])=>`
