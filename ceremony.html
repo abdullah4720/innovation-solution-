@@ -156,16 +156,14 @@ async function build(){
   slides = [{ type:'open' }];
 
   (tracks || []).forEach((tr, idx) => {
+    // الفائز الأول فقط في كل مسار
     const rows = results.filter(r => r.track_id === tr.id)
                         .sort((a,b) => b.final_score - a.final_score)
-                        .slice(0, 3);
+                        .slice(0, 1);
     if(!rows.length) return;
 
     slides.push({ type:'track', track:tr, idx:idx+1, count:rows.length });
-    // من الثالث إلى الأول
-    rows.slice().reverse().forEach((r, k) => {
-      slides.push({ type:'winner', track:tr, rank:rows.length - k, row:r, members:membersOf(r.team_id) });
-    });
+    slides.push({ type:'winner', track:tr, rank:1, row:rows[0], members:membersOf(rows[0].team_id) });
   });
 
   slides.push({ type:'close' });
@@ -174,7 +172,7 @@ async function build(){
 }
 
 function accentFor(trackId){ return ACCENTS[trackId] || '#35C9AE'; }
-const RANK_AR = { 1:'المركز الأول', 2:'المركز الثاني', 3:'المركز الثالث' };
+const RANK_AR = { 1:'الفائز', 2:'المركز الثاني', 3:'المركز الثالث' };
 
 function draw(){
   const s = slides[i];
