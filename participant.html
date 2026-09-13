@@ -135,6 +135,22 @@
     color:var(--navy);padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;
     opacity:0;transition:opacity .2s;pointer-events:none;z-index:70;font-family:'Tajawal',sans-serif;}
   .toast.show{opacity:1;}
+
+  .ovl{position:fixed;inset:0;background:rgba(6,10,18,.78);display:flex;align-items:center;
+    justify-content:center;padding:18px;z-index:80;}
+  .ovl .box{background:var(--surface);border:1px solid var(--line);border-radius:18px;
+    padding:24px;max-width:460px;width:100%;max-height:88vh;overflow:auto;}
+  .ovl h3{font-size:18px;}
+  .ovl .acts{display:flex;gap:9px;margin-top:20px;}
+  .ovl .acts button{flex:1;}
+  .mrow{display:flex;justify-content:space-between;align-items:center;gap:10px;
+    padding:11px 0;border-bottom:1px solid var(--line);}
+  .mrow:last-of-type{border-bottom:none;}
+  .mrow .nm{font-size:13.5px;}
+  .mrow .rl{font-size:11.5px;color:var(--muted);margin-top:2px;}
+  .mini{border:1px solid var(--line);background:var(--surface-2);color:var(--text);
+    border-radius:8px;padding:6px 11px;font-size:12px;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:700;}
+  .mini.danger{color:var(--bad);border-color:#5e3330;}
 </style>
 </head>
 <body>
@@ -419,24 +435,155 @@ function renderTeam(){
       لم تُضَمّ إلى فريق حتى الآن.<br>سيتواصل معك فريق التنظيم.</div></div>`;
     return;
   }
+  const canEdit = me.is_leader && me.team_edit_open;
+  const mem = me.members || [];
+
   box.innerHTML = `
     <div class="card">
-      <h3>${me.team_name}</h3>
-      <div class="note" style="margin-bottom:0;">
-        <span dir="ltr" style="color:var(--teal);">${me.reg_no || me.team_code}</span> · ${me.track_name || ''}</div>
-      <div class="chips">${(me.members||[]).map(m =>
-        `<span class="chip ${m.is_leader?'lead':''}">${m.full_name}${m.member_role?' · '+m.member_role:''}</span>`).join('')}</div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+        <div>
+          <h3>${me.team_name}</h3>
+          <div class="note" style="margin:6px 0 0;">
+            <span dir="ltr" style="color:var(--teal);">${me.reg_no || me.team_code}</span> · ${me.track_name || ''}</div>
+        </div>
+        ${canEdit ? `<button class="mini" onclick="editTeamInfo()">تعديل</button>` : ''}
+      </div>
+
       ${me.challenge_title ? `<div class="challenge"><b>التحدي:</b> ${me.challenge_title}
         ${me.challenge_desc ? `<br><br>${me.challenge_desc}` : ''}</div>` : ''}
+
       ${me.judging_order ? `<div class="ordbox">
         <div class="n">${me.judging_order}</div>
         <div class="t">ترتيب عرض مشروعكم أمام اللجنة<br>
           <span style="color:var(--muted);">من ${me.total_in_committee} مشروع</span></div>
       </div>` : ''}
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+        <h3>الأعضاء</h3>
+        <span class="note" style="margin:0;">${mem.length} من ${me.max_team_size}</span>
+      </div>
+      ${mem.map(m => `
+        <div class="mrow">
+          <div>
+            <div class="nm">${m.full_name}${m.is_leader ? ' · قائد الفريق' : ''}</div>
+            <div class="rl">${[m.member_role, m.organization].filter(Boolean).join(' · ') || '—'}</div>
+          </div>
+          ${canEdit ? `<div style="display:flex;gap:6px;flex-shrink:0;">
+            <button class="mini" onclick="editMember('${m.id}')">تعديل</button>
+            ${m.is_leader || m.locked ? '' :
+              `<button class="mini danger" onclick="removeMember('${m.id}','${String(m.full_name).replace(/'/g,"\\'")}')">حذف</button>`}
+          </div>` : ''}
+        </div>`).join('')}
+
+      ${canEdit && mem.length < me.max_team_size
+        ? `<button class="b b-teal" onclick="addMember()">إضافة عضو</button>`
+        : (me.is_leader && !me.team_edit_open
+            ? `<div class="closed" style="margin-top:14px;">تعديل بيانات الفريق مغلق حاليًا.</div>` : '')}
+      <div class="msg" id="teamMsg"></div>
     </div>`;
 }
 
-/* ---------- مشروعنا ---------- */
+/* ---------- نافذة عامة ---------- */
+function closeOvl(){ const m = document.getElementById('ovl'); if(m) m.remove(); }
+
+function openForm(title, fields, values, onSave){
+  closeOvl();
+  const html = fields.map(f => {
+    const v = (values || {})[f.key] ?? '';
+    if(f.type === 'select'){
+      return `<label for="ov-${f.key}">${f.label}</label>
+        <select id="ov-${f.key}" style="width:100%;background:var(--surface-2);border:1px solid var(--line);
+          color:var(--text);border-radius:10px;padding:11px 12px;font-family:inherit;font-size:15px;">
+          ${f.options.map(o=>`<option value="${o.v}" ${String(v)===String(o.v)?'selected':''}>${o.t}</option>`).join('')}
+        </select>`;
+    }
+    return `<label for="ov-${f.key}">${f.label}</label>
+      <input type="${f.type||'text'}" id="ov-${f.key}" value="${String(v).replace(/"/g,'&quot;')}"
+        ${f.dir?`dir="${f.dir}" style="text-align:right;"`:''}>`;
+  }).join('');
+
+  const el = document.createElement('div');
+  el.className = 'ovl'; el.id = 'ovl';
+  el.innerHTML = `<div class="box">
+      <h3>${title}</h3>${html}
+      <div class="msg" id="ovMsg"></div>
+      <div class="acts">
+        <button class="b b-ghost" onclick="closeOvl()">إلغاء</button>
+        <button class="b b-teal" id="ovSave" style="margin-top:0;">حفظ</button>
+      </div></div>`;
+  document.body.appendChild(el);
+
+  document.getElementById('ovSave').onclick = async () => {
+    const vals = {};
+    fields.forEach(f => { vals[f.key] = document.getElementById('ov-'+f.key).value; });
+    const btn = document.getElementById('ovSave');
+    btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+    try{
+      await onSave(vals);
+      closeOvl(); toast('تم الحفظ'); await loadMe();
+    } catch(e){
+      msg('ovMsg', e.message || 'تعذّر الحفظ');
+      btn.disabled = false; btn.textContent = 'حفظ';
+    }
+  };
+}
+
+function editTeamInfo(){
+  const opts = [{v:'',t:'— بلا تحدٍّ —'}].concat(
+    (me.track_challenges || []).map(c => ({ v:c.id, t:`التحدي ${c.number===1?'الأول':'الثاني'}` })));
+  openForm('تعديل بيانات الفريق',
+    [{ key:'name', label:'اسم الفريق' },
+     { key:'challenge_id', label:'التحدي', type:'select', options:opts }],
+    { name: me.team_name, challenge_id: me.challenge_id || '' },
+    async v => {
+      const { error } = await supabaseClient.rpc('my_update_team', {
+        p_token: token, p_name: v.name, p_challenge_id: v.challenge_id || null });
+      if(error) throw new Error(error.message);
+    });
+}
+
+function addMember(){
+  openForm('إضافة عضو',
+    [{ key:'full_name', label:'الاسم الكامل' },
+     { key:'email', label:'البريد الإلكتروني', type:'email', dir:'ltr' },
+     { key:'phone', label:'رقم الجوال', dir:'ltr' },
+     { key:'role', label:'دور العضو' },
+     { key:'organization', label:'الجهة' }],
+    {},
+    async v => {
+      const { error } = await supabaseClient.rpc('my_add_member', {
+        p_token: token, p_full_name: v.full_name, p_email: v.email,
+        p_phone: v.phone, p_role: v.role || null, p_organization: v.organization || null });
+      if(error) throw new Error(error.message);
+    });
+}
+
+function editMember(id){
+  const m = (me.members || []).find(x => x.id === id);
+  openForm('تعديل بيانات العضو',
+    [{ key:'full_name', label:'الاسم الكامل' },
+     { key:'role', label:'دور العضو' },
+     { key:'organization', label:'الجهة' }],
+    { full_name: m.full_name, role: m.member_role || '', organization: m.organization || '' },
+    async v => {
+      const { error } = await supabaseClient.rpc('my_update_member', {
+        p_token: token, p_member_id: id, p_full_name: v.full_name,
+        p_role: v.role || null, p_organization: v.organization || null });
+      if(error) throw new Error(error.message);
+    });
+}
+
+async function removeMember(id, name){
+  if(!confirm(`حذف ${name} من الفريق؟`)) return;
+  const { error } = await supabaseClient.rpc('my_remove_member', {
+    p_token: token, p_member_id: id });
+  if(error){ msg('teamMsg', error.message); return; }
+  toast('تم الحذف'); await loadMe();
+}
+
+/* ---------- مشروعنا ---------- *//* ---------- مشروعنا ---------- */
 function renderProject(){
   const box = document.getElementById('tab-project');
   if(!me.team_id){
