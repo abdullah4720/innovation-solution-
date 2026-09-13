@@ -35,7 +35,7 @@
 
   /* ---------- المسرح ---------- */
   .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
-    padding:6vh 8vw;text-align:center;}
+    padding:20vh 8vw 10vh;text-align:center;}
   .stage::before{content:'';position:absolute;left:-12vw;bottom:-28vh;width:66vh;height:66vh;
     border-radius:50%;background:radial-gradient(circle,
       color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%);}
@@ -59,9 +59,9 @@
   .members span{border:1px solid var(--line);border-radius:999px;padding:7px 16px;
     font-size:clamp(12px,1.4vw,15px);color:var(--muted);}
 
-  .logos{position:fixed;top:26px;right:34px;display:flex;align-items:center;gap:16px;z-index:5;}
-  .logos img{height:clamp(26px,3.2vh,40px);display:block;}
-  .logos .sep{width:1px;height:26px;background:#31405C;}
+  .logos{position:fixed;top:34px;right:44px;display:flex;align-items:center;gap:26px;z-index:5;}
+  .logos img{height:clamp(52px,7.4vh,104px);display:block;}
+  .logos .sep{width:1px;height:clamp(40px,5.4vh,76px);background:#3A4B6B;}
   .brandfoot{position:fixed;bottom:26px;right:34px;font-family:'Tajawal',sans-serif;
     font-weight:900;font-size:clamp(13px,1.6vw,18px);color:#2E3D57;z-index:5;}
 
@@ -186,7 +186,6 @@ function draw(){
 
   if(s.type === 'open'){
     el.innerHTML = `
-      <div class="kick">QASSIM UNIVERSITY × MINISTRY OF INDUSTRY</div>
       <div class="big">صنّاع الحلول الابتكارية</div>
       <div class="mid" style="color:var(--accent);">حفل التكريم</div>
       <div class="rule"></div>
@@ -195,8 +194,7 @@ function draw(){
     el.innerHTML = `
       <div class="kick">${s.idx === 1 ? 'المسار الأول' : 'المسار الثاني'}</div>
       <div class="big">${s.track.name_ar.replace('مسار ','')}</div>
-      <div class="rule"></div>
-      <div class="small">نُعلن الآن أسماء الفائزين</div>`;
+      <div class="rule"></div>`;
   } else if(s.type === 'winner'){
     const r = s.row;
     el.innerHTML = `
@@ -208,9 +206,7 @@ function draw(){
   } else {
     el.innerHTML = `
       <div class="big">شكرًا لكم</div>
-      <div class="rule"></div>
-      <div class="small">جامعة القصيم · وزارة الصناعة والثروة المعدنية<br>
-        مركز الابتكار والملكية الفكرية</div>`;
+      <div class="rule"></div>`;
   }
 
   document.getElementById('counter').textContent = `${i + 1} / ${slides.length}`;
