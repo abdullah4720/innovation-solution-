@@ -580,37 +580,86 @@ async function issueAllCerts(){
 }
 
 /* ---------- الاستيراد ---------- */
-/* قالب عريض: كل صف فريق كامل.
-   0 رقم التسجيل | 1..8 القائد | 9 المسار | 10 اسم الابتكار | 11 الوصف
-   12 سجل تجاري | 13 براءة اختراع | 14 نموذج مصغر | 15 رابط الدراسة
-   16 عدد الأعضاء | 17+ كتل من 8 أعمدة لكل عضو إضافي            */
-const MEMBER_BLOCK = 8, MEMBERS_START = 17;
+/* القراءة تعتمد على أسماء العناوين لا على مواقع ثابتة،
+   فأي تغيير في ترتيب الأعمدة أو عددها لا يزيح البيانات. */
+
+const H_MEMBER = {
+  full_name:   ['الاسم', 'اسم العضو'],
+  email:       ['البريد الإلكتروني', 'البريد'],
+  phone:       ['رقم الجوال', 'الجوال'],
+  member_role: ['دور العضو', 'الدور'],
+  category:    ['الفئة'],
+  city:        ['المدينة'],
+  gender:      ['الجنس'],
+  organization:['الجهة'],
+};
+const H_TEAM = {
+  reg_no:  ['رقم التسجيل'],
+  track:   ['المسار'],
+  title:   ['اسم الابتكار', 'عنوان المشروع'],
+  summary: ['وصف المشروع', 'الوصف'],
+  cr:      ['سجل تجاري'],
+  patent:  ['براءة اختراع'],
+  proto:   ['نموذج مصغر'],
+  study:   ['رابط الدراسة'],
+};
+
+const norm = v => String(v ?? '').replace(/\s+/g, ' ').trim();
 
 function yn(v){
-  const s = String(v||'').trim();
-  if(!s) return null;
-  return /^(نعم|yes|true|1)$/i.test(s);
+  const t = norm(v);
+  if(!t) return null;
+  return /^(نعم|yes|true|1)$/i.test(t);
 }
-function normTrack(v){
-  return String(v||'').replace(/\s+/g,' ').replace('مسار','').trim();
-}
+function normTrack(v){ return norm(v).replace('مسار', '').trim(); }
 function matchTrack(v){
-  const s = normTrack(v);
-  if(!s) return null;
-  const hit = tracks.find(t => {
-    const n = normTrack(t.name_ar);
-    return n === s || n.includes(s) || s.includes(n);
+  const t = normTrack(v);
+  if(!t) return null;
+  const hit = tracks.find(x => {
+    const n = normTrack(x.name_ar);
+    return n === t || n.includes(t) || t.includes(n);
   });
   return hit ? hit.id : null;
 }
-function member(row, i){
-  const g = n => String(row[i+n] ?? '').trim();
-  const name = g(0);
+
+/* يبني خريطة الأعمدة من صف العناوين */
+function buildMap(header){
+  const cells = header.map(norm);
+  const find = names => cells.findIndex(c => names.includes(c));
+
+  // بدايات كتل الأعضاء = كل عمود عنوانه "الاسم"
+  const starts = [];
+  cells.forEach((c, i) => { if(H_MEMBER.full_name.includes(c)) starts.push(i); });
+
+  const blocks = starts.map((st, k) => {
+    const nextStart = starts[k + 1] ?? cells.length;
+    const block = {};
+    for(let i = st; i < nextStart; i++){
+      for(const [key, names] of Object.entries(H_MEMBER)){
+        if(names.includes(cells[i]) && block[key] === undefined) block[key] = i;
+      }
+    }
+    return block;
+  });
+
+  const team = {};
+  for(const [key, names] of Object.entries(H_TEAM)) team[key] = find(names);
+  return { team, blocks };
+}
+
+function readMember(row, block){
+  const get = key => (block[key] === undefined ? '' : norm(row[block[key]]));
+  const name = get('full_name');
   if(!name) return null;
   return {
-    full_name: name, email: g(1).toLowerCase(), phone: g(2),
-    member_role: g(3) || null, category: g(4) || null,
-    city: g(5) || null, gender: g(6) || null, organization: g(7) || null,
+    full_name: name,
+    email: get('email').toLowerCase(),
+    phone: get('phone'),
+    member_role: get('member_role') || null,
+    category: get('category') || null,
+    city: get('city') || null,
+    gender: get('gender') || null,
+    organization: get('organization') || null,
   };
 }
 
@@ -622,43 +671,42 @@ function previewImport(){
     const wb = XLSX.read(e.target.result, { type:'array' });
     const grid = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header:1, defval:'' });
 
-    const hIdx = grid.findIndex(r => r.some(c => String(c).trim() === 'رقم التسجيل'));
+    const hIdx = grid.findIndex(r => r.some(c => norm(c) === 'رقم التسجيل'));
     if(hIdx === -1){
       msg('importMsg','ما لقيت صف العناوين. تأكد أن الورقة الأولى فيها عمود "رقم التسجيل".');
       return;
     }
 
+    const map = buildMap(grid[hIdx]);
+    if(!map.blocks.length){
+      msg('importMsg','ما لقيت أعمدة أعضاء. لازم يكون عنوان كل عضو "الاسم".');
+      return;
+    }
+
+    const col = k => map.team[k];
     importRows = [];
     for(const row of grid.slice(hIdx + 1)){
-      const g = n => String(row[n] ?? '').trim();
-      const leader = member(row, 1);
-      if(!leader && !g(0)) continue;
-      if(!leader){ continue; }
-
-      const members = [leader];
-      for(let i = MEMBERS_START; i < row.length; i += MEMBER_BLOCK){
-        const m = member(row, i);
-        if(m) members.push(m);
-      }
+      const g = k => (col(k) === -1 || col(k) === undefined ? '' : norm(row[col(k)]));
+      const members = map.blocks.map(b => readMember(row, b)).filter(Boolean);
+      if(!members.length) continue;
 
       importRows.push({
-        reg_no: g(0) || null,
-        track: matchTrack(g(9)), trackRaw: g(9),
-        title: g(10), summary: g(11),
-        has_commercial_register: yn(g(12)),
-        has_patent: yn(g(13)),
-        has_prototype: yn(g(14)),
-        study_url: g(15) || null,
+        reg_no: g('reg_no') || null,
+        track: matchTrack(g('track')), trackRaw: g('track'),
+        title: g('title'), summary: g('summary'),
+        has_commercial_register: yn(g('cr')),
+        has_patent: yn(g('patent')),
+        has_prototype: yn(g('proto')),
+        study_url: g('study') || null,
         members,
       });
     }
 
-    if(!importRows.length){ msg('importMsg','ما فيه صفوف فيها بيانات قائد فريق.'); return; }
+    if(!importRows.length){ msg('importMsg','ما فيه صفوف فيها أعضاء.'); return; }
 
     const badTrack = importRows.filter(r => !r.track);
     const noReg    = importRows.filter(r => !r.reg_no);
 
-    // بريد واحد في أكثر من فريق
     const seen = new Map(), dupes = [];
     importRows.forEach(r => r.members.forEach(m => {
       if(!m.email) return;
@@ -666,16 +714,19 @@ function previewImport(){
       if(seen.has(m.email)) dupes.push(`${m.full_name} (${m.email}) — ${seen.get(m.email)} و${where}`);
       else seen.set(m.email, where);
     }));
-    const noEmail  = importRows.flatMap(r => r.members.filter(m => !m.email || !m.phone)
-                      .map(m => `${r.title || r.reg_no}: ${m.full_name}`));
+
+    const noContact = importRows.flatMap(r =>
+      r.members.filter(m => !m.email || !m.phone)
+               .map(m => `${r.title || r.reg_no}: ${m.full_name}`));
 
     document.getElementById('importPreview').innerHTML = `
       <div style="font-size:13.5px;margin-bottom:12px;line-height:1.9;">
         ${importRows.length} فريق · ${importRows.reduce((n,r)=>n+r.members.length,0)} عضو
+        · ${map.blocks.length} خانة عضو في القالب
         ${badTrack.length ? `<div style="color:var(--bad);margin-top:6px;">مسار غير معروف في ${badTrack.length} فريق: ${badTrack.map(b=>b.trackRaw||'(فارغ)').join('، ')}</div>` : ''}
         ${noReg.length ? `<div style="color:var(--bad);margin-top:6px;">${noReg.length} فريق بلا رقم تسجيل (بيُتخطّى): ${noReg.map(b=>b.title||'(بلا عنوان)').join('، ')}</div>` : ''}
         ${dupes.length ? `<div style="color:var(--amber);margin-top:6px;">بريد مكرر في أكثر من فريق — بيُضاف لأول فريق فقط:<br>${dupes.join('<br>')}</div>` : ''}
-        ${noEmail.length ? `<div style="color:var(--bad);margin-top:6px;">أعضاء بلا بريد أو جوال (بيُتخطّون): ${noEmail.slice(0,6).join(' · ')}${noEmail.length>6?' …':''}</div>` : ''}
+        ${noContact.length ? `<div style="color:var(--amber);margin-top:6px;">أعضاء بلا بريد أو جوال (بيُتخطّون): ${noContact.join(' · ')}</div>` : ''}
       </div>
       <div class="table-wrap"><table>
         <thead><tr><th>رقم التسجيل</th><th>الابتكار</th><th>المسار</th><th>القائد</th><th>الأعضاء</th><th>ملحقات</th></tr></thead>
