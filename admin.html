@@ -110,6 +110,11 @@
   .toast.show{opacity:1;}
   .bar{height:6px;border-radius:999px;background:var(--surface-2);overflow:hidden;margin-top:7px;}
   .bar i{display:block;height:100%;background:var(--teal);}
+
+  .brandmark{display:flex;align-items:center;gap:11px;}
+  .brandmark img{height:30px;display:block;}
+  .brandmark .sep{width:1px;height:24px;background:rgba(255,255,255,.22);}
+  @media(max-width:520px){ .brandmark img{height:24px;} }
 </style>
 </head>
 <body>
@@ -127,7 +132,14 @@
 
 <div id="app" class="hide">
   <div class="topbar">
-    <h1>صنّاع الحلول الابتكارية<span>جامعة القصيم × وزارة الصناعة والثروة المعدنية</span></h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="brandmark">
+      <img src="logo-qu.png" alt="جامعة القصيم">
+      <span class="sep"></span>
+      <img src="logo-mim.png" alt="وزارة الصناعة والثروة المعدنية">
+    </div>
+      <h1>صنّاع الحلول الابتكارية<span>لوحة التحكم</span></h1>
+    </div>
     <div class="right"><span id="whoami" dir="ltr"></span>
       <button class="b b-ghost b-sm" onclick="logout()">خروج</button></div>
   </div>
@@ -180,7 +192,7 @@
         </div>
         <div class="table-wrap"><table>
           <thead><tr><th>الاسم</th><th>البريد</th><th>الجوال</th><th>الفريق</th>
-            <th>اليوم 1</th><th>اليوم 2</th><th>الشهادة</th></tr></thead>
+            <th>اليوم 1</th><th>اليوم 2</th><th>الشهادة</th><th></th></tr></thead>
           <tbody id="peopleBody"></tbody>
         </table></div>
       </div>
@@ -359,13 +371,16 @@ function renderStats(){
   const submitted = teams.filter(t=>t.projects && t.projects.submitted_at).length;
   const d1 = people.filter(p=>p.day1_attended).length;
   const d2 = people.filter(p=>p.day2_attended).length;
+  const rate = people.length ? Math.round((d1 + d2) * 100 / (people.length * 2)) : 0;
   document.getElementById('statsBox').innerHTML = `
     <div class="stat"><div class="n">${teams.length}</div><div class="l">فريق مسجَّل</div></div>
     <div class="stat"><div class="n">${people.length}</div><div class="l">مشارك</div></div>
     <div class="stat"><div class="n">${submitted}</div><div class="l">مشروع مُسلَّم</div></div>
     <div class="stat"><div class="n">${d1}</div><div class="l">حضور اليوم الأول</div></div>
     <div class="stat"><div class="n">${d2}</div><div class="l">حضور اليوم الثاني</div></div>
-    <div class="stat"><div class="n">${people.filter(p=>p.certificate_issued).length}</div><div class="l">شهادة صادرة</div></div>`;
+    <div class="stat"><div class="n">${people.filter(p=>p.certificate_issued).length}</div><div class="l">شهادة صادرة</div></div>
+    <div class="stat"><div class="n">${rate}%</div><div class="l">نسبة الحضور</div></div>
+    <div class="stat"><div class="n">${people.filter(eligible).length}</div><div class="l">مؤهل للشهادة</div></div>`;
 }
 function renderProgress(){
   if(!judges.length){ document.getElementById('judgeProgress').innerHTML='<div class="empty">ما فيه محكّمون بعد.</div>'; return; }
@@ -462,9 +477,17 @@ function renderPeople(){
         ? `<a href="certificate.html?code=${p.certificate_code}" target="_blank" dir="ltr">${p.certificate_code}</a>`
         : (eligible(p) ? `<button class="b b-ghost b-sm" onclick="issueCert('${p.id}')">إصدار</button>`
                        : '<span class="pill grey">غير مؤهل</span>')}</td>
+      <td><button class="b b-ghost b-sm" onclick="resetPersonPassword('${p.id}','${p.full_name.replace(/'/g,"\\'")}')">تصفير</button></td>
     </tr>`;
-  }).join('') || '<tr><td colspan="7"><div class="empty">لا يوجد مشاركون.</div></td></tr>';
+  }).join('') || '<tr><td colspan="8"><div class="empty">لا يوجد مشاركون.</div></td></tr>';
 }
+async function resetPersonPassword(id, name){
+  if(!confirm(`تصفير كلمة مرور ${name}؟ بيختار كلمة مرور جديدة عند دخوله.`)) return;
+  const { error } = await supabaseClient.rpc('admin_reset_participant_password', { p_participant_id: id });
+  if(error) return toast('تعذّر التصفير: ' + error.message);
+  toast('تم التصفير');
+}
+
 function attCell(p,n){
   const v=p[`day${n}_attended`];
   return `<div class="att">
@@ -815,7 +838,12 @@ function renderSettings(){
     <div><label for="d2">تاريخ اليوم الثاني</label><input type="date" id="d2" value="${settings.day2_date||''}"></div>
     <div><label for="regClose">إغلاق التسجيل</label><input type="datetime-local" id="regClose" value="${toLocal(settings.registration_closes_at)}"></div>
     <div><label for="subDl">آخر موعد للتسليم</label><input type="datetime-local" id="subDl" value="${toLocal(settings.submission_deadline)}"></div>
-    <div><label for="minAtt">أيام الحضور للشهادة</label><input type="number" id="minAtt" min="0" max="2" value="${settings.min_attendance_days??1}"></div>
+    <div><label for="minAtt">شرط الحضور لإصدار الشهادة</label>
+      <select id="minAtt">
+        <option value="0" ${(settings.min_attendance_days??1)==0?'selected':''}>لا يُشترط حضور</option>
+        <option value="1" ${(settings.min_attendance_days??1)==1?'selected':''}>يوم واحد على الأقل</option>
+        <option value="2" ${(settings.min_attendance_days??1)==2?'selected':''}>حضور اليومين</option>
+      </select></div>
     <div><label for="minT">أقل عدد أعضاء</label><input type="number" id="minT" min="1" max="10" value="${settings.min_team_size??2}"></div>
     <div><label for="maxT">أكثر عدد أعضاء</label><input type="number" id="maxT" min="1" max="10" value="${settings.max_team_size??5}"></div>`;
   document.getElementById('closedMsg').value = settings.registration_closed_message||'';

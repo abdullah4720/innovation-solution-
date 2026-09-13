@@ -72,6 +72,11 @@
     padding:11px 22px;border-radius:999px;font-size:13.5px;font-weight:700;opacity:0;transition:.2s;
     pointer-events:none;z-index:20;font-family:'Tajawal',sans-serif;}
   .toast.show{opacity:1;}
+
+  .brandmark{display:flex;align-items:center;gap:11px;}
+  .brandmark img{height:30px;display:block;}
+  .brandmark .sep{width:1px;height:24px;background:rgba(255,255,255,.22);}
+  @media(max-width:520px){ .brandmark img{height:24px;} }
 </style>
 </head>
 <body>
@@ -89,7 +94,14 @@
 
 <div id="app" class="hide">
   <div class="topbar">
-    <h1>تسجيل الحضور — صنّاع الحلول الابتكارية</h1>
+    <div style="display:flex;align-items:center;gap:14px;">
+      <div class="brandmark">
+      <img src="logo-qu.png" alt="جامعة القصيم">
+      <span class="sep"></span>
+      <img src="logo-mim.png" alt="وزارة الصناعة والثروة المعدنية">
+    </div>
+      <h1>تسجيل الحضور</h1>
+    </div>
     <div class="right"><span id="whoami" dir="ltr"></span>
       <button class="b b-ghost" onclick="logout()">خروج</button></div>
   </div>

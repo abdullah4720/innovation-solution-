@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>الشهادة — صنّاع الحلول الابتكارية</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -15,8 +15,8 @@
   *{box-sizing:border-box;}
   body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Arabic',sans-serif;}
   h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
-  main{max-width:900px;margin:0 auto;padding:26px 14px 70px;}
-  .lookup{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;max-width:420px;margin:40px auto;}
+  main{max-width:1060px;margin:0 auto;padding:26px 14px 70px;}
+  .lookup{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:420px;margin:50px auto;}
   label{display:block;font-size:12.5px;color:var(--muted);margin:13px 0 5px;}
   input{background:var(--surface-2);border:1px solid var(--line);color:var(--text);
     border-radius:9px;padding:11px 12px;font-family:inherit;font-size:15px;width:100%;}
@@ -28,42 +28,65 @@
   .msg{font-size:13px;padding:11px 13px;border-radius:9px;margin-top:12px;display:none;}
   .msg.err{background:rgba(226,112,106,.12);color:var(--bad);display:block;}
   .hide{display:none !important;}
+  .verified{text-align:center;font-size:13px;color:var(--teal);margin-bottom:14px;}
 
-  /* ---------- الشهادة ---------- */
-  .cert{width:1000px;height:707px;background:#0E1422;color:#EAF0F8;position:relative;
-    padding:58px 70px;overflow:hidden;transform-origin:top center;}
-  .cert .rule{position:absolute;left:0;right:0;top:132px;height:1px;background:var(--teal);opacity:.5;}
-  .cert .rule::after{content:'';position:absolute;right:70px;top:-3.5px;width:8px;height:8px;
-    border-radius:50%;background:var(--teal);}
-  .cert .brandline{display:flex;justify-content:space-between;align-items:flex-start;font-size:14px;color:#C6D1E2;}
-  .cert .brandline b{font-family:'Tajawal';font-weight:700;display:block;font-size:16px;color:#fff;}
-  .cert .brandline span{font-size:11.5px;color:var(--muted);}
+  /* ================= الشهادة ================= */
+  .cert{width:1123px;height:794px;background:#0E1422;color:#EAF0F8;position:relative;
+    overflow:hidden;transform-origin:top center;font-family:'IBM Plex Sans Arabic',sans-serif;}
 
-  .cert .kicker{margin-top:74px;font-size:15px;color:var(--teal);font-weight:600;}
-  .cert .title{font-family:'Tajawal';font-size:40px;font-weight:900;margin-top:6px;line-height:1.25;}
-  .cert .lead{font-size:14.5px;color:var(--muted);margin-top:22px;}
-  .cert .name{font-family:'Tajawal';font-size:46px;font-weight:900;color:var(--teal);margin-top:8px;}
-  .cert .body{font-size:15px;color:#C6D1E2;line-height:2.05;margin-top:18px;max-width:640px;}
+  .cert .frame{position:absolute;inset:26px;border:1px solid #22304A;border-radius:4px;}
+  .cert .frame::before{content:'';position:absolute;inset:9px;border:1px solid #1A2740;border-radius:2px;}
+  .cert .glow{position:absolute;left:-160px;bottom:-220px;width:620px;height:620px;border-radius:50%;
+    background:radial-gradient(circle, rgba(53,201,174,.13) 0%, rgba(53,201,174,0) 68%);}
+  .cert .corner{position:absolute;width:62px;height:62px;border:2px solid var(--teal);opacity:.7;}
+  .cert .c-tr{top:40px;right:40px;border-left:none;border-bottom:none;}
+  .cert .c-tl{top:40px;left:40px;border-right:none;border-bottom:none;}
+  .cert .c-br{bottom:40px;right:40px;border-left:none;border-top:none;}
+  .cert .c-bl{bottom:40px;left:40px;border-right:none;border-top:none;}
+
+  .cert .inner{position:absolute;inset:62px 78px 58px;display:flex;flex-direction:column;}
+
+  .cert .logos{display:flex;justify-content:space-between;align-items:center;}
+  .cert .logos img{height:50px;display:block;}
+  .cert .logos .divider{width:1px;height:42px;background:#2B3A57;}
+
+  .cert .rule{margin-top:24px;height:1px;position:relative;
+    background:linear-gradient(to left, var(--teal), rgba(53,201,174,.06));}
+  .cert .rule::after{content:'';position:absolute;right:0;top:-3.5px;width:8px;height:8px;border-radius:50%;background:var(--teal);}
+
+  .cert .event{margin-top:24px;font-size:15px;color:var(--teal);font-weight:600;letter-spacing:.3px;}
+  .cert .title{font-family:'Tajawal';font-size:45px;font-weight:900;margin-top:5px;}
+  .cert .tagline{font-size:13px;color:var(--muted);margin-top:7px;}
+
+  .cert .lead{font-size:14.5px;color:#B9C6DA;margin-top:30px;line-height:1.95;max-width:690px;}
+  .cert .name{font-family:'Tajawal';font-size:42px;font-weight:900;color:var(--teal);margin-top:9px;line-height:1.32;}
+  .cert .body{font-size:14.5px;color:#C3CFE1;line-height:2.1;margin-top:13px;max-width:720px;}
   .cert .body b{color:#fff;font-weight:600;}
 
-  .cert .cube{position:absolute;left:66px;top:238px;width:196px;height:196px;opacity:.9;}
-  .cert .foot{position:absolute;left:70px;right:70px;bottom:46px;display:flex;
-    justify-content:space-between;align-items:flex-end;font-size:12px;color:var(--muted);}
-  .cert .foot .code{direction:ltr;color:var(--teal);font-weight:600;letter-spacing:.5px;}
-  .cert .sig{text-align:left;}
-  .cert .sig .l{width:170px;height:1px;background:var(--line);margin-bottom:7px;}
+  .cert .cube{position:absolute;left:72px;top:280px;width:230px;height:230px;opacity:.5;}
 
-  .stage{overflow-x:auto;padding-bottom:8px;}
-  .actions{display:flex;gap:10px;justify-content:center;margin-top:20px;flex-wrap:wrap;}
-  @media(max-width:1040px){ .cert{transform:scale(.62);} .stage{height:460px;} }
-  @media(max-width:640px){  .cert{transform:scale(.35);} .stage{height:265px;} }
+  .cert .foot{margin-top:auto;display:flex;justify-content:space-between;align-items:flex-end;}
+  .cert .foot .meta{font-size:11.5px;color:var(--muted);line-height:2;}
+  .cert .foot .meta .code{direction:ltr;display:inline-block;color:var(--teal);font-weight:600;letter-spacing:.6px;}
+  .cert .sig{text-align:center;}
+  .cert .sig .line{width:205px;height:1px;background:#33425F;margin-bottom:9px;}
+  .cert .sig .who{font-family:'Tajawal';font-size:13px;font-weight:700;}
+  .cert .sig .role{font-size:11px;color:var(--muted);margin-top:3px;}
+
+  .stage{overflow-x:auto;padding-bottom:6px;}
+  .actions{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap;}
+  @media(max-width:1130px){ .cert{transform:scale(.72);} .stage{height:580px;} }
+  @media(max-width:820px){  .cert{transform:scale(.5);}  .stage{height:400px;} }
+  @media(max-width:560px){  .cert{transform:scale(.31);} .stage{height:250px;} }
 </style>
 </head>
 <body>
 <main>
   <div class="lookup" id="lookup">
     <h2 style="font-size:19px;">التحقق من الشهادة</h2>
-    <div style="font-size:12.5px;color:var(--muted);margin-top:5px;">أدخل رمز الشهادة للتحقق منها وتحميلها.</div>
+    <div style="font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.8;">
+      أدخل رمز الشهادة للتحقق من صحتها وتحميلها.
+    </div>
     <label for="code">رمز الشهادة</label>
     <input type="text" id="code" dir="ltr" style="text-align:right;" placeholder="SH-XXXXXXXX">
     <button class="b b-teal" style="width:100%;margin-top:16px;" onclick="lookup()">عرض الشهادة</button>
@@ -71,37 +94,56 @@
   </div>
 
   <div id="wrap" class="hide">
+    <div class="verified">شهادة موثّقة وصادرة من المنصة</div>
     <div class="stage">
       <div class="cert" id="cert">
-        <div class="brandline">
-          <div><b>جامعة القصيم</b><span>مركز الابتكار والملكية الفكرية</span></div>
-          <div style="text-align:left;"><b>وزارة الصناعة والثروة المعدنية</b><span>Ministry of Industry and Mineral Resources</span></div>
-        </div>
-        <div class="rule"></div>
+        <div class="frame"></div>
+        <div class="glow"></div>
+        <div class="corner c-tr"></div><div class="corner c-tl"></div>
+        <div class="corner c-br"></div><div class="corner c-bl"></div>
 
         <svg class="cube" viewBox="0 0 200 200" fill="none" aria-hidden="true">
-          <g stroke="#35C9AE" stroke-width="1.4" opacity=".85">
-            <path d="M100 22 L142 46 L142 94 L100 118 L58 94 L58 46 Z"/>
-            <path d="M100 22 L100 70 M100 70 L142 46 M100 70 L58 46"/>
+          <g stroke="#35C9AE" stroke-width="1.3" opacity=".8">
+            <path d="M100 18 L144 43 L144 93 L100 118 L56 93 L56 43 Z"/>
+            <path d="M100 18 L100 68 M100 68 L144 43 M100 68 L56 43"/>
           </g>
-          <path d="M100 84 L128 100 L100 116 L72 100 Z" fill="#35C9AE" opacity=".9"/>
-          <g stroke="#26314A" stroke-width="1.1">
-            <path d="M100 116 L156 148 L100 180 L44 148 Z"/>
-            <path d="M72 132 L128 164 M128 132 L72 164"/>
+          <path d="M100 82 L129 99 L100 116 L71 99 Z" fill="#35C9AE" opacity=".85"/>
+          <g stroke="#2B3A57" stroke-width="1">
+            <path d="M100 116 L158 149 L100 182 L42 149 Z"/>
+            <path d="M71 133 L129 166 M129 133 L71 166"/>
+            <path d="M100 116 L100 182"/>
           </g>
         </svg>
 
-        <div style="margin-right:250px;">
-          <div class="kicker">صنّاع الحلول الابتكارية</div>
-          <div class="title">شهادة مشاركة</div>
-          <div class="lead">تشهد اللجنة المنظِّمة بأن</div>
-          <div class="name" id="cName"></div>
-          <div class="body" id="cBody"></div>
-        </div>
+        <div class="inner">
+          <div class="logos">
+            <img src="logo-qu.png" alt="جامعة القصيم">
+            <div class="divider"></div>
+            <img src="logo-mim.png" alt="وزارة الصناعة والثروة المعدنية">
+          </div>
+          <div class="rule"></div>
 
-        <div class="foot">
-          <div>رمز التحقق <span class="code" id="cCode"></span></div>
-          <div class="sig"><div class="l"></div>اللجنة المنظِّمة</div>
+          <div style="margin-right:250px;">
+            <div class="event">صنّاع الحلول الابتكارية</div>
+            <div class="title">شهادة مشاركة</div>
+            <div class="tagline">نحو حلول مبتكرة تصنع أثرًا مستدامًا</div>
+
+            <div class="lead">تشهد جامعة القصيم — ممثلةً بمركز الابتكار والملكية الفكرية — بالشراكة مع وزارة الصناعة والثروة المعدنية، بأن</div>
+            <div class="name" id="cName"></div>
+            <div class="body" id="cBody"></div>
+          </div>
+
+          <div class="foot">
+            <div class="meta">
+              رمز التحقق <span class="code" id="cCode"></span><br>
+              <span id="cIssued"></span>
+            </div>
+            <div class="sig">
+              <div class="line"></div>
+              <div class="who">مركز الابتكار والملكية الفكرية</div>
+              <div class="role">جامعة القصيم</div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -117,6 +159,9 @@
 <script src="config.js"></script>
 <script>
 function param(k){ return new URLSearchParams(location.search).get(k); }
+function arDate(d){
+  return d ? new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'long',year:'numeric'}) : '';
+}
 
 async function lookup(code){
   const c = (code || document.getElementById('code').value || '').trim();
@@ -134,19 +179,20 @@ async function lookup(code){
   const r = data[0];
   document.getElementById('cName').textContent = r.full_name;
 
-  const dates = [r.day1_date, r.day2_date].filter(Boolean)
-    .map(d => new Date(d).toLocaleDateString('ar-SA', { day:'numeric', month:'long', year:'numeric' }));
-  const when = dates.length === 2 ? `${dates[0]} و${dates[1]}` : (dates[0] || '');
+  const d1 = arDate(r.day1_date), d2 = arDate(r.day2_date);
+  const when = d1 && d2 ? `يومي ${d1} و${d2}` : (d1 || d2 ? `بتاريخ ${d1 || d2}` : '');
 
   document.getElementById('cBody').innerHTML =
     `قد شارك في فعالية <b>صنّاع الحلول الابتكارية</b>` +
     (r.track_name ? ` ضمن <b>${r.track_name}</b>` : '') +
-    (r.team_name ? `، مع فريق <b>${r.team_name}</b>` : '') +
+    (r.team_name ? `، عضوًا في فريق <b>${r.team_name}</b>` : '') +
     (r.project_title ? ` بمشروع <b>${r.project_title}</b>` : '') +
-    (when ? `، وذلك بتاريخ ${when} بجامعة القصيم.` : '.') +
-    `<br>نسأل الله لهم التوفيق والسداد.`;
+    (when ? `، المنعقدة ${when} بجامعة القصيم` : '') +
+    `؛ وأسهم بجهده في تطوير حلول عملية لتحديات واقعية في قطاعي البلديات والصناعة.` +
+    `<br>شاكرين له مشاركته، وسائلين الله له دوام التوفيق.`;
 
   document.getElementById('cCode').textContent = c.toUpperCase();
+  document.getElementById('cIssued').textContent = 'صدرت بتاريخ ' + arDate(new Date());
   document.getElementById('lookup').classList.add('hide');
   document.getElementById('wrap').classList.remove('hide');
 }
@@ -159,6 +205,8 @@ async function shot(){
   clone.style.top = '0';
   clone.style.left = '-99999px';
   document.body.appendChild(clone);
+  await Promise.all([...clone.querySelectorAll('img')].map(img =>
+    img.complete ? Promise.resolve() : new Promise(r => { img.onload = img.onerror = r; })));
   const canvas = await html2canvas(clone, { scale: 2, backgroundColor: '#0E1422', useCORS: true });
   clone.remove();
   return canvas;
@@ -178,8 +226,8 @@ async function download(kind){
       a.click();
     } else {
       const { jsPDF } = window.jspdf;
-      const pdf = new jsPDF({ orientation:'landscape', unit:'pt', format:[1000, 707] });
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 1000, 707);
+      const pdf = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
+      pdf.addImage(canvas.toDataURL('image/jpeg', 0.95), 'JPEG', 0, 0, 842, 595);
       pdf.save(`شهادة-${name}.pdf`);
     }
   } finally {
