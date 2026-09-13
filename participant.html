@@ -112,6 +112,19 @@
   .crit .h{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.75;}
 
   /* ---------- الاستبيان ---------- */
+  .scale10{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;}
+  .scale10 button{flex:1;min-width:38px;border:1px solid var(--line);background:var(--surface-2);
+    color:var(--muted);border-radius:9px;padding:10px 0;font-family:'Tajawal',sans-serif;
+    font-weight:700;font-size:14px;cursor:pointer;}
+  .scale10 button.on{background:var(--teal);border-color:var(--teal);color:var(--navy);}
+  .scale10 .ends{display:flex;justify-content:space-between;width:100%;font-size:11px;
+    color:var(--muted);margin-top:4px;}
+  .choice{display:flex;gap:9px;flex-wrap:wrap;margin-top:10px;}
+  .choice button{flex:1;min-width:96px;border:1px solid var(--line);background:var(--surface-2);
+    color:var(--muted);border-radius:10px;padding:11px;font-family:'Tajawal',sans-serif;
+    font-weight:700;font-size:14px;cursor:pointer;}
+  .choice button.on{background:rgba(53,201,174,.16);border-color:var(--teal);color:var(--teal);}
+  .req{color:var(--bad);}
   .stars{display:flex;gap:7px;flex-direction:row-reverse;justify-content:flex-end;}
   .stars button{background:none;border:none;font-size:27px;line-height:1;color:#33405C;
     cursor:pointer;padding:0;transition:color .12s;}
@@ -229,7 +242,6 @@
 <script>
 let me = null, token = localStorage.getItem('sh_participant_token') || null;
 let pending = null;
-let answers = {}, recommend = null;
 let tab = 'home';
 
 const TABS = [
@@ -702,14 +714,6 @@ function renderJudging(){
 }
 
 /* ---------- الشهادة والاستبيان ---------- */
-const SURVEY_Q = [
-  ['content',      'محتوى البرنامج والتحديات المطروحة'],
-  ['organization', 'التنظيم والمرافق'],
-  ['mentorship',   'الإرشاد والدعم أثناء تطوير الحل'],
-  ['judging',      'آلية التحكيم وعدالتها'],
-  ['overall',      'تجربتك بشكل عام'],
-];
-
 function renderCert(){
   const days = (me.day1_attended?1:0) + (me.day2_attended?1:0);
   const need = me.min_attendance_days ?? 1;
@@ -742,59 +746,101 @@ function renderCert(){
   renderSurvey();
 }
 
+let answers = {};
+
 function renderSurvey(){
   const box = document.getElementById('surveyBox');
   if(!box) return;
+
   if(me.survey_submitted){
-    const sv = me.survey || {};
-    box.innerHTML = `<div class="cert ready">شكرًا لك، استلمنا تقييمك.
-      ${sv.rating_overall ? `<div style="margin-top:7px;color:var(--muted);">تقييمك العام: ${sv.rating_overall} من 5</div>` : ''}
-    </div>`;
+    box.innerHTML = `<div class="cert ready">شكرًا لك، استلمنا تقييمك.</div>`;
     return;
   }
-  if(!me.survey_open){ box.innerHTML = `<div class="closed">الاستبيان مغلق حاليًا.</div>`; return; }
+  if(!me.survey_open){
+    box.innerHTML = `<div class="closed">الاستبيان مغلق حاليًا.</div>`;
+    return;
+  }
+
+  const qs = me.survey_questions || [];
+  if(!qs.length){
+    box.innerHTML = `<div class="closed">لم تُضَف أسئلة للاستبيان بعد.</div>`;
+    return;
+  }
+
+  // إجابات محفوظة سابقًا
+  const saved = me.survey_answers || {};
+  qs.forEach(q => {
+    const a = saved[q.id];
+    if(!a) return;
+    if(a.num != null)  answers[q.id] = { num: Number(a.num) };
+    if(a.text != null) answers[q.id] = { text: a.text };
+  });
 
   box.innerHTML = `
-    <div class="note">رأيك يساعدنا على تطوير البرنامج.${me.require_survey ? ' وتعبئته شرط لإصدار شهادتك.' : ''}</div>
-    ${SURVEY_Q.map(([k,q]) => `
-      <div class="q"><div class="qt">${q}</div>
-        <div class="stars" id="st-${k}">
-          ${[5,4,3,2,1].map(n => `<button onclick="setStar('${k}',${n})" title="${n}">★</button>`).join('')}
-        </div></div>`).join('')}
-    <div class="q"><div class="qt">هل توصي زملاءك بالمشاركة في النسخة القادمة؟</div>
-      <div class="yesno">
-        <button id="rec-yes" onclick="setRecommend(true)">نعم</button>
-        <button id="rec-no"  onclick="setRecommend(false)">لا</button>
-      </div></div>
-    <label for="svComment">ملاحظات أو مقترحات (اختياري)</label>
-    <textarea id="svComment" placeholder="شاركنا رأيك بحرية…"></textarea>
+    <div class="note">رأيك يساعدنا على تطوير البرنامج.${
+      me.require_survey ? ' وتعبئته شرط لإصدار شهادتك.' : ''}</div>
+    ${qs.map(q => renderQuestion(q)).join('')}
     <button class="b b-teal" id="svBtn" onclick="submitSurvey()">إرسال التقييم</button>
     <div class="msg" id="svMsg"></div>`;
 }
 
-function setStar(key, n){
-  answers[key] = n;
-  const box = document.getElementById('st-' + key);
-  [...box.children].forEach(b => b.classList.toggle('on', Number(b.title) <= n));
+function renderQuestion(q){
+  const cur = answers[q.id] || {};
+  const head = `<div class="qt">${q.question}${q.required ? ' <span class="req">*</span>' : ''}</div>`;
+
+  if(q.qtype === 'text'){
+    return `<div class="q">${head}
+      <textarea id="q-${q.id}" placeholder="اكتب ملاحظتك…"
+        oninput="setText('${q.id}', this.value)">${cur.text || ''}</textarea></div>`;
+  }
+
+  if(q.qtype === 'choice'){
+    return `<div class="q">${head}
+      <div class="choice" id="q-${q.id}">
+        ${(q.options || []).map(o =>
+          `<button class="${cur.text === o ? 'on' : ''}"
+             onclick="setChoice('${q.id}', this, '${String(o).replace(/'/g,"\\'")}')">${o}</button>`).join('')}
+      </div></div>`;
+  }
+
+  const max = q.qtype === 'rating5' ? 5 : 10;
+  const from = q.qtype === 'rating5' ? 1 : 0;
+  const nums = [];
+  for(let n = from; n <= max; n++) nums.push(n);
+  return `<div class="q">${head}
+    <div class="scale10" id="q-${q.id}">
+      ${nums.map(n => `<button class="${Number(cur.num) === n ? 'on' : ''}"
+        onclick="setNum('${q.id}', this, ${n})">${n}</button>`).join('')}
+      <div class="ends"><span>${from === 0 ? 'غير راضٍ' : 'ضعيف'}</span><span>ممتاز</span></div>
+    </div></div>`;
 }
-function setRecommend(v){
-  recommend = v;
-  document.getElementById('rec-yes').classList.toggle('on', v === true);
-  document.getElementById('rec-no').classList.toggle('on', v === false);
+
+function setNum(qid, btn, n){
+  answers[qid] = { num: n };
+  [...btn.parentNode.querySelectorAll('button')].forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function setChoice(qid, btn, v){
+  answers[qid] = { text: v };
+  [...btn.parentNode.querySelectorAll('button')].forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+}
+function setText(qid, v){
+  if(v.trim()) answers[qid] = { text: v.trim() };
+  else delete answers[qid];
 }
 
 async function submitSurvey(){
-  const missing = SURVEY_Q.filter(([k]) => !answers[k]);
-  if(missing.length){ msg('svMsg','الرجاء تقييم كل المحاور.'); return; }
+  const qs = me.survey_questions || [];
+  const missing = qs.filter(q => q.required && !answers[q.id]);
+  if(missing.length){
+    msg('svMsg', 'يُرجى الإجابة على كل الأسئلة الإلزامية (' + missing.length + ' متبقٍّ).');
+    return;
+  }
   const btn = document.getElementById('svBtn');
   btn.disabled = true; btn.textContent = 'جاري الإرسال...';
-  const { error } = await supabaseClient.rpc('my_submit_survey', {
-    p_token: token,
-    p_content: answers.content, p_organization: answers.organization,
-    p_mentorship: answers.mentorship, p_judging: answers.judging,
-    p_overall: answers.overall, p_recommend: recommend,
-    p_comment: document.getElementById('svComment').value.trim() || null,
-  });
+  const { error } = await supabaseClient.rpc('my_submit_survey_v2', {
+    p_token: token, p_answers: answers });
   btn.disabled = false; btn.textContent = 'إرسال التقييم';
   if(error){ msg('svMsg', error.message); return; }
   toast('شكرًا لك');
