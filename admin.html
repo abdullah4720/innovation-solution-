@@ -309,9 +309,10 @@
           <select id="bulkTrack" style="max-width:230px;"></select>
           <button class="b b-ghost" onclick="bulkAssign()">إسناد مشاريع المسار للجنة</button>
           <button class="b b-ghost" onclick="renumber()">إعادة الترقيم</button>
+          <button class="b b-danger" onclick="clearAllJudging()">مسح التحكيم بالكامل</button>
         </div>
         <div class="table-wrap"><table>
-          <thead><tr><th>الترتيب</th><th>المشروع</th><th>المسار</th><th>اللجنة</th><th>التقدّم</th></tr></thead>
+          <thead><tr><th>الترتيب</th><th>المشروع</th><th>المسار</th><th>اللجنة</th><th>التقدّم</th><th>التحكيم</th></tr></thead>
           <tbody id="assignBody"></tbody>
         </table></div>
       </div>
@@ -361,7 +362,15 @@
       <div class="panel">
         <h3>النتائج</h3>
         <div class="sub">المتوسط الموزون لدرجات المحكّمين المعتمَدة، مرتّبًا داخل كل مسار.</div>
-        <button class="b b-ghost" onclick="exportResults()">تصدير Excel</button>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;">
+          <button class="b b-ghost" onclick="exportResults()">تصدير Excel</button>
+          <button class="b b-teal" onclick="window.open('ceremony.html','_blank')">فتح شاشة التكريم</button>
+          <button class="b b-ghost" onclick="window.open('results.html','_blank')">معاينة صفحة النتائج</button>
+        </div>
+        <div class="sub" style="margin-top:12px;">
+          شاشة التكريم تعرض الفائزين تدريجيًا ولا تحتاج نشر النتائج.
+          صفحة النتائج العامة لا تعرض شيئًا حتى تُفعِّل «النتائج منشورة» من الإعدادات.
+        </div>
         <div id="resultsBox" style="margin-top:16px;"></div>
       </div>
     </section>
@@ -1402,8 +1411,9 @@ function renderAssign(){
       </select></td>
       <td style="font-size:12.5px;color:${mem.length && done===mem.length ? 'var(--teal)' : 'var(--muted)'};">
         ${mem.length ? `${done} من ${mem.length}` : '—'}</td>
+      <td>${done ? `<button class="b b-ghost b-sm" onclick="openJudgingOf('${t.id}')">إدارة</button>` : '—'}</td>
     </tr>`;
-  }).join('') || '<tr><td colspan="5"><div class="empty">لا توجد مشاريع.</div></td></tr>';
+  }).join('') || '<tr><td colspan="6"><div class="empty">لا توجد مشاريع.</div></td></tr>';
 }
 
 async function addCommittee(){
@@ -1555,6 +1565,62 @@ async function removeMaterial(id){
   const { error } = await supabaseClient.from('event_materials').delete().eq('id', id);
   if(error) return toast('تعذّر الحذف');
   loadAll(); toast('تم الحذف');
+}
+
+/* ---------- إدارة التحكيم ---------- */
+function openJudgingOf(teamId){
+  const t = teams.find(x => x.id === teamId);
+  const mem = comMembers(t.committee_id);
+  closeOvl();
+  const el = document.createElement('div');
+  el.className = 'ovl'; el.id = 'ovl';
+  el.innerHTML = `<div class="box">
+    <h3>تحكيم ${t.name}</h3>
+    <div class="sub2">إلغاء الاعتماد يحذف درجات المحكّم ويفتح التقييم له من جديد.</div>
+    <table class="subtable"><tbody>
+      ${mem.map(j => {
+        const e = evals.find(x => x.judge_id === j.id && x.team_id === teamId);
+        const done = e && e.submitted;
+        return `<tr>
+          <td>${j.full_name}
+            <div style="font-size:11px;color:var(--muted);margin-top:3px;">
+              ${done ? 'اعتمد التقييم' : 'لم يعتمد بعد'}</div></td>
+          <td style="text-align:left;white-space:nowrap;">
+            ${done ? `<button class="b b-danger b-sm"
+              onclick="resetEval('${j.id}','${teamId}')">إلغاء الاعتماد</button>` : '—'}
+          </td></tr>`;
+      }).join('') || '<tr><td style="color:var(--muted);">لا توجد لجنة مُسنَدة.</td></tr>'}
+    </tbody></table>
+    <div class="acts">
+      <button class="b b-ghost" onclick="closeOvl()">إغلاق</button>
+      <button class="b b-danger" onclick="resetTeamJudging('${teamId}')">مسح تحكيم المشروع</button>
+    </div></div>`;
+  document.body.appendChild(el);
+}
+
+async function resetEval(judgeId, teamId){
+  if(!confirm('إلغاء اعتماد هذا المحكّم؟ ستُحذف درجاته ويعيد التقييم من البداية.')) return;
+  const { error } = await supabaseClient.rpc('admin_reset_evaluation', {
+    p_judge_id: judgeId, p_team_id: teamId });
+  if(error) return toast('تعذّر الإلغاء: ' + error.message);
+  closeOvl(); loadAll(); toast('أُلغي الاعتماد');
+}
+
+async function resetTeamJudging(teamId){
+  if(!confirm('مسح كل تقييمات هذا المشروع؟ لا يمكن التراجع.')) return;
+  const { error } = await supabaseClient.rpc('admin_reset_team_judging', { p_team_id: teamId });
+  if(error) return toast('تعذّر المسح: ' + error.message);
+  closeOvl(); loadAll(); toast('مُسح تحكيم المشروع');
+}
+
+async function clearAllJudging(){
+  const n = evals.filter(e => e.submitted).length;
+  if(!confirm(`مسح التحكيم بالكامل؟ ستُحذف كل الدرجات و${n} تقييمًا معتمَدًا.\nاللجان والإسنادات تبقى كما هي.`)) return;
+  if(!confirm('تأكيد أخير — لا يمكن التراجع عن هذا الإجراء.')) return;
+  const { data, error } = await supabaseClient.rpc('admin_clear_all_judging');
+  if(error) return toast('تعذّر المسح: ' + error.message);
+  const r = (data && data[0]) || {};
+  loadAll(); toast(`مُسحت ${r.scores_deleted ?? 0} درجة و${r.evaluations_deleted ?? 0} تقييمًا`);
 }
 
 /* ---------- النتائج ---------- */
