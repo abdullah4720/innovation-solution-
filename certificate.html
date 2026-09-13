@@ -11,131 +11,98 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
   :root{--bg:#0E1422;--surface:#151C2E;--surface-2:#1A2236;--line:#26314A;
-    --teal:#35C9AE;--navy:#0E1938;--text:#EAF0F8;--muted:#96A3B8;--bad:#E2706A;}
+    --teal:#35C9AE;--muted:#96A3B8;--bad:#E2706A;}
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Arabic',sans-serif;}
-  h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
+  body{margin:0;background:var(--bg);color:#EAF0F8;font-family:'IBM Plex Sans Arabic',sans-serif;}
+  h2{font-family:'Tajawal',sans-serif;margin:0;}
   main{max-width:1240px;margin:0 auto;padding:26px 14px 70px;}
   .lookup{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:22px;max-width:420px;margin:50px auto;}
   label{display:block;font-size:12.5px;color:var(--muted);margin:13px 0 5px;}
-  input{background:var(--surface-2);border:1px solid var(--line);color:var(--text);
-    border-radius:9px;padding:11px 12px;font-family:inherit;font-size:15px;width:100%;}
-  input:focus{outline:1.5px solid var(--teal);border-color:var(--teal);}
+  input{background:var(--surface-2);border:1px solid var(--line);color:#EAF0F8;border-radius:9px;
+    padding:11px 12px;font-family:inherit;font-size:15px;width:100%;}
   button.b{border:none;border-radius:10px;padding:12px 20px;font-family:'Tajawal',sans-serif;
     font-weight:700;font-size:14.5px;cursor:pointer;}
   .b-teal{background:var(--teal);color:#0E1422;}
-  .b-ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
+  .b-ghost{background:transparent;border:1px solid var(--line);color:#EAF0F8;}
   .msg{font-size:13px;padding:11px 13px;border-radius:9px;margin-top:12px;display:none;}
   .msg.err{background:rgba(226,112,106,.12);color:var(--bad);display:block;}
   .hide{display:none !important;}
   .verified{text-align:center;font-size:13px;color:var(--teal);margin-bottom:14px;}
-
-  /* ==================== الشهادة ==================== */
-  .cert{width:1160px;height:820px;background:#fff;color:var(--navy);position:relative;
-    transform-origin:top center;font-family:'IBM Plex Sans Arabic',sans-serif;
-    border:11px solid var(--teal);display:flex;flex-direction:column;overflow:hidden;}
-
-  /* شريط الشعارات */
-  .cert .logobar{height:132px;display:flex;align-items:center;justify-content:center;gap:30px;flex-shrink:0;}
-  .cert .logobar img{height:62px;display:block;}
-  .cert .logobar .sep{width:1px;height:56px;background:#C9D3E0;}
-
-  /* الشريط النيفي */
-  .cert .band{height:150px;background:var(--navy);position:relative;flex-shrink:0;overflow:hidden;
-    display:flex;align-items:center;justify-content:flex-start;padding:0 44px;}
-  .cert .band .streaks{position:absolute;inset:0;}
-  .cert .band .streaks i{position:absolute;top:-40px;height:230px;width:15px;background:var(--teal);
-    transform:rotate(22deg);opacity:.85;}
-  .cert .band .streaks i:nth-child(1){right:auto;left:36px;opacity:.95;}
-  .cert .band .streaks i:nth-child(2){left:74px;width:9px;opacity:.6;}
-  .cert .band .streaks i:nth-child(3){left:104px;width:5px;opacity:.35;}
-  .cert .band .badge{position:relative;border:2px solid rgba(53,201,174,.75);border-radius:10px;
-    padding:13px 22px;text-align:center;background:rgba(255,255,255,.03);}
-  .cert .band .badge .b1{font-family:'Tajawal';font-weight:900;font-size:21px;color:#fff;letter-spacing:3px;line-height:1.35;}
-  .cert .band .badge .b2{font-size:9.5px;color:var(--teal);letter-spacing:1.2px;margin-top:5px;}
-
-  /* المتن */
-  .cert .body{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
-    text-align:center;padding:0 96px;}
-  .cert .h{font-family:'Tajawal';font-size:40px;font-weight:900;color:var(--navy);}
-  .cert .divider{width:118px;height:3px;background:var(--teal);border-radius:2px;margin:24px 0 34px;}
-  .cert .to{font-size:16.5px;color:#3C4A62;}
-  .cert .name{font-family:'Tajawal';font-size:35px;font-weight:900;color:var(--navy);margin:26px 0 30px;
-    line-height:1.35;max-width:860px;}
-  .cert .l1{font-size:16.5px;color:#3C4A62;}
-  .cert .l1 b{color:var(--navy);font-weight:700;}
-  .cert .l2{font-size:16px;color:#3C4A62;margin-top:20px;}
-  .cert .l3{font-size:14.5px;color:#64738A;margin-top:20px;}
-
-  /* التذييل */
-  .cert .rule{height:1px;background:#BFD8D4;margin:0 74px;flex-shrink:0;}
-  .cert .foot{height:118px;flex-shrink:0;display:flex;align-items:center;justify-content:space-between;
-    padding:0 74px;font-size:12.5px;color:#64738A;}
-  .cert .foot .mid{text-align:center;}
-  .cert .foot .mid .t1{font-size:12.5px;}
-  .cert .foot .mid .t2{font-family:'Tajawal';font-weight:700;font-size:16px;color:var(--navy);margin-top:8px;}
-  .cert .foot .code{direction:ltr;}
-
   .stage{overflow-x:auto;padding-bottom:6px;}
   .actions{display:flex;gap:10px;justify-content:center;margin-top:22px;flex-wrap:wrap;}
+  .cert{width:1160px;height:820px;position:relative;overflow:hidden;transform-origin:top center;
+    font-family:'IBM Plex Sans Arabic',sans-serif;--accent:#35C9AE;--accent-d:#1E8E7C;--accent-m:#25A891;}
   @media(max-width:1210px){ .cert{transform:scale(.78);} .stage{height:660px;} }
   @media(max-width:940px){  .cert{transform:scale(.56);} .stage{height:475px;} }
   @media(max-width:640px){  .cert{transform:scale(.33);} .stage{height:285px;} }
+
+  .cert.b{background:#FBFAF8;color:#0E1938;}
+  .cert.b .top{height:96px;background:#fff;display:flex;align-items:center;justify-content:center;gap:24px;}
+  .cert.b .top img{height:46px;}
+  .cert.b .top .sep{width:1px;height:38px;background:#CBD4DF;}
+  .cert.b .band{height:236px;background:#0E1422;position:relative;overflow:hidden;
+    display:flex;align-items:center;padding:0 76px;}
+  .cert.b .band .ev{font-family:'Tajawal';font-weight:900;font-size:34px;color:#fff;line-height:1.3;position:relative;}
+  .cert.b .band .tg{font-size:13px;color:var(--accent);margin-top:11px;position:relative;}
+  .cert.b .band .cubes{position:absolute;left:56px;top:-118px;width:404px;height:476px;opacity:.95;}
+  .cert.b .band::after{content:'';position:absolute;inset:auto 0 0 0;height:5px;background:var(--accent);}
+  .cert.b .field{padding:44px 96px 0;text-align:center;}
+  .cert.b .kicker{font-size:11.5px;letter-spacing:3.4px;color:var(--accent-d);font-weight:600;}
+  .cert.b .h{font-family:'Tajawal';font-weight:900;font-size:29px;margin-top:8px;}
+  .cert.b .to{font-size:14px;color:#5C6B82;margin-top:18px;}
+  .cert.b .name{font-family:'Tajawal';font-weight:900;font-size:44px;margin-top:12px;color:#0E1938;}
+  .cert.b .uline{width:96px;height:4px;background:var(--accent);border-radius:3px;margin:16px auto 0;}
+  .cert.b .body{font-size:14.5px;color:#41506A;line-height:2.05;margin-top:20px;max-width:730px;
+    margin-inline:auto;text-wrap:balance;}
+  .cert.b .body b{color:#0E1938;font-weight:700;}
+  .cert.b .foot{position:absolute;inset:auto 76px 40px;display:flex;justify-content:space-between;
+    align-items:flex-end;border-top:1px solid #DDE3EA;padding-top:16px;}
+  .cert.b .foot .lbl{font-size:9.5px;letter-spacing:2px;color:#7C8AA0;}
+  .cert.b .foot .val{font-family:'Tajawal';font-weight:700;font-size:14px;margin-top:4px;}
+  .cert.b .foot .code{direction:ltr;}
+
 </style>
 </head>
 <body>
 <main>
   <div class="lookup" id="lookup">
     <h2 style="font-size:19px;">التحقق من الشهادة</h2>
-    <div style="font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.8;">
-      أدخل رمز الشهادة للتحقق من صحتها وتحميلها.
-    </div>
     <label for="code">رمز الشهادة</label>
     <input type="text" id="code" dir="ltr" style="text-align:right;" placeholder="SH-XXXXXXXX">
     <button class="b b-teal" style="width:100%;margin-top:16px;" onclick="lookup()">عرض الشهادة</button>
     <div class="msg" id="msg"></div>
   </div>
-
   <div id="wrap" class="hide">
     <div class="verified">شهادة موثّقة وصادرة من المنصة</div>
     <div class="stage">
-      <div class="cert" id="cert">
-        <div class="logobar">
-          <img src="logo-qu-dark.png" alt="جامعة القصيم">
-          <span class="sep"></span>
-          <img src="logo-mim-dark.png" alt="وزارة الصناعة والثروة المعدنية">
+      <div class="cert b" id="cert">
+        <div class="top">
+          <img data-logo="qu-dark" alt="جامعة القصيم"><span class="sep"></span>
+          <img data-logo="mim-dark" alt="وزارة الصناعة والثروة المعدنية">
         </div>
-
         <div class="band">
-          <div class="streaks"><i></i><i></i><i></i></div>
-          <div class="badge">
-            <div class="b1">صنّاع الحلول<br>الابتكارية</div>
-            <div class="b2">INNOVATIVE SOLUTIONS MAKERS</div>
+          <svg class="cubes" viewBox="0 0 400 470" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M200,182.0 L234,199.0 L200,216.0 L166,199.0 Z" fill="#1D2A45"/><path d="M166,199.0 L200,216.0 L200,246.0 L166,229.0 Z" fill="#131D31"/><path d="M234,199.0 L200,216.0 L200,246.0 L234,229.0 Z" fill="#18243C"/><path d="M166,199.0 L200,216.0 L166,233.0 L132,216.0 Z" fill="#1D2A45"/><path d="M132,216.0 L166,233.0 L166,263.0 L132,246.0 Z" fill="#131D31"/><path d="M200,216.0 L166,233.0 L166,263.0 L200,246.0 Z" fill="#18243C"/><path d="M234,199.0 L268,216.0 L234,233.0 L200,216.0 Z" fill="#1D2A45"/><path d="M200,216.0 L234,233.0 L234,263.0 L200,246.0 Z" fill="#131D31"/><path d="M268,216.0 L234,233.0 L234,263.0 L268,246.0 Z" fill="#18243C"/><path d="M132,216.0 L166,233.0 L132,250.0 L98,233.0 Z" fill="#1D2A45"/><path d="M98,233.0 L132,250.0 L132,280.0 L98,263.0 Z" fill="#131D31"/><path d="M166,233.0 L132,250.0 L132,280.0 L166,263.0 Z" fill="#18243C"/><path d="M200,216.0 L234,233.0 L200,250.0 L166,233.0 Z" fill="#1D2A45"/><path d="M166,233.0 L200,250.0 L200,280.0 L166,263.0 Z" fill="#131D31"/><path d="M234,233.0 L200,250.0 L200,280.0 L234,263.0 Z" fill="#18243C"/><path d="M268,216.0 L302,233.0 L268,250.0 L234,233.0 Z" fill="#1D2A45"/><path d="M234,233.0 L268,250.0 L268,280.0 L234,263.0 Z" fill="#131D31"/><path d="M302,233.0 L268,250.0 L268,280.0 L302,263.0 Z" fill="#18243C"/><path d="M98,233.0 L132,250.0 L98,267.0 L64,250.0 Z" fill="#1D2A45"/><path d="M64,250.0 L98,267.0 L98,297.0 L64,280.0 Z" fill="#131D31"/><path d="M132,250.0 L98,267.0 L98,297.0 L132,280.0 Z" fill="#18243C"/><path d="M166,233.0 L200,250.0 L166,267.0 L132,250.0 Z" fill="#1D2A45"/><path d="M132,250.0 L166,267.0 L166,297.0 L132,280.0 Z" fill="#131D31"/><path d="M200,250.0 L166,267.0 L166,297.0 L200,280.0 Z" fill="#18243C"/><path d="M234,233.0 L268,250.0 L234,267.0 L200,250.0 Z" fill="#1D2A45"/><path d="M200,250.0 L234,267.0 L234,297.0 L200,280.0 Z" fill="#131D31"/><path d="M268,250.0 L234,267.0 L234,297.0 L268,280.0 Z" fill="#18243C"/><path d="M302,233.0 L336,250.0 L302,267.0 L268,250.0 Z" fill="#1D2A45"/><path d="M268,250.0 L302,267.0 L302,297.0 L268,280.0 Z" fill="#131D31"/><path d="M336,250.0 L302,267.0 L302,297.0 L336,280.0 Z" fill="#18243C"/><path d="M64,250.0 L98,267.0 L64,284.0 L30,267.0 Z" fill="#1D2A45"/><path d="M30,267.0 L64,284.0 L64,314.0 L30,297.0 Z" fill="#131D31"/><path d="M98,267.0 L64,284.0 L64,314.0 L98,297.0 Z" fill="#18243C"/><path d="M132,250.0 L166,267.0 L132,284.0 L98,267.0 Z" fill="#1D2A45"/><path d="M98,267.0 L132,284.0 L132,314.0 L98,297.0 Z" fill="#131D31"/><path d="M166,267.0 L132,284.0 L132,314.0 L166,297.0 Z" fill="#18243C"/><path d="M200,250.0 L234,267.0 L200,284.0 L166,267.0 Z" fill="#1D2A45"/><path d="M166,267.0 L200,284.0 L200,314.0 L166,297.0 Z" fill="#131D31"/><path d="M234,267.0 L200,284.0 L200,314.0 L234,297.0 Z" fill="#18243C"/><path d="M268,250.0 L302,267.0 L268,284.0 L234,267.0 Z" fill="#1D2A45"/><path d="M234,267.0 L268,284.0 L268,314.0 L234,297.0 Z" fill="#131D31"/><path d="M302,267.0 L268,284.0 L268,314.0 L302,297.0 Z" fill="#18243C"/><path d="M336,250.0 L370,267.0 L336,284.0 L302,267.0 Z" fill="#1D2A45"/><path d="M302,267.0 L336,284.0 L336,314.0 L302,297.0 Z" fill="#131D31"/><path d="M370,267.0 L336,284.0 L336,314.0 L370,297.0 Z" fill="#18243C"/><path d="M98,267.0 L132,284.0 L98,301.0 L64,284.0 Z" fill="#1D2A45"/><path d="M64,284.0 L98,301.0 L98,331.0 L64,314.0 Z" fill="#131D31"/><path d="M132,284.0 L98,301.0 L98,331.0 L132,314.0 Z" fill="#18243C"/><path d="M166,267.0 L200,284.0 L166,301.0 L132,284.0 Z" fill="#1D2A45"/><path d="M132,284.0 L166,301.0 L166,331.0 L132,314.0 Z" fill="#131D31"/><path d="M200,284.0 L166,301.0 L166,331.0 L200,314.0 Z" fill="#18243C"/><path d="M234,267.0 L268,284.0 L234,301.0 L200,284.0 Z" fill="#1D2A45"/><path d="M200,284.0 L234,301.0 L234,331.0 L200,314.0 Z" fill="#131D31"/><path d="M268,284.0 L234,301.0 L234,331.0 L268,314.0 Z" fill="#18243C"/><path d="M302,267.0 L336,284.0 L302,301.0 L268,284.0 Z" fill="#1D2A45"/><path d="M268,284.0 L302,301.0 L302,331.0 L268,314.0 Z" fill="#131D31"/><path d="M336,284.0 L302,301.0 L302,331.0 L336,314.0 Z" fill="#18243C"/><path d="M132,284.0 L166,301.0 L132,318.0 L98,301.0 Z" fill="#1D2A45"/><path d="M98,301.0 L132,318.0 L132,348.0 L98,331.0 Z" fill="#131D31"/><path d="M166,301.0 L132,318.0 L132,348.0 L166,331.0 Z" fill="#18243C"/><path d="M200,284.0 L234,301.0 L200,318.0 L166,301.0 Z" fill="#1D2A45"/><path d="M166,301.0 L200,318.0 L200,348.0 L166,331.0 Z" fill="#131D31"/><path d="M234,301.0 L200,318.0 L200,348.0 L234,331.0 Z" fill="#18243C"/><path d="M268,284.0 L302,301.0 L268,318.0 L234,301.0 Z" fill="#1D2A45"/><path d="M234,301.0 L268,318.0 L268,348.0 L234,331.0 Z" fill="#131D31"/><path d="M302,301.0 L268,318.0 L268,348.0 L302,331.0 Z" fill="#18243C"/><path d="M166,301.0 L200,318.0 L166,335.0 L132,318.0 Z" fill="#1D2A45"/><path d="M132,318.0 L166,335.0 L166,365.0 L132,348.0 Z" fill="#131D31"/><path d="M200,318.0 L166,335.0 L166,365.0 L200,348.0 Z" fill="#18243C"/><path d="M234,301.0 L268,318.0 L234,335.0 L200,318.0 Z" fill="#1D2A45"/><path d="M200,318.0 L234,335.0 L234,365.0 L200,348.0 Z" fill="#131D31"/><path d="M268,318.0 L234,335.0 L234,365.0 L268,348.0 Z" fill="#18243C"/><path d="M200,318.0 L234,335.0 L200,352.0 L166,335.0 Z" fill="#1D2A45"/><path d="M166,335.0 L200,352.0 L200,382.0 L166,365.0 Z" fill="#131D31"/><path d="M234,335.0 L200,352.0 L200,382.0 L234,365.0 Z" fill="#18243C"/><path d="M200,186.0 L234,203.0 L200,220.0 L166,203.0 Z" fill="#1D2A45"/><path d="M166,203.0 L200,220.0 L200,250.0 L166,233.0 Z" fill="#131D31"/><path d="M234,203.0 L200,220.0 L200,250.0 L234,233.0 Z" fill="#18243C"/><path d="M166,203.0 L200,220.0 L166,237.0 L132,220.0 Z" fill="#1D2A45"/><path d="M132,220.0 L166,237.0 L166,267.0 L132,250.0 Z" fill="#131D31"/><path d="M200,220.0 L166,237.0 L166,267.0 L200,250.0 Z" fill="#18243C"/><path d="M234,203.0 L268,220.0 L234,237.0 L200,220.0 Z" fill="#1D2A45"/><path d="M200,220.0 L234,237.0 L234,267.0 L200,250.0 Z" fill="#131D31"/><path d="M268,220.0 L234,237.0 L234,267.0 L268,250.0 Z" fill="#18243C"/><path d="M132,220.0 L166,237.0 L132,254.0 L98,237.0 Z" fill="#1D2A45"/><path d="M98,237.0 L132,254.0 L132,284.0 L98,267.0 Z" fill="#131D31"/><path d="M166,237.0 L132,254.0 L132,284.0 L166,267.0 Z" fill="#18243C"/><path d="M200,220.0 L234,237.0 L200,254.0 L166,237.0 Z" fill="#1D2A45"/><path d="M166,237.0 L200,254.0 L200,284.0 L166,267.0 Z" fill="#131D31"/><path d="M234,237.0 L200,254.0 L200,284.0 L234,267.0 Z" fill="#18243C"/><path d="M268,220.0 L302,237.0 L268,254.0 L234,237.0 Z" fill="#1D2A45"/><path d="M234,237.0 L268,254.0 L268,284.0 L234,267.0 Z" fill="#131D31"/><path d="M302,237.0 L268,254.0 L268,284.0 L302,267.0 Z" fill="#18243C"/><path d="M166,237.0 L200,254.0 L166,271.0 L132,254.0 Z" fill="#1D2A45"/><path d="M132,254.0 L166,271.0 L166,301.0 L132,284.0 Z" fill="#131D31"/><path d="M200,254.0 L166,271.0 L166,301.0 L200,284.0 Z" fill="#18243C"/><path d="M234,237.0 L268,254.0 L234,271.0 L200,254.0 Z" fill="#1D2A45"/><path d="M200,254.0 L234,271.0 L234,301.0 L200,284.0 Z" fill="#131D31"/><path d="M268,254.0 L234,271.0 L234,301.0 L268,284.0 Z" fill="#18243C"/><path d="M200,254.0 L234,271.0 L200,288.0 L166,271.0 Z" fill="#1D2A45"/><path d="M166,271.0 L200,288.0 L200,318.0 L166,301.0 Z" fill="#131D31"/><path d="M234,271.0 L200,288.0 L200,318.0 L234,301.0 Z" fill="#18243C"/><path d="M200,190.0 L234,207.0 L200,224.0 L166,207.0 Z" fill="#1D2A45"/><path d="M166,207.0 L200,224.0 L200,254.0 L166,237.0 Z" fill="#131D31"/><path d="M234,207.0 L200,224.0 L200,254.0 L234,237.0 Z" fill="#18243C"/><path d="M200,149.5 L234,166.5 L200,183.5 L166,166.5 Z" fill="var(--accent)"/><path d="M166,166.5 L200,183.5 L200,213.5 L166,196.5 Z" fill="var(--accent-d)"/><path d="M234,166.5 L200,183.5 L200,213.5 L234,196.5 Z" fill="var(--accent-m)"/><path d="M200,82.0 L245.56,104.78 L245.56,144.98000000000002 L200,167.76 L154.44,144.98000000000002 L154.44,104.78 Z" fill="none" stroke="var(--accent)" stroke-width="1.7" opacity=".6" stroke-linejoin="round"/><path d="M154.44,104.78 L200,127.56 L245.56,104.78 M200,127.56 L200,167.76" fill="none" stroke="var(--accent)" stroke-width="1.7" opacity=".6" stroke-linejoin="round"/></svg>
+          <div>
+            <div class="ev">صنّاع الحلول الابتكارية</div>
+            <div class="tg">نحو حلول مبتكرة تصنع أثرًا مستدامًا</div>
           </div>
         </div>
-
-        <div class="body">
+        <div class="field">
+          <div class="kicker">CERTIFICATE OF PARTICIPATION</div>
           <div class="h">شهادة مشاركة</div>
-          <div class="divider"></div>
           <div class="to">يتقدّم مركز الابتكار والملكية الفكرية بجامعة القصيم بالشكر والتقدير إلى</div>
           <div class="name" id="cName"></div>
-          <div class="l1" id="cL1"></div>
-          <div class="l2" id="cL2"></div>
-          <div class="l3" id="cL3"></div>
+          <div class="uline"></div>
+          <div class="body" id="cBody"></div>
         </div>
-
-        <div class="rule"></div>
         <div class="foot">
-          <div id="cDate"></div>
-          <div class="mid">
-            <div class="t1">مع خالص الشكر والتقدير،</div>
-            <div class="t2">فريق صنّاع الحلول الابتكارية</div>
-          </div>
-          <div>رمز التحقق: <span class="code" id="cCode"></span></div>
+          <div><div class="lbl">رمز التحقق</div><div class="val code" id="cCode"></div></div>
+          <div style="text-align:center;"><div class="val">فريق صنّاع الحلول الابتكارية</div>
+            <div class="lbl" style="letter-spacing:.4px;margin-top:5px;">مركز الابتكار والملكية الفكرية · جامعة القصيم</div></div>
+          <div style="text-align:left;"><div class="lbl">تاريخ الإصدار</div><div class="val" id="cDate"></div></div>
         </div>
       </div>
     </div>
-
     <div class="actions">
       <button class="b b-teal" onclick="download('pdf')" id="pdfBtn">تحميل PDF</button>
       <button class="b b-ghost" onclick="download('png')" id="pngBtn">تحميل صورة</button>
@@ -143,16 +110,63 @@
     </div>
   </div>
 </main>
-
 <script src="config.js"></script>
 <script>
+
 function param(k){ return new URLSearchParams(location.search).get(k); }
 function arDate(d){
-  return d ? new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'long',year:'numeric'}) : '';
+  return d ? new Date(d).toLocaleDateString('ar-SA-u-ca-gregory',{day:'numeric',month:'long',year:'numeric'}) : '';
 }
 function dayNum(d){ return d ? new Date(d).getDate() : null; }
 function monthYear(d){
-  return d ? new Date(d).toLocaleDateString('ar-SA',{month:'long',year:'numeric'}) : '';
+  return d ? new Date(d).toLocaleDateString('ar-SA-u-ca-gregory',{month:'long',year:'numeric'}) : '';
+}
+const ACCENTS = {
+  safety: ['#DB8A52','#9E5F33','#C0743F'],
+  tech:   ['#35C9AE','#1E8E7C','#25A891'],
+};
+function put(id, text){ const e = document.getElementById(id); if(e) e.textContent = text; }
+/* اسم قصير لا يُكسر في منتصفه؛ الطويل يُترك للسطر الطبيعي */
+function nb(t){
+  const v = String(t || '');
+  return v.length <= 28 ? `<b style="white-space:nowrap">${v}</b>` : `<b>${v}</b>`;
+}
+
+function fill(r, code){
+  const track = String(r.track_name || '');
+  const [a, ad, am] = track.includes('السلامة') ? ACCENTS.safety : ACCENTS.tech;
+  const cert = document.getElementById('cert');
+  cert.style.setProperty('--accent', a);
+  cert.style.setProperty('--accent-d', ad);
+  cert.style.setProperty('--accent-m', am);
+
+  const f = String(r.gender || '').includes('أنث') || String(r.gender || '').includes('انث');
+  const nameEl = document.getElementById('cName');
+  nameEl.textContent = r.full_name;
+  const L = (r.full_name || '').length;
+  nameEl.style.fontSize = L > 34 ? '32px' : L > 26 ? '37px' : L > 19 ? '42px' : '47px';
+
+  const d1 = dayNum(r.day1_date), d2 = dayNum(r.day2_date);
+  const period = (d1 && d2) ? `في الفترة من ${d1}–${d2} ${monthYear(r.day2_date)}`
+    : (r.day1_date || r.day2_date ? `بتاريخ ${arDate(r.day1_date || r.day2_date)}` : '');
+
+  const body = document.getElementById('cBody');
+  if(body){
+    body.innerHTML =
+      `على ${f ? 'مشاركتها المتميّزة' : 'مشاركته المتميّزة'} في فعالية <b>صنّاع الحلول الابتكارية</b>` +
+      (track ? ` ضمن <b>${track.replace('مسار ','')}</b>` : '') +
+      (r.team_name ? `، ${f ? 'عضوةً' : 'عضوًا'} في فريق ${nb(r.team_name)}` : '') +
+      (r.project_title ? ` بمشروع ${nb(r.project_title)}` : '') +
+      `،<br>${f ? 'وإتمامها' : 'وإتمامه'} متطلبات البرنامج بنجاح` + (period ? ` ${period}` : '') + `.` +
+      `<br>متمنين ${f ? 'لها' : 'له'} دوام التوفيق والنجاح.`;
+  }
+  put('cTrack',   track.replace('مسار ','') || '—');
+  put('cTeam',    r.team_name || '—');
+  put('cProject', r.project_title || '—');
+  put('cPeriod',  period.replace('في الفترة من ','').replace('بتاريخ ','') || '—');
+  put('cShort',   `${f ? 'مشاركتها' : 'مشاركته'} المتميّزة ${f ? 'وإتمامها' : 'وإتمامه'} متطلبات البرنامج بنجاح`);
+  put('cCode', String(code).toUpperCase());
+  put('cDate', arDate(new Date()));
 }
 
 async function lookup(code){
@@ -160,35 +174,11 @@ async function lookup(code){
   const msg = document.getElementById('msg');
   msg.className = 'msg';
   if(!c) return;
-
   const { data, error } = await supabaseClient.rpc('get_certificate', { p_code: c });
   if(error || !data || !data.length){
-    msg.className = 'msg err';
-    msg.textContent = 'ما فيه شهادة بهذا الرمز.';
-    return;
+    msg.className = 'msg err'; msg.textContent = 'ما فيه شهادة بهذا الرمز.'; return;
   }
-
-  const r = data[0];
-  const f = String(r.gender || '').includes('أنث') || String(r.gender || '').includes('انث');
-
-  document.getElementById('cName').textContent = r.full_name;
-
-  document.getElementById('cL1').innerHTML =
-    `على ${f ? 'مشاركتها المتميّزة' : 'مشاركته المتميّزة'} في <b>صنّاع الحلول الابتكارية</b>` +
-    (r.track_name ? ` ضمن <b>${r.track_name.replace('مسار ','')}</b>` : '');
-
-  const d1 = dayNum(r.day1_date), d2 = dayNum(r.day2_date);
-  const period = (d1 && d2)
-    ? `في الفترة من ${d1}-${d2} ${monthYear(r.day2_date)}`
-    : (r.day1_date || r.day2_date ? `بتاريخ ${arDate(r.day1_date || r.day2_date)}` : '');
-  document.getElementById('cL2').textContent =
-    `${f ? 'وإتمامها' : 'وإتمامه'} متطلبات البرنامج بنجاح` + (period ? ` وذلك ${period}` : '');
-
-  document.getElementById('cL3').textContent =
-    `متمنين ${f ? 'لها' : 'له'} دوام التوفيق والنجاح في ${f ? 'مسيرتها' : 'مسيرته'} العلمية والمهنية.`;
-
-  document.getElementById('cCode').textContent = c.toUpperCase();
-  document.getElementById('cDate').textContent = arDate(new Date());
+  fill(data[0], c);
   document.getElementById('lookup').classList.add('hide');
   document.getElementById('wrap').classList.remove('hide');
 }
@@ -196,14 +186,14 @@ async function lookup(code){
 async function shot(){
   const node = document.getElementById('cert');
   const clone = node.cloneNode(true);
-  clone.style.transform = 'none';
-  clone.style.position = 'fixed';
-  clone.style.top = '0';
-  clone.style.left = '-99999px';
+  clone.style.transform='none'; clone.style.position='fixed';
+  clone.style.top='0'; clone.style.left='-99999px';
   document.body.appendChild(clone);
+  if(typeof paintLogos === 'function') paintLogos(clone);
   await Promise.all([...clone.querySelectorAll('img')].map(img =>
     img.complete ? Promise.resolve() : new Promise(r => { img.onload = img.onerror = r; })));
-  const canvas = await html2canvas(clone, { scale: 2, backgroundColor: '#ffffff', useCORS: true });
+  const bg = getComputedStyle(node).backgroundColor || '#ffffff';
+  const canvas = await html2canvas(clone, { scale:2, backgroundColor:bg, useCORS:true });
   clone.remove();
   return canvas;
 }
@@ -217,22 +207,19 @@ async function download(kind){
     const name = document.getElementById('cName').textContent.replace(/\s+/g,'-');
     if(kind === 'png'){
       const a = document.createElement('a');
-      a.href = canvas.toDataURL('image/png');
-      a.download = `شهادة-${name}.png`;
-      a.click();
+      a.href = canvas.toDataURL('image/png'); a.download = `شهادة-${name}.png`; a.click();
     } else {
       const { jsPDF } = window.jspdf;
       const pdf = new jsPDF({ orientation:'landscape', unit:'pt', format:'a4' });
-      pdf.addImage(canvas.toDataURL('image/jpeg', 0.96), 'JPEG', 0, 0, 842, 595);
+      pdf.addImage(canvas.toDataURL('image/jpeg',0.96),'JPEG',0,0,842,595);
       pdf.save(`شهادة-${name}.pdf`);
     }
-  } finally {
-    btn.disabled = false; btn.textContent = label;
-  }
+  } finally { btn.disabled=false; btn.textContent=label; }
 }
 
 const c = param('code');
 if(c){ document.getElementById('code').value = c; lookup(c); }
+
 </script>
 </body>
 </html>
