@@ -61,6 +61,37 @@
   .brandmark img{height:30px;display:block;}
   .brandmark .sep{width:1px;height:24px;background:rgba(255,255,255,.22);}
   @media(max-width:520px){ .brandmark img{height:24px;} }
+
+  .com{background:var(--surface-2,#1A2236);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px;}
+  .com .cn{font-family:'Tajawal',sans-serif;font-weight:700;font-size:17px;color:var(--navy,#0B1B3F);}
+  .com .lbl{font-size:12px;color:var(--muted);margin-top:12px;}
+  .com .mm{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px;}
+  .com .chip{border:1px solid var(--line);border-radius:999px;padding:6px 13px;font-size:12.5px;color:var(--muted);background:#fff;}
+  .com .chip.me{background:var(--teal);border-color:var(--teal);color:#fff;font-weight:700;}
+  .ord{display:inline-block;background:var(--navy,#0B1B3F);color:#fff;border-radius:8px;
+    padding:4px 11px;font-size:12px;font-family:'Tajawal',sans-serif;font-weight:700;}
+  .warn{background:#fdf4e3;border:1px solid #e6c98a;color:#8a6210;border-radius:10px;
+    padding:11px 13px;font-size:12.5px;line-height:1.8;margin-top:12px;}
+  .modal{position:fixed;inset:0;background:rgba(11,27,63,.6);display:flex;align-items:center;
+    justify-content:center;padding:18px;z-index:50;}
+  .modal .box{background:#fff;border-radius:16px;padding:24px;max-width:460px;width:100%;
+    max-height:86vh;overflow:auto;}
+  .modal h3{font-family:'Tajawal',sans-serif;font-size:18px;color:var(--navy,#0B1B3F);}
+  .modal .sub{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.8;}
+  .modal .rw{display:flex;justify-content:space-between;align-items:center;
+    padding:11px 0;border-bottom:1px solid var(--line);font-size:13.5px;}
+  .modal .rw:last-of-type{border-bottom:none;}
+  .modal .rw .sc{font-family:'Tajawal',sans-serif;font-weight:700;}
+  .modal .tot{display:flex;justify-content:space-between;background:#f2fbf9;border:1px solid #cdeee8;
+    border-radius:10px;padding:13px;margin-top:14px;font-family:'Tajawal',sans-serif;font-weight:700;
+    font-size:15px;color:#0f7a68;}
+  .modal .acts{display:flex;gap:9px;margin-top:18px;}
+  .modal .acts button{flex:1;border:none;border-radius:11px;padding:13px;cursor:pointer;
+    font-family:'Tajawal',sans-serif;font-weight:700;font-size:14.5px;}
+  .modal .acts .go{background:var(--teal);color:#fff;}
+  .modal .acts .back{background:#fff;border:1.5px solid var(--line);color:var(--navy,#0B1B3F);}
+  .modal .cm{background:#f7f7f2;border-radius:10px;padding:11px;font-size:13px;
+    line-height:1.8;margin-top:13px;color:#3b4252;white-space:pre-wrap;}
 </style>
 </head>
 <body>
@@ -68,9 +99,9 @@
 <div class="topbar">
   <div style="display:flex;align-items:center;gap:14px;">
     <div class="brandmark">
-      <img src="logo-qu.png" alt="جامعة القصيم">
+      <img data-logo="qu" alt="جامعة القصيم">
       <span class="sep"></span>
-      <img src="logo-mim.png" alt="وزارة الصناعة والثروة المعدنية">
+      <img data-logo="mim" alt="وزارة الصناعة والثروة المعدنية">
     </div>
     <h1>بوابة المحكّم</h1>
   </div>
@@ -117,6 +148,7 @@
   </div>
 
   <div id="app" class="hide">
+    <div id="comBox"></div>
     <div class="card" id="introCard">
       <h2 style="color:var(--navy);font-size:18px;">المشاريع المسندة لك</h2>
       <div class="hint" id="introHint"></div>
@@ -131,7 +163,7 @@
 <script>
 let token = localStorage.getItem('sh_judge_token') || null;
 let pending = null;          // { email, phone, full_name }
-let criteria = [], teams = [];
+let criteria = [], teams = [], committees = [];
 
 function msg(id, text, ok){
   const el = document.getElementById(id);
@@ -217,10 +249,12 @@ function logout(){
 }
 
 async function loadWorkspace(){
-  const [{ data: crit }, { data: tms }] = await Promise.all([
+  const [{ data: crit }, { data: tms }, { data: coms }] = await Promise.all([
     supabaseClient.rpc('judge_criteria', { p_token: token }),
     supabaseClient.rpc('judge_projects', { p_token: token }),
+    supabaseClient.rpc('judge_committee', { p_token: token }),
   ]);
+  committees = coms || [];
 
   if(crit === null && tms === null){ logout(); return; }
 
@@ -230,7 +264,22 @@ async function loadWorkspace(){
   if(pending) document.getElementById('whoami').textContent = pending.full_name;
   document.getElementById('logoutBtn').classList.remove('hide');
   show('app');
+  renderCommittees();
   renderTeams();
+}
+
+function renderCommittees(){
+  const box = document.getElementById('comBox');
+  if(!committees.length){ box.innerHTML = ''; return; }
+  box.innerHTML = committees.map(c => `
+    <div class="com">
+      <div class="cn">${c.committee_name}</div>
+      <div class="lbl">أعضاء اللجنة</div>
+      <div class="mm">${(c.members || []).map(m =>
+        `<span class="chip ${m.is_me ? 'me' : ''}">${m.full_name}${m.is_me ? ' · أنت' : ''}${
+          m.organization && !m.is_me ? ` — ${m.organization}` : ''}</span>`).join('')}</div>
+      <div class="lbl">عدد المشاريع: ${c.teams_count}</div>
+    </div>`).join('');
 }
 
 function renderTeams(){
@@ -264,9 +313,13 @@ function renderTeams(){
 
     return `
     <div class="team" id="team-${t.team_id}">
-      <span class="code">${t.team_code}</span>
-      <h3>${t.team_name}</h3>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span class="ord">المشروع ${t.order_index} من ${t.total_in_committee}</span>
+        <span class="code">${t.team_code}</span>
+      </div>
+      <h3 style="margin-top:8px;">${t.team_name}</h3>
       <div class="meta">${t.track_name}${t.challenge_title ? ' · ' + t.challenge_title : ''}</div>
+      ${t.conflict ? `<div class="warn">تنبيه: جهتك تطابق جهة أحد أعضاء هذا الفريق. التقييم متاح، والقرار لك.</div>` : ''}
       <div class="meta">الأعضاء: ${(t.members || []).join('، ')}</div>
 
       ${p.title ? `<div class="ptitle">${p.title}</div>` : '<div class="ptitle" style="color:var(--muted);">لم يُسلَّم مشروع بعد</div>'}
@@ -282,7 +335,7 @@ function renderTeams(){
         <textarea id="cm-${t.team_id}" ${locked ? 'disabled' : ''}>${t.my_comment || ''}</textarea>
         ${locked
           ? `<div class="done">تم اعتماد تقييمك لهذا المشروع.</div>`
-          : `<button class="primary" onclick="submitTeam('${t.team_id}')">اعتماد التقييم نهائيًا</button>`}
+          : `<button class="primary" onclick="openReview('${t.team_id}')">مراجعة واعتماد التقييم</button>`}
         <div class="msg" id="tm-${t.team_id}"></div>
       </div>
     </div>`;
@@ -304,15 +357,56 @@ async function setScore(teamId, critId, value){
   toast('تم الحفظ');
 }
 
-async function submitTeam(teamId){
+function weightedTotal(scores){
+  let num = 0, den = 0;
+  criteria.forEach(c => {
+    const v = scores[c.id];
+    if(v == null) return;
+    num += (v / c.max_score) * c.weight;
+    den += c.weight;
+  });
+  return den ? Math.round(num / den * 1000) / 10 : 0;
+}
+
+function openReview(teamId){
   const t = teams.find(x => x.team_id === teamId);
   const missing = criteria.filter(c => !(t.my_scores && t.my_scores[c.id]));
   if(missing.length){
     msg('tm-' + teamId, 'قيّم كل المعايير قبل الاعتماد: ' + missing.map(c => c.name_ar).join('، '));
     return;
   }
-  if(!confirm('الاعتماد نهائي ولا يمكن تعديل الدرجات بعده. متأكد؟')) return;
+  const comment = document.getElementById('cm-' + teamId).value.trim();
+  const rows = criteria.map(c => `
+    <div class="rw"><span>${c.name_ar} <span style="color:var(--muted);">· ${c.weight}%</span></span>
+      <span class="sc">${t.my_scores[c.id]} / ${c.max_score}</span></div>`).join('');
 
+  const el = document.createElement('div');
+  el.className = 'modal';
+  el.id = 'reviewModal';
+  el.innerHTML = `
+    <div class="box">
+      <h3>مراجعة التقييم قبل الاعتماد</h3>
+      <div class="sub">${t.team_name} — ${t.team_code}<br>
+        بعد الاعتماد لا يمكن تعديل الدرجات أو الملاحظات.</div>
+      <div style="margin-top:16px;">${rows}</div>
+      <div class="tot"><span>النتيجة الموزونة</span><span>${weightedTotal(t.my_scores)}%</span></div>
+      ${comment ? `<div class="sub" style="margin-top:14px;">ملاحظاتك</div><div class="cm">${comment}</div>`
+                : `<div class="sub" style="margin-top:14px;">لم تكتب ملاحظات.</div>`}
+      <div class="acts">
+        <button class="back" onclick="closeReview()">رجوع للتعديل</button>
+        <button class="go" onclick="confirmSubmit('${teamId}')">اعتماد نهائي</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+}
+function closeReview(){
+  const m = document.getElementById('reviewModal');
+  if(m) m.remove();
+}
+
+async function confirmSubmit(teamId){
+  closeReview();
+  const t = teams.find(x => x.team_id === teamId);
   const comment = document.getElementById('cm-' + teamId).value.trim();
   const { error } = await supabaseClient.rpc('judge_submit', {
     p_token: token, p_team_id: teamId, p_comment: comment || null,

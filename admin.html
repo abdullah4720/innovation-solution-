@@ -96,6 +96,11 @@
   .login h2{font-size:19px;margin-bottom:6px;}
   .login .sub{font-size:12.5px;color:var(--muted);margin-bottom:8px;}
 
+  .cellbtn{width:34px;height:30px;border-radius:8px;border:1px solid var(--line);
+    background:var(--surface-2);color:var(--muted);cursor:pointer;font-size:14px;font-weight:700;}
+  .cellbtn.on{background:rgba(53,201,174,.18);border-color:var(--teal);color:var(--teal);}
+  .cellbtn.lock{background:rgba(53,201,174,.34);border-color:var(--teal);color:#0E1422;cursor:not-allowed;}
+  #assignTable th{position:sticky;top:0;background:var(--surface);z-index:1;}
   .assign-grid{display:grid;gap:10px;}
   .assign-judge{border:1px solid var(--line);border-radius:12px;padding:15px;background:var(--surface-2);}
   .assign-judge .jn{font-family:'Tajawal',sans-serif;font-weight:700;font-size:14.5px;}
@@ -222,6 +227,20 @@
 
     <!-- التحكيم -->
     <section id="tab-judging" class="hide">
+      <div class="panel" style="border-color:var(--teal);">
+        <h3>كيف يسير التحكيم</h3>
+        <div class="sub" style="margin-bottom:0;">
+          <b style="color:var(--teal);">1</b> أضف المحكّمين بأسمائهم وبريدهم وجوالهم ·
+          <b style="color:var(--teal);">2</b> راجع معايير التقييم وأوزانها ·
+          <b style="color:var(--teal);">3</b> أنشئ اللجان وضُمّ المحكّمين وأسند المشاريع ·
+          <b style="color:var(--teal);">4</b> افتح مفتاح «التحكيم مفتوح» من الإعدادات ·
+          <b style="color:var(--teal);">5</b> أرسل للمحكّمين رابط <span dir="ltr">judge.html</span><br><br>
+          المحكّم يدخل ببريده وجواله ويختار كلمة مروره، ويرى المشاريع المسندة له فقط.
+          الدرجات تُحفظ فور الضغط، والاعتماد نهائي لا يُعدَّل.
+          النتيجة متوسط موزون لدرجات المحكّمين <b>المعتمَدة فقط</b>.
+        </div>
+      </div>
+
       <div class="panel">
         <h3>المحكّمون</h3>
         <div class="sub">المحكّم يدخل ببريده وجواله ثم يختار كلمة مروره بنفسه.</div>
@@ -256,10 +275,31 @@
       </div>
 
       <div class="panel">
-        <h3>إسناد المشاريع</h3>
-        <div class="sub">اضغط على اسم الفريق لإسناده أو إلغاء إسناده للمحكّم.</div>
-        <button class="b b-ghost" onclick="assignAll()">إسناد كل الفرق لكل المحكّمين</button>
-        <div class="assign-grid" id="assignBox" style="margin-top:16px;"></div>
+        <h3>لجان التحكيم</h3>
+        <div class="sub">اللجنة تضم محكّمين، والمشروع يُسند للجنة واحدة فيقيّمه كل أعضائها.</div>
+        <div class="row">
+          <input type="text" id="comName" placeholder="اسم اللجنة — مثال: اللجنة الأولى">
+          <input type="text" id="comNotes" placeholder="ملاحظة (اختياري)">
+        </div>
+        <button class="b b-teal" style="margin-top:12px;" onclick="addCommittee()">إضافة لجنة</button>
+        <div class="msg" id="comMsg"></div>
+        <div id="comBox" style="margin-top:18px;"></div>
+      </div>
+
+      <div class="panel">
+        <h3>إسناد المشاريع للجان</h3>
+        <div class="sub">كل مشروع للجنة واحدة. الترتيب يحدد تسلسل عرضه على المحكّمين.</div>
+        <div id="assignStats" class="stats" style="margin-bottom:14px;"></div>
+        <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px;">
+          <select id="bulkCom" style="max-width:230px;"></select>
+          <select id="bulkTrack" style="max-width:230px;"></select>
+          <button class="b b-ghost" onclick="bulkAssign()">إسناد مشاريع المسار للجنة</button>
+          <button class="b b-ghost" onclick="renumber()">إعادة الترقيم</button>
+        </div>
+        <div class="table-wrap"><table>
+          <thead><tr><th>الترتيب</th><th>المشروع</th><th>المسار</th><th>اللجنة</th><th>التقدّم</th></tr></thead>
+          <tbody id="assignBody"></tbody>
+        </table></div>
       </div>
     </section>
 
@@ -303,6 +343,7 @@ const TABS = [
 let tracks=[], challenges=[], teams=[], people=[], judges=[], criteria=[],
     assignments=[], evals=[], settings={}, results=[], importRows=null;
 let surveys=[], surveyIds=new Set(), surveyStats={};
+let committees=[], comMembersRows=[];
 
 document.getElementById('tabs').innerHTML = TABS.map(([k,l],i) =>
   `<button id="tb-${k}" class="${i===0?'on':''}" onclick="switchTab('${k}')">${l}</button>`).join('');
@@ -350,7 +391,7 @@ function logout(){ supabaseClient.auth.signOut().then(()=>location.reload()); }
 
 /* ---------- تحميل البيانات ---------- */
 async function loadAll(){
-  const [tr,ch,tm,pp,jd,cr,as,ev,st,rs,sv,ss] = await Promise.all([
+  const [tr,ch,tm,pp,jd,cr,as,ev,st,rs,sv,ss,cm,cmm] = await Promise.all([
     supabaseClient.from('tracks').select('*').order('sort_order'),
     supabaseClient.from('challenges').select('*').order('track_id, number'),
     supabaseClient.from('teams').select('*, projects(*)').order('code'),
@@ -363,18 +404,21 @@ async function loadAll(){
     supabaseClient.from('v_team_results').select('*'),
     supabaseClient.from('event_evaluations').select('*'),
     supabaseClient.rpc('survey_summary'),
+    supabaseClient.from('judging_committees').select('*').order('name'),
+    supabaseClient.from('committee_members').select('*'),
   ]);
   tracks=tr.data||[]; challenges=ch.data||[]; teams=tm.data||[]; people=pp.data||[];
   judges=jd.data||[]; criteria=cr.data||[]; assignments=as.data||[]; evals=ev.data||[];
   settings=st.data||{}; results=rs.data||[];
   surveys=sv.data||[]; surveyIds=new Set(surveys.map(x=>x.participant_id));
   surveyStats=(ss.data && ss.data[0]) || {};
+  committees=cm.data||[]; comMembersRows=cmm.data||[];
 
   document.getElementById('teamTrackFilter').innerHTML =
     '<option value="">كل المسارات</option>' + tracks.map(t=>`<option value="${t.id}">${t.name_ar}</option>`).join('');
 
   renderStats(); renderTeams(); renderPeople(); renderJudges();
-  renderCriteria(); renderAssign(); renderResults(); renderSettings();
+  renderCriteria(); renderCommittees(); renderResults(); renderSettings();
   renderProgress(); renderSurvey();
 }
 
@@ -397,7 +441,8 @@ function renderStats(){
 function renderProgress(){
   if(!judges.length){ document.getElementById('judgeProgress').innerHTML='<div class="empty">ما فيه محكّمون بعد.</div>'; return; }
   document.getElementById('judgeProgress').innerHTML = judges.map(j=>{
-    const total = assignments.filter(a=>a.judge_id===j.id).length;
+    const myComs = comMembersRows.filter(m=>m.judge_id===j.id).map(m=>m.committee_id);
+    const total = teams.filter(t=>myComs.includes(t.committee_id)).length;
     const done  = evals.filter(e=>e.judge_id===j.id && e.submitted).length;
     const pct = total ? Math.round(done*100/total) : 0;
     return `<div style="margin-bottom:14px;">
@@ -809,7 +854,8 @@ async function runImport(){
 /* ---------- التحكيم ---------- */
 function renderJudges(){
   document.getElementById('judgesBody').innerHTML = judges.map(j=>{
-    const n=assignments.filter(a=>a.judge_id===j.id).length;
+    const myComs2 = comMembersRows.filter(m=>m.judge_id===j.id).map(m=>m.committee_id);
+    const n = teams.filter(t=>myComs2.includes(t.committee_id)).length;
     return `<tr>
       <td>${j.full_name}</td>
       <td dir="ltr" style="text-align:right;font-size:12px;">${j.email}</td>
@@ -872,41 +918,157 @@ async function removeCriterion(id){
   await supabaseClient.from('judging_criteria').delete().eq('id',id);
   loadAll();
 }
-function renderAssign(){
-  if(!judges.length){ document.getElementById('assignBox').innerHTML='<div class="empty">أضف محكّمين أولًا.</div>'; return; }
-  document.getElementById('assignBox').innerHTML = judges.map(j=>`
-    <div class="assign-judge">
-      <div class="jn">${j.full_name}</div>
-      <div class="assign-teams">
-        ${teams.map(t=>{
-          const on=assignments.some(a=>a.judge_id===j.id && a.team_id===t.id);
-          return `<span class="tchip ${on?'on':''}" onclick="toggleAssign('${j.id}','${t.id}')">${t.code} · ${t.name}</span>`;
-        }).join('') || '<span style="color:var(--muted);font-size:12.5px;">لا توجد فرق.</span>'}
-      </div>
-    </div>`).join('');
+function comMembers(cid){
+  return comMembersRows.filter(m => m.committee_id === cid)
+    .map(m => judges.find(j => j.id === m.judge_id)).filter(Boolean);
 }
-async function toggleAssign(judge_id, team_id){
-  const ex=assignments.find(a=>a.judge_id===judge_id && a.team_id===team_id);
-  if(ex){
-    await supabaseClient.from('judge_assignments').delete().eq('id',ex.id);
-    assignments=assignments.filter(a=>a.id!==ex.id);
+
+function renderCommittees(){
+  const box = document.getElementById('comBox');
+  if(!committees.length){
+    box.innerHTML = '<div class="empty">ما فيه لجان بعد. أضف لجنة وابدأ بضم المحكّمين.</div>';
   } else {
-    const { data } = await supabaseClient.from('judge_assignments')
-      .insert({ judge_id, team_id }).select().single();
-    if(data) assignments.push(data);
+    box.innerHTML = committees.map(c => {
+      const mem = comMembers(c.id);
+      const n = teams.filter(t => t.committee_id === c.id).length;
+      return `<div class="assign-judge" style="margin-bottom:12px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;">
+          <div><div class="jn">${c.name}</div>
+            <div style="font-size:12px;color:var(--muted);margin-top:3px;">
+              ${mem.length} محكّم · ${n} مشروع${c.notes ? ' · ' + c.notes : ''}</div></div>
+          <button class="b b-danger b-sm" onclick="removeCommittee('${c.id}','${c.name.replace(/'/g,"\\'")}')">حذف</button>
+        </div>
+        <div class="assign-teams">
+          ${judges.map(j => {
+            const on = comMembersRows.some(m => m.committee_id === c.id && m.judge_id === j.id);
+            return `<span class="tchip ${on?'on':''}" onclick="toggleMember('${c.id}','${j.id}')">${j.full_name}</span>`;
+          }).join('') || '<span style="color:var(--muted);font-size:12.5px;">أضف محكّمين أولًا.</span>'}
+        </div>
+      </div>`;
+    }).join('');
   }
-  renderAssign(); renderJudges(); renderProgress();
+  renderAssign();
 }
-async function assignAll(){
-  if(!judges.length || !teams.length) return;
-  if(!confirm('إسناد كل الفرق لكل المحكّمين؟')) return;
-  const rows=[];
-  judges.forEach(j=>teams.forEach(t=>{
-    if(!assignments.some(a=>a.judge_id===j.id && a.team_id===t.id))
-      rows.push({ judge_id:j.id, team_id:t.id });
-  }));
-  if(rows.length) await supabaseClient.from('judge_assignments').insert(rows);
+
+function renderAssign(){
+  const noCom = teams.filter(t => !t.committee_id).length;
+  const submitted = evals.filter(e => e.submitted).length;
+  document.getElementById('assignStats').innerHTML = `
+    <div class="stat"><div class="n">${committees.length}</div><div class="l">لجنة</div></div>
+    <div class="stat"><div class="n">${judges.length}</div><div class="l">محكّم</div></div>
+    <div class="stat"><div class="n" style="color:${noCom?'var(--bad)':'var(--teal)'}">${noCom}</div>
+      <div class="l">مشروع بلا لجنة</div></div>
+    <div class="stat"><div class="n">${submitted}</div><div class="l">تقييم معتمَد</div></div>`;
+
+  document.getElementById('bulkCom').innerHTML =
+    '<option value="">— اختر اللجنة —</option>' +
+    committees.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+  document.getElementById('bulkTrack').innerHTML =
+    '<option value="">كل المسارات</option>' +
+    tracks.map(t => `<option value="${t.id}">${t.name_ar}</option>`).join('');
+
+  const sorted = [...teams].sort((a,b) =>
+    String(a.committee_id||'zz').localeCompare(String(b.committee_id||'zz')) ||
+    (a.judging_order ?? 999) - (b.judging_order ?? 999));
+
+  document.getElementById('assignBody').innerHTML = sorted.map(t => {
+    const mem = t.committee_id ? comMembers(t.committee_id) : [];
+    const done = evals.filter(e => e.team_id === t.id && e.submitted).length;
+    return `<tr>
+      <td><input type="number" min="1" style="width:62px;" value="${t.judging_order ?? ''}"
+        onchange="setOrder('${t.id}', this.value)"></td>
+      <td><div style="font-size:13px;">${t.name}</div>
+        <div style="font-size:11px;color:var(--teal);" dir="ltr">${t.reg_no || t.code}</div></td>
+      <td>${trackPill(t.track_id)}</td>
+      <td><select style="width:170px;" onchange="setCommittee('${t.id}', this.value)">
+        <option value="">— بلا لجنة —</option>
+        ${committees.map(c => `<option value="${c.id}" ${t.committee_id===c.id?'selected':''}>${c.name}</option>`).join('')}
+      </select></td>
+      <td style="font-size:12.5px;color:${mem.length && done===mem.length ? 'var(--teal)' : 'var(--muted)'};">
+        ${mem.length ? `${done} من ${mem.length}` : '—'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="5"><div class="empty">لا توجد مشاريع.</div></td></tr>';
+}
+
+async function addCommittee(){
+  const name = document.getElementById('comName').value.trim();
+  if(!name) return msg('comMsg','اكتب اسم اللجنة.');
+  const { error } = await supabaseClient.from('judging_committees')
+    .insert({ name, notes: document.getElementById('comNotes').value.trim() || null });
+  if(error) return msg('comMsg', error.code==='23505' ? 'فيه لجنة بنفس الاسم.' : error.message);
+  document.getElementById('comName').value = '';
+  document.getElementById('comNotes').value = '';
+  msg('comMsg','تمت الإضافة.', true);
+  loadAll();
+}
+
+async function removeCommittee(id, name){
+  if(!confirm(`حذف "${name}"؟ مشاريعها بترجع بلا لجنة، ودرجات محكّميها تبقى محفوظة.`)) return;
+  const { error } = await supabaseClient.from('judging_committees').delete().eq('id', id);
+  if(error) return toast('تعذّر الحذف: ' + error.message);
+  loadAll(); toast('تم الحذف');
+}
+
+async function toggleMember(committee_id, judge_id){
+  const ex = comMembersRows.find(m => m.committee_id===committee_id && m.judge_id===judge_id);
+  if(ex){
+    const { error } = await supabaseClient.from('committee_members').delete().eq('id', ex.id);
+    if(error) return toast('تعذّر السحب');
+    comMembersRows = comMembersRows.filter(m => m.id !== ex.id);
+  } else {
+    const { data, error } = await supabaseClient.from('committee_members')
+      .insert({ committee_id, judge_id }).select().single();
+    if(error) return toast('تعذّر الضم');
+    if(data) comMembersRows.push(data);
+  }
+  renderCommittees();
+}
+
+async function setCommittee(team_id, committee_id){
+  const { error } = await supabaseClient.from('teams')
+    .update({ committee_id: committee_id || null }).eq('id', team_id);
+  if(error) return toast('تعذّر الحفظ');
+  const t = teams.find(x => x.id === team_id);
+  t.committee_id = committee_id || null;
+  renderAssign(); renderProgress(); toast('تم');
+}
+
+async function setOrder(team_id, value){
+  const n = parseInt(value, 10);
+  const { error } = await supabaseClient.from('teams')
+    .update({ judging_order: isNaN(n) ? null : n }).eq('id', team_id);
+  if(error) return toast('تعذّر الحفظ');
+  const t = teams.find(x => x.id === team_id);
+  t.judging_order = isNaN(n) ? null : n;
+  toast('تم');
+}
+
+async function bulkAssign(){
+  const cid = document.getElementById('bulkCom').value;
+  const tid = document.getElementById('bulkTrack').value;
+  if(!cid) return toast('اختر اللجنة');
+  const list = teams.filter(t => !tid || t.track_id === tid);
+  if(!list.length) return toast('ما فيه مشاريع مطابقة');
+  if(!confirm(`إسناد ${list.length} مشروعًا لهذه اللجنة؟ الإسناد السابق بيُستبدل.`)) return;
+  const { error } = await supabaseClient.from('teams')
+    .update({ committee_id: cid }).in('id', list.map(t => t.id));
+  if(error) return toast('تعذّر الإسناد: ' + error.message);
   loadAll(); toast('تم الإسناد');
+}
+
+async function renumber(){
+  const groups = {};
+  teams.forEach(t => {
+    if(!t.committee_id) return;
+    (groups[t.committee_id] = groups[t.committee_id] || []).push(t);
+  });
+  for(const cid in groups){
+    const list = groups[cid].sort((a,b) => String(a.code).localeCompare(String(b.code)));
+    for(let i = 0; i < list.length; i++){
+      await supabaseClient.from('teams').update({ judging_order: i + 1 }).eq('id', list[i].id);
+    }
+  }
+  loadAll(); toast('أُعيد الترقيم');
 }
 
 /* ---------- النتائج ---------- */
