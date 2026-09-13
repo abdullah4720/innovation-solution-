@@ -75,15 +75,28 @@
   .brandmark img{height:30px;display:block;}
   .brandmark .sep{width:1px;height:24px;background:rgba(255,255,255,.22);}
   @media(max-width:520px){ .brandmark img{height:24px;} }
+
+  .stars{display:flex;gap:7px;flex-direction:row-reverse;justify-content:flex-end;}
+  .stars button{background:none;border:none;font-size:27px;line-height:1;color:#33405C;cursor:pointer;padding:0;transition:color .12s;}
+  .stars button.on{color:var(--teal);}
+  .q{padding:14px 0;border-bottom:1px solid var(--line);}
+  .q:last-of-type{border-bottom:none;}
+  .q .qt{font-size:14px;margin-bottom:9px;}
+  .yesno{display:flex;gap:9px;margin-top:9px;}
+  .yesno button{flex:1;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);
+    border-radius:9px;padding:11px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
+  .yesno button.on{background:rgba(53,201,174,.16);border-color:var(--teal);color:var(--teal);}
+  .done-box{background:rgba(53,201,174,.1);border:1px solid var(--teal);border-radius:12px;
+    padding:15px;font-size:13.5px;line-height:1.85;}
 </style>
 </head>
 <body>
 
 <div class="hero">
   <div class="brandmark">
-      <img src="logo-qu.png" alt="جامعة القصيم">
+      <img data-logo="qu" alt="جامعة القصيم">
       <span class="sep"></span>
-      <img src="logo-mim.png" alt="وزارة الصناعة والثروة المعدنية">
+      <img data-logo="mim" alt="وزارة الصناعة والثروة المعدنية">
     </div>
   <h1 style="margin-top:16px;">بوابة المشارك</h1>
   <div class="sub">صنّاع الحلول الابتكارية · جامعة القصيم</div>
@@ -160,6 +173,11 @@
         <button class="b b-teal" id="subBtn" onclick="submitProject()">حفظ التسليم</button>
         <div class="msg" id="subMsg"></div>
       </div>
+    </div>
+
+    <div class="panel" id="surveyPanel">
+      <h3>استبيان التقييم</h3>
+      <div id="surveyBox"></div>
     </div>
 
     <div class="panel">
@@ -299,6 +317,9 @@ function render(){
   /* --- المشروع --- */
   renderProject();
 
+  /* --- الاستبيان --- */
+  renderSurvey();
+
   /* --- الشهادة --- */
   renderCert();
 }
@@ -389,6 +410,91 @@ async function submitProject(){
   }
 }
 
+const SURVEY_Q = [
+  ['content',      'محتوى البرنامج والتحديات المطروحة'],
+  ['organization', 'التنظيم والمرافق'],
+  ['mentorship',   'الإرشاد والدعم أثناء تطوير الحل'],
+  ['judging',      'آلية التحكيم وعدالتها'],
+  ['overall',      'تجربتك بشكل عام'],
+];
+let answers = {}, recommend = null;
+
+function renderSurvey(){
+  const box = document.getElementById('surveyBox');
+
+  if(me.survey_submitted){
+    const sv = me.survey || {};
+    box.innerHTML = `<div class="done-box">
+      شكرًا لك، استلمنا تقييمك.
+      ${sv.rating_overall ? `<div style="margin-top:7px;color:var(--muted);">تقييمك العام: ${sv.rating_overall} من 5</div>` : ''}
+    </div>`;
+    return;
+  }
+  if(!me.survey_open){
+    box.innerHTML = `<div class="closed">الاستبيان مغلق حاليًا.</div>`;
+    return;
+  }
+
+  box.innerHTML = `
+    <div style="font-size:12.5px;color:var(--muted);line-height:1.85;margin-bottom:6px;">
+      رأيك يساعدنا نطوّر البرنامج.${me.require_survey ? ' وتعبئته شرط لإصدار شهادتك.' : ''}
+    </div>
+    ${SURVEY_Q.map(([k,q]) => `
+      <div class="q">
+        <div class="qt">${q}</div>
+        <div class="stars" id="st-${k}">
+          ${[5,4,3,2,1].map(n => `<button onclick="setStar('${k}',${n})" title="${n}">★</button>`).join('')}
+        </div>
+      </div>`).join('')}
+    <div class="q">
+      <div class="qt">هل توصي زملاءك بالمشاركة في النسخة القادمة؟</div>
+      <div class="yesno">
+        <button id="rec-yes" onclick="setRecommend(true)">نعم</button>
+        <button id="rec-no"  onclick="setRecommend(false)">لا</button>
+      </div>
+    </div>
+    <label for="svComment">ملاحظات أو مقترحات (اختياري)</label>
+    <textarea id="svComment" placeholder="شاركنا رأيك بحرية..."></textarea>
+    <button class="b b-teal" id="svBtn" onclick="submitSurvey()">إرسال التقييم</button>
+    <div class="msg" id="svMsg"></div>`;
+}
+
+function setStar(key, n){
+  answers[key] = n;
+  const box = document.getElementById('st-' + key);
+  // الأزرار معروضة 5←1، فالنجوم المضاءة هي الأخيرة
+  [...box.children].forEach(b => {
+    b.classList.toggle('on', Number(b.title) <= n);
+  });
+}
+function setRecommend(v){
+  recommend = v;
+  document.getElementById('rec-yes').classList.toggle('on', v === true);
+  document.getElementById('rec-no').classList.toggle('on', v === false);
+}
+
+async function submitSurvey(){
+  const missing = SURVEY_Q.filter(([k]) => !answers[k]);
+  if(missing.length){ msg('svMsg', 'الرجاء تقييم كل المحاور.'); return; }
+
+  const btn = document.getElementById('svBtn');
+  btn.disabled = true; btn.textContent = 'جاري الإرسال...';
+  const { error } = await supabaseClient.rpc('my_submit_survey', {
+    p_token: token,
+    p_content:      answers.content,
+    p_organization: answers.organization,
+    p_mentorship:   answers.mentorship,
+    p_judging:      answers.judging,
+    p_overall:      answers.overall,
+    p_recommend:    recommend,
+    p_comment:      document.getElementById('svComment').value.trim() || null,
+  });
+  btn.disabled = false; btn.textContent = 'إرسال التقييم';
+
+  if(error){ msg('svMsg', error.message); return; }
+  await loadMe();
+}
+
 function renderCert(){
   const box = document.getElementById('certBox');
   if(me.certificate_issued){
@@ -400,14 +506,26 @@ function renderCert(){
   }
   const days = (me.day1_attended?1:0) + (me.day2_attended?1:0);
   const need = me.min_attendance_days ?? 1;
-  if(days >= need){
+  const needSurvey = me.require_survey && !me.survey_submitted;
+
+  const unmet = [];
+  if(days < need){
+    unmet.push(need === 2
+      ? `حضور اليومين — سجّلنا لك ${days} من 2`
+      : `حضور يوم واحد على الأقل — سجّلنا لك ${days}`);
+  }
+  if(needSurvey) unmet.push('تعبئة استبيان التقييم');
+
+  if(!unmet.length){
     box.innerHTML = `<div class="cert wait">أنت مؤهل للشهادة.
       <button class="b b-teal" onclick="getCert()" id="certBtn">إصدار الشهادة</button></div>
       <div class="msg" id="certMsg"></div>`;
   } else {
     box.innerHTML = `<div class="cert wait">
-      الشهادة تُصدر بعد تسجيل حضورك ${need === 1 ? 'يومًا واحدًا' : need + ' أيام'} على الأقل.
-      سجّلنا لك ${days} حتى الآن.</div>`;
+      لإصدار شهادتك يتبقّى:
+      <ul style="margin:9px 0 0;padding-inline-start:20px;line-height:2;">
+        ${unmet.map(u => `<li>${u}</li>`).join('')}
+      </ul></div>`;
   }
 }
 
