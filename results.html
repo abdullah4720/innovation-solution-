@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>النتائج — صنّاع الحلول الابتكارية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--navy:#0E1422;--surface:#151C2E;--surface-2:#1A2236;--line:#26314A;
+    --teal:#35C9AE;--amber:#DB8A52;--text:#EAF0F8;--muted:#96A3B8;}
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--navy);color:var(--text);font-family:'IBM Plex Sans Arabic',sans-serif;}
+  h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
+  .bar{background:var(--surface);border-bottom:1px solid var(--line);padding:14px 18px;
+    display:flex;justify-content:space-between;align-items:center;gap:12px;}
+  .brandmark{display:flex;align-items:center;gap:10px;}
+  .brandmark img{height:26px;display:block;}
+  .brandmark .sep{width:1px;height:22px;background:rgba(255,255,255,.22);}
+  .bar h1{font-size:15px;}
+  .hero{padding:30px 18px 26px;text-align:center;border-bottom:1px solid var(--line);
+    background:var(--surface);}
+  .hero .kick{font-size:12px;letter-spacing:3.4px;color:var(--teal);font-weight:600;}
+  .hero h2{font-size:26px;margin-top:9px;}
+  .hero .sub{font-size:13px;color:var(--muted);margin-top:9px;}
+  main{max-width:760px;margin:0 auto;padding:20px 16px 70px;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;
+    padding:20px;margin-bottom:16px;}
+  .tname{font-family:'Tajawal',sans-serif;font-weight:900;font-size:18px;}
+  .tname.safety{color:var(--amber);} .tname.tech{color:var(--teal);}
+  .row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--line);}
+  .row:last-child{border-bottom:none;}
+  .rk{width:40px;height:40px;flex-shrink:0;border-radius:11px;display:flex;align-items:center;
+    justify-content:center;font-family:'Tajawal',sans-serif;font-weight:900;font-size:16px;
+    background:var(--surface-2);border:1px solid var(--line);color:var(--muted);}
+  .row.top .rk{background:rgba(53,201,174,.16);border-color:var(--teal);color:var(--teal);}
+  .row .nm{font-family:'Tajawal',sans-serif;font-weight:700;font-size:15px;}
+  .row .pj{font-size:12.5px;color:var(--muted);margin-top:3px;line-height:1.7;}
+  .empty{text-align:center;color:var(--muted);padding:50px 20px;font-size:14.5px;line-height:2;}
+</style>
+</head>
+<body>
+
+<div class="bar">
+  <div class="brandmark">
+    <img data-logo="qu" alt="جامعة القصيم">
+    <span class="sep"></span>
+    <img data-logo="mim" alt="وزارة الصناعة والثروة المعدنية">
+  </div>
+  <h1>النتائج</h1>
+  <span></span>
+</div>
+
+<div class="hero">
+  <div class="kick">صنّاع الحلول الابتكارية</div>
+  <h2>نتائج التحكيم</h2>
+  <div class="sub">جامعة القصيم · وزارة الصناعة والثروة المعدنية</div>
+</div>
+
+<main><div id="box"><div class="empty">جارٍ التحميل…</div></div></main>
+
+<script src="config.js"></script>
+<script>
+const TRACK_CLASS = t => (t || '').includes('السلامة') ? 'safety' : 'tech';
+
+async function load(){
+  const { data, error } = await supabaseClient.rpc('get_public_results');
+  const box = document.getElementById('box');
+
+  if(error){
+    box.innerHTML = '<div class="card"><div class="empty">تعذّر تحميل النتائج، يُرجى المحاولة لاحقًا.</div></div>';
+    return;
+  }
+  if(!data || !data.length){
+    box.innerHTML = `<div class="card"><div class="empty">
+      لم تُعلَن النتائج بعد.<br>تابعوا الإعلان في حفل التكريم.</div></div>`;
+    return;
+  }
+
+  const byTrack = {};
+  data.forEach(r => { (byTrack[r.track_name] = byTrack[r.track_name] || []).push(r); });
+
+  box.innerHTML = Object.entries(byTrack).map(([track, rows]) => `
+    <div class="card">
+      <div class="tname ${TRACK_CLASS(track)}">${track}</div>
+      <div style="margin-top:10px;">
+        ${rows.sort((a,b) => a.rank - b.rank).map(r => `
+          <div class="row ${r.rank <= 3 ? 'top' : ''}">
+            <div class="rk">${r.rank}</div>
+            <div>
+              <div class="nm">${r.team_name}</div>
+              ${r.project_title ? `<div class="pj">${r.project_title}</div>` : ''}
+            </div>
+          </div>`).join('')}
+      </div>
+    </div>`).join('');
+}
+load();
+</script>
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>شاشة التكريم — صنّاع الحلول الابتكارية</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  :root{--navy:#0E1422;--surface:#151C2E;--surface-2:#1A2236;--line:#26314A;
+    --teal:#35C9AE;--amber:#DB8A52;--text:#EAF0F8;--muted:#96A3B8;--bad:#E2706A;
+    --accent:#35C9AE;}
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{margin:0;background:var(--navy);color:var(--text);
+    font-family:'IBM Plex Sans Arabic',sans-serif;overflow:hidden;}
+  h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
+
+  /* ---------- الدخول ---------- */
+  .login{max-width:380px;margin:16vh auto;background:var(--surface);border:1px solid var(--line);
+    border-radius:16px;padding:28px;}
+  .login h2{font-size:20px;}
+  .login .sub{font-size:12.5px;color:var(--muted);margin-top:6px;line-height:1.85;}
+  label{display:block;font-size:12.5px;color:var(--muted);margin:14px 0 6px;}
+  input{width:100%;background:var(--surface-2);border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:12px;font-family:inherit;font-size:15px;}
+  button.b{border:none;border-radius:11px;padding:13px 18px;font-family:'Tajawal',sans-serif;
+    font-weight:700;font-size:14.5px;cursor:pointer;}
+  .b-teal{background:var(--teal);color:var(--navy);width:100%;margin-top:18px;}
+  .b-ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
+  .msg{font-size:13px;padding:11px 13px;border-radius:9px;margin-top:12px;display:none;}
+  .msg.err{background:rgba(226,112,106,.12);color:var(--bad);display:block;}
+  .hide{display:none !important;}
+
+  /* ---------- المسرح ---------- */
+  .stage{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+    padding:6vh 8vw;text-align:center;}
+  .stage::before{content:'';position:absolute;left:-12vw;bottom:-28vh;width:66vh;height:66vh;
+    border-radius:50%;background:radial-gradient(circle,
+      color-mix(in srgb, var(--accent) 16%, transparent) 0%, transparent 70%);}
+  .slide{position:relative;max-width:1100px;width:100%;
+    animation:rise .45s cubic-bezier(.2,.7,.3,1);}
+  @keyframes rise{from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:none;}}
+
+  .kick{font-size:clamp(13px,1.5vw,17px);letter-spacing:5px;color:var(--accent);font-weight:600;}
+  .big{font-family:'Tajawal',sans-serif;font-weight:900;
+    font-size:clamp(34px,7vw,86px);line-height:1.2;margin-top:18px;}
+  .mid{font-family:'Tajawal',sans-serif;font-weight:700;
+    font-size:clamp(22px,3.6vw,44px);margin-top:14px;}
+  .small{font-size:clamp(14px,1.7vw,20px);color:var(--muted);margin-top:18px;line-height:1.9;}
+  .rule{width:120px;height:5px;border-radius:3px;background:var(--accent);margin:26px auto 0;}
+
+  .rank{display:inline-flex;align-items:center;gap:12px;background:var(--surface);
+    border:1px solid var(--accent);border-radius:999px;padding:9px 24px;
+    font-family:'Tajawal',sans-serif;font-weight:900;
+    font-size:clamp(15px,2vw,22px);color:var(--accent);}
+  .members{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin-top:24px;}
+  .members span{border:1px solid var(--line);border-radius:999px;padding:7px 16px;
+    font-size:clamp(12px,1.4vw,15px);color:var(--muted);}
+
+  .logos{position:fixed;top:26px;right:34px;display:flex;align-items:center;gap:16px;z-index:5;}
+  .logos img{height:clamp(26px,3.2vh,40px);display:block;}
+  .logos .sep{width:1px;height:26px;background:#31405C;}
+  .brandfoot{position:fixed;bottom:26px;right:34px;font-family:'Tajawal',sans-serif;
+    font-weight:900;font-size:clamp(13px,1.6vw,18px);color:#2E3D57;z-index:5;}
+
+  .hud{position:fixed;bottom:22px;left:30px;display:flex;align-items:center;gap:10px;z-index:6;}
+  .hud .n{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;}
+  .hud button{background:var(--surface);border:1px solid var(--line);color:var(--text);
+    border-radius:9px;padding:8px 13px;cursor:pointer;font-family:'Tajawal',sans-serif;
+    font-weight:700;font-size:12.5px;}
+  .hint{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);font-size:12px;
+    color:#3B4A66;z-index:5;}
+  .nav-zone{position:fixed;top:0;bottom:0;width:22vw;cursor:pointer;z-index:4;}
+  .nav-zone.right{right:0;} .nav-zone.left{left:0;}
+</style>
+</head>
+<body>
+
+<!-- الدخول -->
+<div class="login" id="loginCard">
+  <h2>شاشة التكريم</h2>
+  <div class="sub">تُدار من حساب فريق التنظيم. المسافة أو السهم للتقدّم، و F لملء الشاشة.</div>
+  <label for="le">البريد الإلكتروني</label>
+  <input type="email" id="le" dir="ltr" style="text-align:right;">
+  <label for="lp">كلمة المرور</label>
+  <input type="password" id="lp">
+  <button class="b b-teal" onclick="login()">دخول</button>
+  <div class="msg" id="loginMsg"></div>
+</div>
+
+<!-- العرض -->
+<div id="show" class="hide">
+  <div class="logos">
+    <img data-logo="qu" alt="جامعة القصيم">
+    <span class="sep"></span>
+    <img data-logo="mim" alt="وزارة الصناعة والثروة المعدنية">
+  </div>
+  <div class="brandfoot">صنّاع الحلول الابتكارية</div>
+
+  <div class="nav-zone right" onclick="next()"></div>
+  <div class="nav-zone left"  onclick="prev()"></div>
+
+  <div class="stage"><div class="slide" id="slide"></div></div>
+
+  <div class="hud">
+    <button onclick="prev()">السابق</button>
+    <button onclick="next()">التالي</button>
+    <button onclick="toggleFull()">ملء الشاشة</button>
+    <button onclick="toggleScores()" id="scBtn">إظهار الدرجات</button>
+    <span class="n" id="counter"></span>
+  </div>
+  <div class="hint" id="hint"></div>
+</div>
+
+<script src="config.js"></script>
+<script>
+let slides = [], i = 0, showScores = false;
+const ACCENTS = { safety:'#DB8A52', tech:'#35C9AE' };
+
+function msg(id, t){
+  const el = document.getElementById(id);
+  el.className = 'msg err'; el.textContent = t;
+}
+
+supabaseClient.auth.onAuthStateChange(async (_e, session) => {
+  if(!session) return;
+  const { data: prof } = await supabaseClient.from('profiles').select('*').eq('id', session.user.id).single();
+  if(!prof){ msg('loginMsg','هذا الحساب غير مُضاف إلى فريق التنظيم.'); await supabaseClient.auth.signOut(); return; }
+  document.getElementById('loginCard').classList.add('hide');
+  document.getElementById('show').classList.remove('hide');
+  build();
+});
+
+async function login(){
+  const { error } = await supabaseClient.auth.signInWithPassword({
+    email: document.getElementById('le').value.trim(),
+    password: document.getElementById('lp').value });
+  if(error) msg('loginMsg','بيانات الدخول غير صحيحة.');
+}
+
+async function build(){
+  const [{ data: res }, { data: tracks }, { data: people }] = await Promise.all([
+    supabaseClient.from('v_team_results').select('*'),
+    supabaseClient.from('tracks').select('*').order('sort_order'),
+    supabaseClient.from('participants').select('full_name, team_id, is_leader'),
+  ]);
+
+  const results = (res || []).filter(r => r.final_score != null);
+  const membersOf = tid => (people || [])
+    .filter(p => p.team_id === tid)
+    .sort((a,b) => (b.is_leader?1:0) - (a.is_leader?1:0))
+    .map(p => p.full_name);
+
+  slides = [{ type:'open' }];
+
+  (tracks || []).forEach((tr, idx) => {
+    const rows = results.filter(r => r.track_id === tr.id)
+                        .sort((a,b) => b.final_score - a.final_score)
+                        .slice(0, 3);
+    if(!rows.length) return;
+
+    slides.push({ type:'track', track:tr, idx:idx+1, count:rows.length });
+    // من الثالث إلى الأول
+    rows.slice().reverse().forEach((r, k) => {
+      slides.push({ type:'winner', track:tr, rank:rows.length - k, row:r, members:membersOf(r.team_id) });
+    });
+  });
+
+  slides.push({ type:'close' });
+  i = 0;
+  draw();
+}
+
+function accentFor(trackId){ return ACCENTS[trackId] || '#35C9AE'; }
+const RANK_AR = { 1:'المركز الأول', 2:'المركز الثاني', 3:'المركز الثالث' };
+
+function draw(){
+  const s = slides[i];
+  const el = document.getElementById('slide');
+  document.documentElement.style.setProperty('--accent',
+    s && s.track ? accentFor(s.track.id) : '#35C9AE');
+
+  if(!s){ el.innerHTML = ''; return; }
+
+  if(s.type === 'open'){
+    el.innerHTML = `
+      <div class="kick">QASSIM UNIVERSITY × MINISTRY OF INDUSTRY</div>
+      <div class="big">صنّاع الحلول الابتكارية</div>
+      <div class="mid" style="color:var(--accent);">حفل التكريم</div>
+      <div class="rule"></div>
+      <div class="small">نحو حلول مبتكرة تصنع أثرًا مستدامًا</div>`;
+  } else if(s.type === 'track'){
+    el.innerHTML = `
+      <div class="kick">${s.idx === 1 ? 'المسار الأول' : 'المسار الثاني'}</div>
+      <div class="big">${s.track.name_ar.replace('مسار ','')}</div>
+      <div class="rule"></div>
+      <div class="small">نُعلن الآن أسماء الفائزين</div>`;
+  } else if(s.type === 'winner'){
+    const r = s.row;
+    el.innerHTML = `
+      <div class="rank">${RANK_AR[s.rank] || ('المركز ' + s.rank)}</div>
+      <div class="big" style="color:var(--accent);">${r.name}</div>
+      ${r.project_title ? `<div class="mid">${r.project_title}</div>` : ''}
+      ${showScores ? `<div class="small">النتيجة ${r.final_score}% · ${r.judges_count} محكّم</div>` : ''}
+      <div class="members">${s.members.map(m => `<span>${m}</span>`).join('')}</div>`;
+  } else {
+    el.innerHTML = `
+      <div class="big">شكرًا لكم</div>
+      <div class="rule"></div>
+      <div class="small">جامعة القصيم · وزارة الصناعة والثروة المعدنية<br>
+        مركز الابتكار والملكية الفكرية</div>`;
+  }
+
+  document.getElementById('counter').textContent = `${i + 1} / ${slides.length}`;
+  const nx = slides[i + 1];
+  document.getElementById('hint').textContent =
+    nx ? (nx.type === 'winner' ? 'اضغط لإعلان الفائز' : 'اضغط للمتابعة') : 'انتهى العرض';
+}
+
+function next(){ if(i < slides.length - 1){ i++; draw(); } }
+function prev(){ if(i > 0){ i--; draw(); } }
+function toggleScores(){
+  showScores = !showScores;
+  document.getElementById('scBtn').textContent = showScores ? 'إخفاء الدرجات' : 'إظهار الدرجات';
+  draw();
+}
+function toggleFull(){
+  if(document.fullscreenElement) document.exitFullscreen();
+  else document.documentElement.requestFullscreen();
+}
+
+document.addEventListener('keydown', e => {
+  if(document.getElementById('show').classList.contains('hide')) return;
+  if(e.key === ' ' || e.key === 'ArrowLeft' || e.key === 'PageDown'){ e.preventDefault(); next(); }
+  if(e.key === 'ArrowRight' || e.key === 'PageUp'){ e.preventDefault(); prev(); }
+  if(e.key.toLowerCase() === 'f') toggleFull();
+  if(e.key.toLowerCase() === 's') toggleScores();
+  if(e.key === 'Home'){ i = 0; draw(); }
+});
+</script>
+</body>
+</html>
