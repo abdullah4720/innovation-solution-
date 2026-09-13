@@ -179,7 +179,7 @@
         </div>
         <div class="table-wrap"><table>
           <thead><tr><th>الرمز</th><th>الفريق</th><th>المسار</th><th>التحدي</th>
-            <th>الأعضاء</th><th>المشروع</th><th>الحالة</th><th>إجراءات</th></tr></thead>
+            <th>الأعضاء</th><th>العرض التقديمي</th><th>الحالة</th><th>إجراءات</th></tr></thead>
           <tbody id="teamsBody"></tbody>
         </table></div>
       </div>
@@ -303,6 +303,35 @@
       </div>
     </section>
 
+    <!-- ملفات المنظمين -->
+    <section id="tab-materials" class="hide">
+      <div class="panel">
+        <h3>ملفات ومواد للمشاركين</h3>
+        <div class="sub">
+          ما ترفعه هنا يظهر للمشاركين في تبويب «الملفات» ببوابتهم — القوالب والأدلة والجداول.<br>
+          اترك المسار فارغًا ليظهر الملف لكل المشاركين.
+        </div>
+        <div class="row">
+          <input type="text" id="mTitle" placeholder="عنوان الملف — مثال: قالب العرض التقديمي">
+          <select id="mTrack"></select>
+        </div>
+        <label for="mDesc">وصف مختصر (اختياري)</label>
+        <input type="text" id="mDesc" placeholder="متى يُستخدم وكيف">
+        <div class="row" style="margin-top:12px;">
+          <div><label for="mFile">ملف</label><input type="file" id="mFile"></div>
+          <div><label for="mLink">أو رابط خارجي</label>
+            <input type="url" id="mLink" dir="ltr" style="text-align:right;" placeholder="https://"></div>
+        </div>
+        <button class="b b-teal" style="margin-top:14px;" onclick="addMaterial()" id="mBtn">نشر الملف</button>
+        <div class="msg" id="mMsg"></div>
+
+        <div class="table-wrap" style="margin-top:18px;"><table>
+          <thead><tr><th>العنوان</th><th>المسار</th><th>المرفق</th><th>الحالة</th><th></th></tr></thead>
+          <tbody id="matBody"></tbody>
+        </table></div>
+      </div>
+    </section>
+
     <!-- النتائج -->
     <section id="tab-results" class="hide">
       <div class="panel">
@@ -338,12 +367,13 @@
 <script>
 const TABS = [
   ['overview','نظرة عامة'], ['teams','الفرق'], ['people','المشاركون'],
-  ['import','الاستيراد'], ['judging','التحكيم'], ['results','النتائج'], ['settings','الإعدادات'],
+  ['import','الاستيراد'], ['judging','التحكيم'], ['materials','الملفات'],
+  ['results','النتائج'], ['settings','الإعدادات'],
 ];
 let tracks=[], challenges=[], teams=[], people=[], judges=[], criteria=[],
     assignments=[], evals=[], settings={}, results=[], importRows=null;
 let surveys=[], surveyIds=new Set(), surveyStats={};
-let committees=[], comMembersRows=[];
+let committees=[], comMembersRows=[], materials=[];
 
 document.getElementById('tabs').innerHTML = TABS.map(([k,l],i) =>
   `<button id="tb-${k}" class="${i===0?'on':''}" onclick="switchTab('${k}')">${l}</button>`).join('');
@@ -391,7 +421,7 @@ function logout(){ supabaseClient.auth.signOut().then(()=>location.reload()); }
 
 /* ---------- تحميل البيانات ---------- */
 async function loadAll(){
-  const [tr,ch,tm,pp,jd,cr,as,ev,st,rs,sv,ss,cm,cmm] = await Promise.all([
+  const [tr,ch,tm,pp,jd,cr,as,ev,st,rs,sv,ss,cm,cmm,mt] = await Promise.all([
     supabaseClient.from('tracks').select('*').order('sort_order'),
     supabaseClient.from('challenges').select('*').order('track_id, number'),
     supabaseClient.from('teams').select('*, projects(*)').order('code'),
@@ -406,32 +436,33 @@ async function loadAll(){
     supabaseClient.rpc('survey_summary'),
     supabaseClient.from('judging_committees').select('*').order('name'),
     supabaseClient.from('committee_members').select('*'),
+    supabaseClient.from('event_materials').select('*').order('sort_order'),
   ]);
   tracks=tr.data||[]; challenges=ch.data||[]; teams=tm.data||[]; people=pp.data||[];
   judges=jd.data||[]; criteria=cr.data||[]; assignments=as.data||[]; evals=ev.data||[];
   settings=st.data||{}; results=rs.data||[];
   surveys=sv.data||[]; surveyIds=new Set(surveys.map(x=>x.participant_id));
   surveyStats=(ss.data && ss.data[0]) || {};
-  committees=cm.data||[]; comMembersRows=cmm.data||[];
+  committees=cm.data||[]; comMembersRows=cmm.data||[]; materials=mt.data||[];
 
   document.getElementById('teamTrackFilter').innerHTML =
     '<option value="">كل المسارات</option>' + tracks.map(t=>`<option value="${t.id}">${t.name_ar}</option>`).join('');
 
   renderStats(); renderTeams(); renderPeople(); renderJudges();
   renderCriteria(); renderCommittees(); renderResults(); renderSettings();
-  renderProgress(); renderSurvey();
+  renderProgress(); renderSurvey(); renderMaterials();
 }
 
 /* ---------- نظرة عامة ---------- */
 function renderStats(){
-  const submitted = teams.filter(t=>t.projects && t.projects.submitted_at).length;
+  const submitted = teams.filter(t=>t.projects && t.projects.presentation_url).length;
   const d1 = people.filter(p=>p.day1_attended).length;
   const d2 = people.filter(p=>p.day2_attended).length;
   const rate = people.length ? Math.round((d1 + d2) * 100 / (people.length * 2)) : 0;
   document.getElementById('statsBox').innerHTML = `
     <div class="stat"><div class="n">${teams.length}</div><div class="l">فريق مسجَّل</div></div>
     <div class="stat"><div class="n">${people.length}</div><div class="l">مشارك</div></div>
-    <div class="stat"><div class="n">${submitted}</div><div class="l">مشروع مُسلَّم</div></div>
+    <div class="stat"><div class="n">${submitted}</div><div class="l">عرض مرفوع</div></div>
     <div class="stat"><div class="n">${d1}</div><div class="l">حضور اليوم الأول</div></div>
     <div class="stat"><div class="n">${d2}</div><div class="l">حضور اليوم الثاني</div></div>
     <div class="stat"><div class="n">${people.filter(p=>p.certificate_issued).length}</div><div class="l">شهادة صادرة</div></div>
@@ -511,9 +542,9 @@ function renderTeams(){
       <td>${trackPill(t.track_id)}</td>
       <td style="max-width:260px;font-size:12px;color:var(--muted);">${ch?('التحدي '+(ch.number===1?'الأول':'الثاني')):'—'}</td>
       <td>${members.length}</td>
-      <td>${p && p.submitted_at
-        ? `<span class="pill teal">مُسلَّم</span>${p.file_url?` <a href="${p.file_url}" target="_blank" rel="noopener">الملف</a>`:''}`
-        : '<span class="pill grey">لم يُسلَّم</span>'}</td>
+      <td>${p && p.presentation_url
+        ? `<span class="pill teal">العرض مُسلَّم</span> <a href="${p.presentation_url}" target="_blank" rel="noopener">فتح</a>`
+        : '<span class="pill grey">لم يُرفع عرض</span>'}</td>
       <td><select style="width:120px;" onchange="setTeamStatus('${t.id}',this.value)">
         ${['registered','shortlisted','rejected','withdrawn'].map(s=>
           `<option value="${s}" ${t.status===s?'selected':''}>${
@@ -1071,6 +1102,76 @@ async function renumber(){
   loadAll(); toast('أُعيد الترقيم');
 }
 
+/* ---------- ملفات المنظمين ---------- */
+function renderMaterials(){
+  document.getElementById('mTrack').innerHTML =
+    '<option value="">لكل المشاركين</option>' +
+    tracks.map(t => `<option value="${t.id}">${t.name_ar}</option>`).join('');
+
+  document.getElementById('matBody').innerHTML = materials.map(m => `
+    <tr>
+      <td><div style="font-size:13px;">${m.title}</div>
+        ${m.description ? `<div style="font-size:11.5px;color:var(--muted);margin-top:3px;">${m.description}</div>` : ''}</td>
+      <td>${m.track_id ? trackPill(m.track_id) : '<span class="pill grey">الجميع</span>'}</td>
+      <td style="font-size:12.5px;">
+        ${m.file_url ? `<a href="${m.file_url}" target="_blank" rel="noopener">${m.file_name || 'ملف'}</a>` : ''}
+        ${m.link_url ? `<a href="${m.link_url}" target="_blank" rel="noopener">رابط</a>` : ''}
+        ${!m.file_url && !m.link_url ? '—' : ''}</td>
+      <td><span class="pill ${m.published?'teal':'grey'}" style="cursor:pointer;"
+        onclick="togglePublish('${m.id}',${!m.published})">${m.published?'منشور':'مخفي'}</span></td>
+      <td><button class="b b-danger b-sm" onclick="removeMaterial('${m.id}')">حذف</button></td>
+    </tr>`).join('') || '<tr><td colspan="5"><div class="empty">ما فيه ملفات منشورة بعد.</div></td></tr>';
+}
+
+async function addMaterial(){
+  const title = document.getElementById('mTitle').value.trim();
+  if(!title) return msg('mMsg','اكتب عنوان الملف.');
+  const file = document.getElementById('mFile').files[0];
+  const link = document.getElementById('mLink').value.trim();
+  if(!file && !link) return msg('mMsg','ارفع ملفًا أو ضع رابطًا.');
+
+  const btn = document.getElementById('mBtn');
+  btn.disabled = true; btn.textContent = 'جاري النشر...';
+  try{
+    let file_url = null, file_name = null;
+    if(file){
+      if(file.size > 50*1024*1024) throw new Error('حجم الملف أكبر من 50 ميجابايت.');
+      const safe = file.name.replace(/[^\w.\-]+/g,'_');
+      const path = `materials/${Date.now()}-${safe}`;
+      const { error: up } = await supabaseClient.storage.from('event-files').upload(path, file);
+      if(up) throw new Error('تعذّر الرفع: ' + up.message);
+      file_url = supabaseClient.storage.from('event-files').getPublicUrl(path).data.publicUrl;
+      file_name = file.name;
+    }
+    const { error } = await supabaseClient.from('event_materials').insert({
+      title, description: document.getElementById('mDesc').value.trim() || null,
+      track_id: document.getElementById('mTrack').value || null,
+      file_url, file_name, link_url: link || null,
+      sort_order: materials.length + 1,
+    });
+    if(error) throw new Error(error.message);
+    ['mTitle','mDesc','mLink'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('mFile').value = '';
+    msg('mMsg','تم النشر، والمشاركون يشوفونه الآن.', true);
+    loadAll();
+  } catch(e){ msg('mMsg', e.message); }
+  finally { btn.disabled = false; btn.textContent = 'نشر الملف'; }
+}
+
+async function togglePublish(id, val){
+  const { error } = await supabaseClient.from('event_materials').update({ published: val }).eq('id', id);
+  if(error) return toast('تعذّر التغيير');
+  const m = materials.find(x => x.id === id); m.published = val;
+  renderMaterials(); toast(val ? 'ظهر للمشاركين' : 'أُخفي');
+}
+
+async function removeMaterial(id){
+  if(!confirm('حذف هذا الملف من قائمة المشاركين؟')) return;
+  const { error } = await supabaseClient.from('event_materials').delete().eq('id', id);
+  if(error) return toast('تعذّر الحذف');
+  loadAll(); toast('تم الحذف');
+}
+
 /* ---------- النتائج ---------- */
 function renderResults(){
   const box=document.getElementById('resultsBox');
@@ -1095,7 +1196,7 @@ function renderResults(){
 /* ---------- الإعدادات ---------- */
 const TOGGLES = [
   ['registration_open','التسجيل مفتوح','صفحة التسجيل تستقبل فرقًا جديدة.'],
-  ['submission_open','تسليم المشاريع مفتوح','الفرق تقدر ترفع ملفاتها من بوابة الفريق.'],
+  ['presentation_open','رفع العروض التقديمية مفتوح','قسم منفصل لملف العرض الذي يُقدَّم أمام اللجنة.'],
   ['judging_open','التحكيم مفتوح','المحكّمون يقدرون يحفظون الدرجات.'],
   ['results_published','النتائج منشورة','النتائج تظهر في الصفحة العامة.'],
   ['survey_open','استبيان التقييم مفتوح','المشاركون يقدرون يعبّون الاستبيان من بوابتهم.'],
@@ -1112,7 +1213,7 @@ function renderSettings(){
     <div><label for="d1">تاريخ اليوم الأول</label><input type="date" id="d1" value="${settings.day1_date||''}"></div>
     <div><label for="d2">تاريخ اليوم الثاني</label><input type="date" id="d2" value="${settings.day2_date||''}"></div>
     <div><label for="regClose">إغلاق التسجيل</label><input type="datetime-local" id="regClose" value="${toLocal(settings.registration_closes_at)}"></div>
-    <div><label for="subDl">آخر موعد للتسليم</label><input type="datetime-local" id="subDl" value="${toLocal(settings.submission_deadline)}"></div>
+    <div><label for="presDl">آخر موعد للعرض التقديمي</label><input type="datetime-local" id="presDl" value="${toLocal(settings.presentation_deadline)}"></div>
     <div><label for="minAtt">شرط الحضور لإصدار الشهادة</label>
       <select id="minAtt">
         <option value="0" ${(settings.min_attendance_days??1)==0?'selected':''}>لا يُشترط حضور</option>
@@ -1139,7 +1240,7 @@ async function saveSettings(){
   const payload={
     day1_date: val('d1')||null, day2_date: val('d2')||null,
     registration_closes_at: val('regClose')? new Date(val('regClose')).toISOString():null,
-    submission_deadline:    val('subDl')  ? new Date(val('subDl')).toISOString():null,
+    presentation_deadline:  val('presDl') ? new Date(val('presDl')).toISOString():null,
     min_attendance_days: parseInt(val('minAtt')||'1',10),
     min_team_size: parseInt(val('minT')||'2',10),
     max_team_size: parseInt(val('maxT')||'5',10),
@@ -1161,7 +1262,8 @@ function exportTeams(){
     'المسار':(tracks.find(x=>x.id===t.track_id)||{}).name_ar||'',
     'التحدي':(challenges.find(c=>c.id===t.challenge_id)||{}).title_ar||'',
     'الأعضاء':people.filter(p=>p.team_id===t.id).map(p=>p.full_name).join('، '),
-    'المشروع':(t.projects&&t.projects.title)||'','الملف':(t.projects&&t.projects.file_url)||'',
+    'المشروع':(t.projects&&t.projects.title)||'',
+    'العرض التقديمي':(t.projects&&t.projects.presentation_url)||'',
     'الحالة':t.status,
   })),'الفرق.xlsx');
 }

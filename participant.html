@@ -8,107 +8,163 @@
 <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@500;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root{--bg:#0E1422;--surface:#151C2E;--surface-2:#1A2236;--line:#26314A;
+  :root{--navy:#0E1422;--surface:#151C2E;--surface-2:#1A2236;--line:#26314A;
     --teal:#35C9AE;--amber:#DB8A52;--text:#EAF0F8;--muted:#96A3B8;--bad:#E2706A;}
   *{box-sizing:border-box;}
-  body{margin:0;background:var(--bg);color:var(--text);font-family:'IBM Plex Sans Arabic',sans-serif;}
+  body{margin:0;background:var(--navy);color:var(--text);font-family:'IBM Plex Sans Arabic',sans-serif;}
   h1,h2,h3{font-family:'Tajawal',sans-serif;margin:0;}
   a{color:var(--teal);}
-  .hero{background:var(--surface);border-bottom:1px solid var(--line);padding:22px 20px;position:relative;overflow:hidden;}
-  .hero::after{content:'';position:absolute;inset-inline:0;top:14px;height:1px;background:var(--teal);opacity:.35;}
-  .hero h1{font-size:19px;}
-  .hero .sub{color:var(--teal);font-size:12.5px;margin-top:6px;}
-  .hero .out{position:absolute;left:18px;top:18px;}
-  main{max-width:660px;margin:0 auto;padding:20px 14px 80px;}
-  .panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px;}
-  .panel h3{font-size:16px;margin-bottom:12px;}
-  label{display:block;font-size:12.5px;color:var(--muted);margin:13px 0 5px;}
+
+  .bar{background:var(--surface);border-bottom:1px solid var(--line);}
+  .bar .top{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:12px 18px;}
+  .brandmark{display:flex;align-items:center;gap:10px;}
+  .brandmark img{height:26px;display:block;}
+  .brandmark .sep{width:1px;height:22px;background:rgba(255,255,255,.22);}
+  .bar h1{font-size:15px;}
+  .bar button.out{background:transparent;border:1px solid var(--line);color:var(--text);
+    border-radius:8px;padding:6px 12px;cursor:pointer;font-family:inherit;font-size:12.5px;}
+
+  /* ---------- الترحيب ---------- */
+  .hero{padding:22px 18px 20px;background:var(--surface);border-bottom:1px solid var(--line);}
+  .hero .hi{font-family:'Tajawal',sans-serif;font-weight:900;font-size:25px;}
+  .hero .sub{font-size:13px;color:var(--muted);margin-top:7px;line-height:1.85;}
+  .pills{display:flex;flex-wrap:wrap;gap:7px;margin-top:14px;}
+  .pill{border-radius:999px;padding:5px 13px;font-size:12px;font-weight:600;
+    background:var(--surface-2);border:1px solid var(--line);color:var(--muted);}
+  .pill.ok{background:rgba(53,201,174,.14);border-color:var(--teal);color:var(--teal);}
+  .pill.warn{background:rgba(219,138,82,.14);border-color:var(--amber);color:var(--amber);}
+
+  /* ---------- التبويبات ---------- */
+  .tabs{display:flex;gap:2px;padding:0 8px;background:var(--surface);
+    border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none;
+    position:sticky;top:0;z-index:20;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tabs button{background:none;border:none;border-bottom:2px solid transparent;color:var(--muted);
+    padding:13px 10px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:13px;
+    cursor:pointer;white-space:nowrap;position:relative;}
+  @media(min-width:520px){ .tabs button{padding:13px 15px;font-size:13.5px;} }
+  .tabs button.on{color:var(--teal);border-bottom-color:var(--teal);}
+  .tabs button .dot{display:inline-block;width:7px;height:7px;border-radius:50%;
+    background:var(--amber);margin-inline-start:5px;vertical-align:middle;}
+
+  main{max-width:680px;margin:0 auto;padding:18px 16px 70px;}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:20px;margin-bottom:14px;}
+  .card h3{font-size:16px;margin-bottom:6px;}
+  .card .note{font-size:12.5px;color:var(--muted);line-height:1.85;margin-bottom:14px;}
+
+  label{display:block;font-size:12.5px;color:var(--muted);margin:13px 0 6px;}
   input,textarea{background:var(--surface-2);border:1px solid var(--line);color:var(--text);
-    border-radius:9px;padding:11px 12px;font-family:inherit;font-size:15px;width:100%;}
+    border-radius:10px;padding:11px 12px;font-family:inherit;font-size:15px;width:100%;}
   textarea{resize:vertical;min-height:86px;line-height:1.85;}
   input:focus,textarea:focus{outline:1.5px solid var(--teal);border-color:var(--teal);}
-  button.b{border:none;border-radius:10px;padding:12px 18px;font-family:'Tajawal',sans-serif;
+  button.b{border:none;border-radius:11px;padding:13px 18px;font-family:'Tajawal',sans-serif;
     font-weight:700;font-size:14.5px;cursor:pointer;}
-  .b-teal{background:var(--teal);color:#0E1422;width:100%;margin-top:16px;}
-  .b-teal:disabled{opacity:.5;cursor:not-allowed;}
-  .b-ghost{background:transparent;border:1px solid var(--line);color:var(--text);padding:7px 13px;font-size:12.5px;}
-  .msg{font-size:13px;padding:11px 13px;border-radius:9px;margin-top:12px;display:none;line-height:1.75;}
+  .b-teal{background:var(--teal);color:var(--navy);width:100%;margin-top:16px;}
+  .b-teal:disabled{opacity:.45;cursor:not-allowed;}
+  .b-ghost{background:transparent;border:1px solid var(--line);color:var(--text);}
+  .msg{font-size:13px;padding:11px 13px;border-radius:10px;margin-top:12px;display:none;line-height:1.8;}
   .msg.err{background:rgba(226,112,106,.12);color:var(--bad);display:block;}
   .msg.ok{background:rgba(53,201,174,.12);color:var(--teal);display:block;}
   .hide{display:none !important;}
+  .empty{text-align:center;color:var(--muted);padding:30px 16px;font-size:13.5px;line-height:1.95;}
+  .closed{background:var(--surface-2);border:1px solid var(--line);border-radius:11px;
+    padding:12px 14px;font-size:13px;color:var(--muted);line-height:1.85;}
 
-  .who .nm{font-family:'Tajawal',sans-serif;font-size:23px;font-weight:900;}
-  .who .rl{font-size:12.5px;color:var(--muted);margin-top:5px;}
-  .team-line{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
-  .team-line .tn{font-family:'Tajawal',sans-serif;font-size:16px;}
-  .team-line .code{font-size:12px;color:var(--teal);direction:ltr;display:inline-block;margin-top:3px;}
+  /* ---------- الحضور ---------- */
+  .days{display:flex;gap:10px;}
+  .day{flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;
+    padding:14px;text-align:center;}
+  .day .l{font-size:12px;color:var(--muted);}
+  .day .d{font-size:11.5px;color:var(--muted);opacity:.8;margin-top:2px;}
+  .day .v{font-family:'Tajawal',sans-serif;font-weight:700;font-size:15px;margin-top:9px;}
+  .day.yes{border-color:var(--teal);} .day.yes .v{color:var(--teal);}
+  .day.no{border-color:var(--bad);}  .day.no .v{color:var(--bad);}
+
+  /* ---------- الفريق ---------- */
   .chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;}
   .chip{background:var(--surface-2);border:1px solid var(--line);border-radius:999px;
     padding:6px 13px;font-size:12.5px;color:var(--muted);}
   .chip.lead{border-color:var(--teal);color:var(--teal);}
-  .challenge{background:var(--surface-2);border-radius:10px;padding:13px;font-size:12.5px;
-    line-height:1.85;color:var(--muted);margin-top:13px;}
+  .challenge{background:var(--surface-2);border-radius:11px;padding:13px;font-size:12.5px;
+    line-height:1.9;color:var(--muted);margin-top:13px;}
+  .ordbox{display:flex;align-items:center;gap:12px;background:rgba(53,201,174,.09);
+    border:1px solid var(--teal);border-radius:12px;padding:14px;margin-top:13px;}
+  .ordbox .n{font-family:'Tajawal',sans-serif;font-weight:900;font-size:27px;color:var(--teal);}
+  .ordbox .t{font-size:13px;line-height:1.8;}
 
-  .days{display:flex;gap:10px;}
-  .day{flex:1;background:var(--surface-2);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:center;}
-  .day .l{font-size:12px;color:var(--muted);}
-  .day .d{font-size:11.5px;color:var(--muted);opacity:.8;margin-top:2px;}
-  .day .v{font-family:'Tajawal',sans-serif;font-weight:700;font-size:15px;margin-top:8px;}
-  .day.yes{border-color:var(--teal);} .day.yes .v{color:var(--teal);}
-  .day.no{border-color:var(--bad);}  .day.no .v{color:var(--bad);}
-  .day.wait .v{color:var(--muted);}
-
-  .cert{border-radius:12px;padding:16px;font-size:13.5px;line-height:1.85;}
-  .cert.ready{background:rgba(53,201,174,.1);border:1px solid var(--teal);}
-  .cert.wait{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);}
-  .file-label{display:block;background:var(--surface-2);border:1.5px dashed var(--line);border-radius:10px;
-    padding:15px;text-align:center;cursor:pointer;font-family:'Tajawal',sans-serif;font-weight:700;font-size:13.5px;}
+  /* ---------- الملفات ---------- */
+  .file-label{display:block;background:var(--surface-2);border:1.5px dashed var(--line);
+    border-radius:11px;padding:15px;text-align:center;cursor:pointer;
+    font-family:'Tajawal',sans-serif;font-weight:700;font-size:13.5px;}
   input[type=file]{display:none;}
-  .flink{display:inline-block;margin-top:10px;background:var(--surface-2);border:1px solid var(--line);
-    border-radius:9px;padding:9px 15px;text-decoration:none;font-size:13px;}
-  .flags{display:flex;flex-wrap:wrap;gap:7px;margin-top:12px;}
-  .flag{font-size:11.5px;border-radius:999px;padding:4px 11px;background:rgba(219,138,82,.14);color:var(--amber);}
-  .closed{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;
-    padding:13px;font-size:13px;color:var(--muted);line-height:1.8;}
+  .flink{display:inline-block;margin-top:10px;margin-inline-end:8px;background:var(--surface-2);
+    border:1px solid var(--line);border-radius:10px;padding:10px 15px;
+    text-decoration:none;font-size:13px;font-weight:600;}
+  .mat{border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:10px;background:var(--surface-2);}
+  .mat .t{font-family:'Tajawal',sans-serif;font-weight:700;font-size:14.5px;}
+  .mat .d{font-size:12.5px;color:var(--muted);margin-top:5px;line-height:1.8;}
 
-  .brandmark{display:flex;align-items:center;gap:11px;}
-  .brandmark img{height:30px;display:block;}
-  .brandmark .sep{width:1px;height:24px;background:rgba(255,255,255,.22);}
-  @media(max-width:520px){ .brandmark img{height:24px;} }
+  /* ---------- المعايير ---------- */
+  .crit{border-bottom:1px solid var(--line);padding:13px 0;}
+  .crit:last-child{border-bottom:none;}
+  .crit .t{display:flex;justify-content:space-between;gap:10px;font-size:14px;font-weight:600;}
+  .crit .t .w{color:var(--teal);font-family:'Tajawal',sans-serif;font-weight:700;}
+  .crit .h{font-size:12px;color:var(--muted);margin-top:4px;line-height:1.75;}
 
+  /* ---------- الاستبيان ---------- */
   .stars{display:flex;gap:7px;flex-direction:row-reverse;justify-content:flex-end;}
-  .stars button{background:none;border:none;font-size:27px;line-height:1;color:#33405C;cursor:pointer;padding:0;transition:color .12s;}
+  .stars button{background:none;border:none;font-size:27px;line-height:1;color:#33405C;
+    cursor:pointer;padding:0;transition:color .12s;}
   .stars button.on{color:var(--teal);}
   .q{padding:14px 0;border-bottom:1px solid var(--line);}
-  .q:last-of-type{border-bottom:none;}
   .q .qt{font-size:14px;margin-bottom:9px;}
   .yesno{display:flex;gap:9px;margin-top:9px;}
   .yesno button{flex:1;border:1px solid var(--line);background:var(--surface-2);color:var(--muted);
-    border-radius:9px;padding:11px;font-family:'Tajawal',sans-serif;font-weight:700;font-size:14px;cursor:pointer;}
+    border-radius:10px;padding:11px;font-family:'Tajawal',sans-serif;font-weight:700;
+    font-size:14px;cursor:pointer;}
   .yesno button.on{background:rgba(53,201,174,.16);border-color:var(--teal);color:var(--teal);}
-  .done-box{background:rgba(53,201,174,.1);border:1px solid var(--teal);border-radius:12px;
-    padding:15px;font-size:13.5px;line-height:1.85;}
+
+  /* ---------- الشهادة ---------- */
+  .cert{border-radius:12px;padding:16px;font-size:13.5px;line-height:1.9;}
+  .cert.ready{background:rgba(53,201,174,.1);border:1px solid var(--teal);}
+  .cert.wait{background:var(--surface-2);border:1px solid var(--line);color:var(--muted);}
+
+  /* ---------- الدخول ---------- */
+  .auth{max-width:400px;margin:50px auto;}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--teal);
+    color:var(--navy);padding:10px 20px;border-radius:999px;font-size:13px;font-weight:700;
+    opacity:0;transition:opacity .2s;pointer-events:none;z-index:70;font-family:'Tajawal',sans-serif;}
+  .toast.show{opacity:1;}
 </style>
 </head>
 <body>
 
-<div class="hero">
-  <div class="brandmark">
+<div class="bar">
+  <div class="top">
+    <div class="brandmark">
       <img data-logo="qu" alt="جامعة القصيم">
       <span class="sep"></span>
       <img data-logo="mim" alt="وزارة الصناعة والثروة المعدنية">
     </div>
-  <h1 style="margin-top:16px;">بوابة المشارك</h1>
-  <div class="sub">صنّاع الحلول الابتكارية · جامعة القصيم</div>
-  <div class="out"><button class="b b-ghost hide" id="outBtn" onclick="logout()">خروج</button></div>
+    <h1>بوابة المشارك</h1>
+    <button class="out hide" id="outBtn" onclick="logout()">خروج</button>
+  </div>
+</div>
+
+<div id="heroWrap" class="hide">
+  <div class="hero">
+    <div class="hi" id="hi"></div>
+    <div class="sub" id="heroSub"></div>
+    <div class="pills" id="heroPills"></div>
+  </div>
+  <div class="tabs" id="tabs"></div>
 </div>
 
 <main>
-  <div class="panel" id="checkCard">
+  <!-- ============ الدخول ============ -->
+  <div class="auth card" id="checkCard">
     <h3>الدخول</h3>
-    <div style="font-size:12.5px;color:var(--muted);line-height:1.8;">
-      ادخل بالبريد ورقم الجوال اللي سجّلت فيهما. أول مرة بتختار كلمة مرور خاصة فيك.
-    </div>
+    <div class="note">ادخل بالبريد ورقم الجوال اللي سجّلت فيهما. أول مرة بتختار كلمة مرور خاصة فيك.</div>
     <label for="email">البريد الإلكتروني</label>
     <input type="email" id="email" dir="ltr" style="text-align:right;">
     <label for="phone">رقم الجوال</label>
@@ -117,22 +173,22 @@
     <div class="msg" id="checkMsg"></div>
   </div>
 
-  <div class="panel hide" id="setCard">
+  <div class="auth card hide" id="setCard">
     <h3>اختر كلمة مرورك</h3>
-    <div style="font-size:12.5px;color:var(--muted);line-height:1.8;" id="setWelcome"></div>
+    <div class="note" id="setWelcome"></div>
     <label for="sPass">كلمة المرور</label>
     <input type="password" id="sPass" autocomplete="new-password">
     <label for="sPass2">تأكيد كلمة المرور</label>
     <input type="password" id="sPass2" autocomplete="new-password">
-    <div style="font-size:12px;color:var(--muted);margin-top:7px;">6 خانات على الأقل.</div>
+    <div class="note" style="margin:8px 0 0;">6 خانات على الأقل.</div>
     <button class="b b-teal" id="setBtn" onclick="setPassword()">حفظ والدخول</button>
     <div class="msg" id="setMsg"></div>
     <button class="b b-ghost" style="width:100%;margin-top:10px;" onclick="backToCheck()">رجوع</button>
   </div>
 
-  <div class="panel hide" id="loginCard">
+  <div class="auth card hide" id="loginCard">
     <h3>أهلًا بك</h3>
-    <div style="font-size:12.5px;color:var(--muted);line-height:1.8;" id="loginWelcome"></div>
+    <div class="note" id="loginWelcome"></div>
     <label for="lPass">كلمة المرور</label>
     <input type="password" id="lPass" autocomplete="current-password">
     <button class="b b-teal" id="loginBtn" onclick="login()">دخول</button>
@@ -140,69 +196,51 @@
     <button class="b b-ghost" style="width:100%;margin-top:10px;" onclick="backToCheck()">رجوع</button>
   </div>
 
+  <!-- ============ المحتوى ============ -->
   <div id="app" class="hide">
-    <div class="panel who">
-      <div class="nm" id="pName"></div>
-      <div class="rl" id="pRole"></div>
-      <div class="team-line" id="teamLine"></div>
-    </div>
-
-    <div class="panel">
-      <h3>الحضور</h3>
-      <div class="days" id="daysBox"></div>
-    </div>
-
-    <div class="panel" id="projectPanel">
-      <h3>مشروع الفريق</h3>
-      <div id="projState"></div>
-      <div id="projForm" class="hide">
-        <label for="pTitle">اسم الابتكار</label>
-        <input type="text" id="pTitle">
-        <label for="pSummary">وصف المشروع</label>
-        <textarea id="pSummary"></textarea>
-        <label for="pSolution">كيف يعمل الحل تقنيًا</label>
-        <textarea id="pSolution"></textarea>
-        <label for="pImpact">الأثر المتوقع</label>
-        <textarea id="pImpact"></textarea>
-        <label for="pVideo">رابط فيديو العرض (اختياري)</label>
-        <input type="url" id="pVideo" dir="ltr" style="text-align:right;" placeholder="https://">
-        <label>ملف العرض</label>
-        <label class="file-label" id="fileLabel" for="pFile">اختر ملف PDF أو PowerPoint</label>
-        <input type="file" id="pFile" accept=".pdf,.ppt,.pptx"
-          onchange="document.getElementById('fileLabel').textContent = this.files[0] ? this.files[0].name : 'اختر ملف PDF أو PowerPoint';">
-        <button class="b b-teal" id="subBtn" onclick="submitProject()">حفظ التسليم</button>
-        <div class="msg" id="subMsg"></div>
-      </div>
-    </div>
-
-    <div class="panel" id="surveyPanel">
-      <h3>استبيان التقييم</h3>
-      <div id="surveyBox"></div>
-    </div>
-
-    <div class="panel">
-      <h3>الشهادة</h3>
-      <div id="certBox"></div>
-    </div>
+    <section id="tab-home"></section>
+    <section id="tab-team"    class="hide"></section>
+    <section id="tab-project" class="hide"></section>
+    <section id="tab-files"   class="hide"></section>
+    <section id="tab-judging" class="hide"></section>
+    <section id="tab-cert"    class="hide"></section>
   </div>
 </main>
+
+<div class="toast" id="toast"></div>
 
 <script src="config.js"></script>
 <script>
 let me = null, token = localStorage.getItem('sh_participant_token') || null;
-let pending = null;   // { email, phone, full_name }
+let pending = null;
+let answers = {}, recommend = null;
+let tab = 'home';
+
+const TABS = [
+  ['home','الرئيسية'], ['team','فريقي'], ['project','مشروعنا'],
+  ['files','الملفات'], ['judging','التحكيم'], ['cert','الشهادة'],
+];
 
 function msg(id, text, ok){
   const el = document.getElementById(id);
+  if(!el) return;
   el.className = 'msg ' + (ok ? 'ok' : 'err');
   el.textContent = text;
 }
 function showCard(id){
   ['checkCard','setCard','loginCard','app'].forEach(x =>
     document.getElementById(x).classList.toggle('hide', x !== id));
+  document.getElementById('heroWrap').classList.toggle('hide', id !== 'app');
+}
+let toastTimer;
+function toast(t){
+  const el = document.getElementById('toast');
+  el.textContent = t; el.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('show'), 1600);
 }
 function backToCheck(){ pending = null; showCard('checkCard'); }
 
+/* ==================== الدخول ==================== */
 async function checkMe(){
   const email = document.getElementById('email').value.trim();
   const phone = document.getElementById('phone').value.trim();
@@ -217,7 +255,6 @@ async function checkMe(){
     msg('checkMsg','ما لقينا تسجيلًا بهذا البريد ورقم الجوال. تأكد من البيانات أو تواصل مع فريق التنظيم.');
     return;
   }
-
   pending = { email, phone, full_name: data[0].full_name };
   if(data[0].must_set_password){
     document.getElementById('setWelcome').textContent = `${pending.full_name} — أول دخول لك، اختر كلمة مرور.`;
@@ -233,36 +270,30 @@ async function setPassword(){
   const p2 = document.getElementById('sPass2').value;
   if(p1.length < 6){ msg('setMsg','كلمة المرور 6 خانات على الأقل.'); return; }
   if(p1 !== p2){ msg('setMsg','كلمتا المرور غير متطابقتين.'); return; }
-
   const btn = document.getElementById('setBtn');
   btn.disabled = true; btn.textContent = 'جاري الحفظ...';
   const { data, error } = await supabaseClient.rpc('participant_set_password', {
-    p_email: pending.email, p_phone: pending.phone, p_password: p1,
-  });
+    p_email: pending.email, p_phone: pending.phone, p_password: p1 });
   btn.disabled = false; btn.textContent = 'حفظ والدخول';
-
   if(error){ msg('setMsg', error.message); return; }
-  token = data;
-  localStorage.setItem('sh_participant_token', token);
+  token = data; localStorage.setItem('sh_participant_token', token);
   loadMe();
 }
 
 async function login(){
   const pass = document.getElementById('lPass').value;
   if(!pass){ msg('loginMsg','اكتب كلمة المرور.'); return; }
-
   const btn = document.getElementById('loginBtn');
   btn.disabled = true; btn.textContent = 'جاري الدخول...';
   const { data, error } = await supabaseClient.rpc('participant_login', {
-    p_email: pending.email, p_password: pass,
-  });
+    p_email: pending.email, p_password: pass });
   btn.disabled = false; btn.textContent = 'دخول';
-
   if(error){ msg('loginMsg','كلمة المرور غير صحيحة.'); return; }
-  token = data;
-  localStorage.setItem('sh_participant_token', token);
+  token = data; localStorage.setItem('sh_participant_token', token);
   loadMe();
 }
+
+function logout(){ localStorage.removeItem('sh_participant_token'); token = null; location.reload(); }
 
 async function loadMe(){
   const { data, error } = await supabaseClient.rpc('my_status', { p_token: token });
@@ -271,145 +302,259 @@ async function loadMe(){
   render();
 }
 
-function logout(){
-  localStorage.removeItem('sh_participant_token');
-  token = null;
-  location.reload();
-}
-
+/* ==================== العرض ==================== */
 function fmt(d){
-  return d ? new Date(d).toLocaleDateString('ar-SA',{day:'numeric',month:'long'}) : '—';
+  return d ? new Date(d).toLocaleDateString('ar-SA-u-ca-gregory',{day:'numeric',month:'long'}) : '—';
+}
+function fmtFull(d){
+  return d ? new Date(d).toLocaleString('ar-SA-u-ca-gregory',{dateStyle:'medium',timeStyle:'short'}) : '';
 }
 
 function render(){
   showCard('app');
   document.getElementById('outBtn').classList.remove('hide');
 
-  document.getElementById('pName').textContent = me.full_name;
-  document.getElementById('pRole').textContent =
-    [me.member_role, me.track_name].filter(Boolean).join(' · ') || '';
+  document.getElementById('hi').textContent = `أهلًا، ${me.first_name || me.full_name}`;
+  document.getElementById('heroSub').innerHTML =
+    [me.team_name ? `فريق <b>${me.team_name}</b>` : 'لم تُضمّ لفريق بعد',
+     me.track_name, me.event_location].filter(Boolean).join(' · ');
 
-  /* --- الفريق --- */
-  const tl = document.getElementById('teamLine');
-  if(me.team_id){
-    tl.innerHTML = `
-      <div class="tn">${me.team_name}</div>
-      <div class="code">${me.reg_no || me.team_code}</div>
-      <div class="chips">${(me.members||[]).map(m=>
-        `<span class="chip ${m.is_leader?'lead':''}">${m.full_name}${m.member_role?' · '+m.member_role:''}</span>`).join('')}</div>
-      ${me.challenge_title ? `<div class="challenge">${me.challenge_title}</div>` : ''}`;
-  } else {
-    tl.innerHTML = `<div class="closed">لم تُضمّ لفريق بعد. فريق التنظيم بيتواصل معك.</div>`;
-  }
+  const days = (me.day1_attended?1:0) + (me.day2_attended?1:0);
+  const pills = [];
+  pills.push(`<span class="pill ${days ? 'ok' : ''}">الحضور ${days}/2</span>`);
+  if(me.presentation_open) pills.push(me.project && me.project.presentation_url
+    ? `<span class="pill ok">العرض مُسلَّم</span>`
+    : `<span class="pill warn">العرض لم يُسلَّم</span>`);
+  pills.push(me.survey_submitted
+    ? `<span class="pill ok">الاستبيان مكتمل</span>`
+    : `<span class="pill warn">الاستبيان لم يُعبَّأ</span>`);
+  if(me.certificate_issued) pills.push(`<span class="pill ok">الشهادة صادرة</span>`);
+  document.getElementById('heroPills').innerHTML = pills.join('');
 
-  /* --- الحضور --- */
-  const days = [
+  renderTabs();
+  renderTab();
+}
+
+function pendingCount(){
+  let n = 0;
+  if(me.team_id && me.presentation_open && !(me.project && me.project.presentation_url)) n++;
+  return n;
+}
+
+function renderTabs(){
+  const needSurvey = me.survey_open && !me.survey_submitted;
+  document.getElementById('tabs').innerHTML = TABS.map(([k,l]) => {
+    let dot = '';
+    if(k === 'project' && pendingCount()) dot = '<span class="dot"></span>';
+    if(k === 'cert' && needSurvey) dot = '<span class="dot"></span>';
+    return `<button id="tb-${k}" class="${k===tab?'on':''}" onclick="goTab('${k}')">${l}${dot}</button>`;
+  }).join('');
+}
+function goTab(k){
+  tab = k;
+  TABS.forEach(([x]) => {
+    document.getElementById('tb-'+x).classList.toggle('on', x===k);
+    document.getElementById('tab-'+x).classList.toggle('hide', x!==k);
+  });
+  renderTab();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderTab(){
+  if(tab === 'home')    renderHome();
+  if(tab === 'team')    renderTeam();
+  if(tab === 'project') renderProject();
+  if(tab === 'files')   renderFiles();
+  if(tab === 'judging') renderJudging();
+  if(tab === 'cert')    renderCert();
+}
+
+/* ---------- الرئيسية ---------- */
+function renderHome(){
+  const d = [
     { n:'الأول',  d:me.day1_date, v:me.day1_attended },
     { n:'الثاني', d:me.day2_date, v:me.day2_attended },
   ];
-  document.getElementById('daysBox').innerHTML = days.map(x=>{
-    const cls = x.v===true?'yes':(x.v===false?'no':'wait');
-    const txt = x.v===true?'حاضر':(x.v===false?'لم تحضر':'لم يُسجَّل بعد');
-    return `<div class="day ${cls}"><div class="l">اليوم ${x.n}</div>
-      <div class="d">${fmt(x.d)}</div><div class="v">${txt}</div></div>`;
-  }).join('');
+  const ann = me.announcements || [];
+  const todo = [];
+  if(me.team_id && me.presentation_open && !(me.project && me.project.presentation_url))
+    todo.push('رفع العرض التقديمي من تبويب «مشروعنا»');
+  if(me.survey_open && !me.survey_submitted)
+    todo.push('تعبئة استبيان التقييم من تبويب «الشهادة»');
 
-  /* --- المشروع --- */
-  renderProject();
+  document.getElementById('tab-home').innerHTML = `
+    ${todo.length ? `<div class="card">
+      <h3>المطلوب منك</h3>
+      <ul style="margin:10px 0 0;padding-inline-start:20px;line-height:2.1;font-size:13.5px;">
+        ${todo.map(x=>`<li>${x}</li>`).join('')}</ul>
+    </div>` : `<div class="card"><h3>كل شي تمام</h3>
+      <div class="note" style="margin:8px 0 0;">ما عليك مطلوب حاليًا.</div></div>`}
 
-  /* --- الاستبيان --- */
-  renderSurvey();
+    <div class="card">
+      <h3>الحضور</h3>
+      <div class="note">${me.event_time || ''} · ${me.event_location || ''}</div>
+      <div class="days">${d.map(x=>{
+        const cls = x.v===true?'yes':(x.v===false?'no':'');
+        const txt = x.v===true?'حاضر':(x.v===false?'لم تحضر':'لم يُسجَّل بعد');
+        return `<div class="day ${cls}"><div class="l">اليوم ${x.n}</div>
+          <div class="d">${fmt(x.d)}</div><div class="v">${txt}</div></div>`;
+      }).join('')}</div>
+    </div>
 
-  /* --- الشهادة --- */
-  renderCert();
+    <div class="card">
+      <h3>تحديثات المنظمين</h3>
+      ${ann.length ? ann.map(a=>`
+        <div class="mat"><div class="t">${a.title}</div>
+          <div class="d">${a.body}</div>
+          <div class="d" style="opacity:.7;margin-top:6px;">${fmtFull(a.created_at)}</div></div>`).join('')
+        : '<div class="empty">ما فيه تحديثات حاليًا.</div>'}
+    </div>`;
 }
 
-function renderProject(){
-  const panel = document.getElementById('projectPanel');
-  if(!me.team_id){ panel.classList.add('hide'); return; }
-  panel.classList.remove('hide');
-
-  const p = me.project;
-  const state = document.getElementById('projState');
-  const form  = document.getElementById('projForm');
-
-  if(p){
-    document.getElementById('pTitle').value    = p.title    || '';
-    document.getElementById('pSummary').value  = p.summary  || '';
-    document.getElementById('pSolution').value = p.solution || '';
-    document.getElementById('pImpact').value   = p.impact   || '';
-    document.getElementById('pVideo').value    = p.video_url|| '';
-    if(p.file_name) document.getElementById('fileLabel').textContent = p.file_name + ' — اختر ملفًا آخر للاستبدال';
-  }
-
-  const flags = p ? [
-    p.has_commercial_register ? 'سجل تجاري' : '',
-    p.has_patent   ? 'براءة اختراع' : '',
-    p.has_prototype? 'نموذج مصغر'  : '',
-  ].filter(Boolean) : [];
-
-  const head = p ? `
-    <div style="font-family:'Tajawal';font-size:16px;font-weight:700;">${p.title||''}</div>
-    ${p.summary ? `<div style="font-size:13px;color:var(--muted);line-height:1.85;margin-top:7px;">${p.summary}</div>` : ''}
-    ${flags.length ? `<div class="flags">${flags.map(f=>`<span class="flag">${f}</span>`).join('')}</div>` : ''}
-    ${p.file_url  ? `<a class="flink" href="${p.file_url}" target="_blank" rel="noopener">ملف العرض الحالي</a>` : ''}
-    ${p.study_url ? `<a class="flink" href="${p.study_url}" target="_blank" rel="noopener">دراسة المشروع</a>` : ''}` : '';
-
-  if(!me.submission_open){
-    state.innerHTML = head + `<div class="closed" style="margin-top:13px;">${
-      p ? 'تسليم المشاريع مغلق الآن، وتسليمكم محفوظ.' : 'تسليم المشاريع لم يُفتح بعد.'}</div>`;
-    form.classList.add('hide');
+/* ---------- فريقي ---------- */
+function renderTeam(){
+  const box = document.getElementById('tab-team');
+  if(!me.team_id){
+    box.innerHTML = `<div class="card"><div class="empty">
+      لم تُضمّ لفريق بعد.<br>فريق التنظيم بيتواصل معك.</div></div>`;
     return;
   }
-
-  const dl = me.submission_deadline
-    ? new Date(me.submission_deadline).toLocaleString('ar-SA',{dateStyle:'medium',timeStyle:'short'}) : null;
-  state.innerHTML = head + (dl
-    ? `<div class="closed" style="margin-top:13px;">آخر موعد للتسليم: ${dl}</div>` : '');
-  form.classList.remove('hide');
+  box.innerHTML = `
+    <div class="card">
+      <h3>${me.team_name}</h3>
+      <div class="note" style="margin-bottom:0;">
+        <span dir="ltr" style="color:var(--teal);">${me.reg_no || me.team_code}</span> · ${me.track_name || ''}</div>
+      <div class="chips">${(me.members||[]).map(m =>
+        `<span class="chip ${m.is_leader?'lead':''}">${m.full_name}${m.member_role?' · '+m.member_role:''}</span>`).join('')}</div>
+      ${me.challenge_title ? `<div class="challenge"><b>التحدي:</b> ${me.challenge_title}
+        ${me.challenge_desc ? `<br><br>${me.challenge_desc}` : ''}</div>` : ''}
+      ${me.judging_order ? `<div class="ordbox">
+        <div class="n">${me.judging_order}</div>
+        <div class="t">ترتيب عرض مشروعكم أمام اللجنة<br>
+          <span style="color:var(--muted);">من ${me.total_in_committee} مشروع</span></div>
+      </div>` : ''}
+    </div>`;
 }
 
-async function submitProject(){
-  const title = document.getElementById('pTitle').value.trim();
-  if(!title){ msg('subMsg','اكتب اسم الابتكار.'); return; }
-
-  const btn = document.getElementById('subBtn');
-  btn.disabled = true; btn.textContent = 'جاري الحفظ...';
-  document.getElementById('subMsg').className = 'msg';
-
-  try{
-    let fileUrl = null, fileName = null;
-    const file = document.getElementById('pFile').files[0];
-    if(file){
-      if(file.size > 25*1024*1024) throw new Error('حجم الملف أكبر من 25 ميجابايت.');
-      const safe = file.name.replace(/[^\w.\-]+/g,'_');
-      const path = `${me.team_code}/${Date.now()}-${safe}`;
-      const { error: upErr } = await supabaseClient.storage.from('project-files').upload(path, file);
-      if(upErr) throw new Error('تعذّر رفع الملف: ' + upErr.message);
-      fileUrl  = supabaseClient.storage.from('project-files').getPublicUrl(path).data.publicUrl;
-      fileName = file.name;
-    }
-
-    const { error } = await supabaseClient.rpc('my_submit_project', {
-      p_token: token,
-      p_title: title,
-      p_summary:  document.getElementById('pSummary').value.trim(),
-      p_solution: document.getElementById('pSolution').value.trim(),
-      p_impact:   document.getElementById('pImpact').value.trim(),
-      p_file_url: fileUrl, p_file_name: fileName,
-      p_video_url: document.getElementById('pVideo').value.trim() || null,
-    });
-    if(error) throw new Error(error.message);
-
-    msg('subMsg','تم حفظ التسليم.', true);
-    await loadMe();
-  } catch(e){
-    msg('subMsg', e.message || 'تعذّر الحفظ.');
-  } finally {
-    btn.disabled = false; btn.textContent = 'حفظ التسليم';
+/* ---------- مشروعنا ---------- */
+function renderProject(){
+  const box = document.getElementById('tab-project');
+  if(!me.team_id){
+    box.innerHTML = `<div class="card"><div class="empty">لم تُضمّ لفريق بعد.</div></div>`;
+    return;
   }
+  const p = me.project || {};
+  const pdl = me.presentation_deadline ? fmtFull(me.presentation_deadline) : null;
+
+  const flags = [
+    p.has_commercial_register ? 'سجل تجاري' : '',
+    p.has_patent    ? 'براءة اختراع' : '',
+    p.has_prototype ? 'نموذج مصغر'  : '',
+  ].filter(Boolean);
+
+  box.innerHTML = `
+    <div class="card">
+      <h3>${p.title || 'مشروع الفريق'}</h3>
+      ${p.summary ? `<div class="note" style="margin-top:8px;">${p.summary}</div>` : ''}
+      ${flags.length ? `<div class="chips">${flags.map(f=>`<span class="chip">${f}</span>`).join('')}</div>` : ''}
+      ${p.study_url ? `<a class="flink" href="${p.study_url}" target="_blank" rel="noopener">دراسة المشروع</a>` : ''}
+      <div class="note" style="margin:14px 0 0;">
+        بيانات المشروع مسجَّلة لدى فريق التنظيم. لتعديلها تواصل معهم.
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>العرض التقديمي</h3>
+      <div class="note">${me.presentation_open
+        ? (pdl ? `ارفعوا العرض الذي ستقدّمونه أمام اللجنة. آخر موعد: ${pdl}`
+               : 'ارفعوا العرض الذي ستقدّمونه أمام اللجنة. تقدرون تستبدلونه قبل الإغلاق.')
+        : 'رفع العروض التقديمية لم يُفتح بعد.'}</div>
+
+      ${p.presentation_url ? `
+        <div class="cert ready" style="margin-bottom:12px;">
+          تم استلام عرضكم${p.presentation_at ? ` — ${fmtFull(p.presentation_at)}` : ''}.
+        </div>
+        <a class="flink" href="${p.presentation_url}" target="_blank" rel="noopener">${p.presentation_name || 'العرض الحالي'}</a>
+      ` : (me.presentation_open ? '' : '<div class="closed">لم يُرفع عرض بعد.</div>')}
+
+      ${me.presentation_open ? `
+        <label class="file-label" id="presLabel" for="presFile" style="margin-top:12px;">
+          ${p.presentation_url ? 'اختر ملفًا لاستبدال العرض' : 'اختر ملف العرض (PPTX أو PDF)'}</label>
+        <input type="file" id="presFile" accept=".pdf,.ppt,.pptx"
+          onchange="document.getElementById('presLabel').textContent = this.files[0] ? this.files[0].name : 'اختر ملف العرض (PPTX أو PDF)';">
+        <button class="b b-teal" id="presBtn" onclick="submitPresentation()">رفع العرض</button>
+        <div class="msg" id="presMsg"></div>` : ''}
+    </div>`;
 }
 
+async function uploadTo(bucket, file, prefix){
+  const safe = file.name.replace(/[^\w.\-]+/g, '_');
+  const path = `${prefix}/${Date.now()}-${safe}`;
+  const { error } = await supabaseClient.storage.from(bucket).upload(path, file);
+  if(error) throw new Error('تعذّر رفع الملف: ' + error.message);
+  return supabaseClient.storage.from(bucket).getPublicUrl(path).data.publicUrl;
+}
+
+async function submitPresentation(){
+  const file = document.getElementById('presFile').files[0];
+  if(!file){ msg('presMsg','اختر ملف العرض أولًا.'); return; }
+  const btn = document.getElementById('presBtn');
+  btn.disabled = true; btn.textContent = 'جاري الرفع...';
+  try{
+    if(file.size > 30*1024*1024) throw new Error('حجم الملف أكبر من 30 ميجابايت.');
+    const url = await uploadTo('project-files', file, (me.team_code || 'team') + '/presentations');
+    const { error } = await supabaseClient.rpc('my_submit_presentation', {
+      p_token: token, p_url: url, p_name: file.name });
+    if(error) throw new Error(error.message);
+    toast('تم رفع العرض');
+    await loadMe();
+  } catch(e){ msg('presMsg', e.message || 'تعذّر الرفع.'); }
+  finally { btn.disabled = false; btn.textContent = 'رفع العرض'; }
+}
+
+/* ---------- الملفات ---------- */
+function renderFiles(){
+  const mats = me.materials || [];
+  document.getElementById('tab-files').innerHTML = `
+    <div class="card">
+      <h3>ملفات ومواد البرنامج</h3>
+      <div class="note">ما يرفعه فريق التنظيم لكم: القوالب، الأدلة، الجداول، والعروض.</div>
+      ${mats.length ? mats.map(m => `
+        <div class="mat">
+          <div class="t">${m.title}</div>
+          ${m.description ? `<div class="d">${m.description}</div>` : ''}
+          ${m.file_url ? `<a class="flink" href="${m.file_url}" target="_blank" rel="noopener">${m.file_name || 'تحميل'}</a>` : ''}
+          ${m.link_url ? `<a class="flink" href="${m.link_url}" target="_blank" rel="noopener">فتح الرابط</a>` : ''}
+        </div>`).join('')
+      : '<div class="empty">ما فيه ملفات منشورة حاليًا.</div>'}
+    </div>`;
+}
+
+/* ---------- التحكيم ---------- */
+function renderJudging(){
+  const cs = me.criteria || [];
+  document.getElementById('tab-judging').innerHTML = `
+    <div class="card">
+      <h3>معايير التحكيم</h3>
+      <div class="note">على هذي المعايير تُقيَّم مشاريعكم. النتيجة متوسط موزون لدرجات المحكّمين.</div>
+      ${cs.length ? cs.map(c => `
+        <div class="crit">
+          <div class="t"><span>${c.name_ar}</span><span class="w">${c.weight}%</span></div>
+          ${c.hint_ar ? `<div class="h">${c.hint_ar}</div>` : ''}
+        </div>`).join('')
+      : '<div class="empty">لم تُنشر المعايير بعد.</div>'}
+    </div>
+    ${me.judging_order ? `<div class="card">
+      <h3>ترتيب العرض</h3>
+      <div class="ordbox" style="margin-top:4px;">
+        <div class="n">${me.judging_order}</div>
+        <div class="t">ترتيب مشروعكم أمام اللجنة<br>
+          <span style="color:var(--muted);">من ${me.total_in_committee} مشروع</span></div>
+      </div>
+    </div>` : ''}`;
+}
+
+/* ---------- الشهادة والاستبيان ---------- */
 const SURVEY_Q = [
   ['content',      'محتوى البرنامج والتحديات المطروحة'],
   ['organization', 'التنظيم والمرافق'],
@@ -417,42 +562,63 @@ const SURVEY_Q = [
   ['judging',      'آلية التحكيم وعدالتها'],
   ['overall',      'تجربتك بشكل عام'],
 ];
-let answers = {}, recommend = null;
+
+function renderCert(){
+  const days = (me.day1_attended?1:0) + (me.day2_attended?1:0);
+  const need = me.min_attendance_days ?? 1;
+  const needSurvey = me.require_survey && !me.survey_submitted;
+  const unmet = [];
+  if(days < need) unmet.push(need === 2
+    ? `حضور اليومين — سجّلنا لك ${days} من 2`
+    : `حضور يوم واحد على الأقل — سجّلنا لك ${days}`);
+  if(needSurvey) unmet.push('تعبئة استبيان التقييم');
+
+  let certHtml;
+  if(me.certificate_issued){
+    certHtml = `<div class="cert ready">شهادتك جاهزة.
+      <div style="margin-top:12px;">
+        <a class="flink" href="certificate.html?code=${me.certificate_code}" target="_blank">عرض الشهادة وتحميلها</a>
+      </div></div>`;
+  } else if(!unmet.length){
+    certHtml = `<div class="cert wait">أنت مؤهل للشهادة.
+      <button class="b b-teal" id="certBtn" onclick="getCert()">إصدار الشهادة</button></div>
+      <div class="msg" id="certMsg"></div>`;
+  } else {
+    certHtml = `<div class="cert wait">لإصدار شهادتك يتبقّى:
+      <ul style="margin:9px 0 0;padding-inline-start:20px;line-height:2.1;">
+        ${unmet.map(u=>`<li>${u}</li>`).join('')}</ul></div>`;
+  }
+
+  document.getElementById('tab-cert').innerHTML = `
+    <div class="card"><h3>الشهادة</h3>${certHtml}</div>
+    <div class="card"><h3>استبيان التقييم</h3><div id="surveyBox"></div></div>`;
+  renderSurvey();
+}
 
 function renderSurvey(){
   const box = document.getElementById('surveyBox');
-
+  if(!box) return;
   if(me.survey_submitted){
     const sv = me.survey || {};
-    box.innerHTML = `<div class="done-box">
-      شكرًا لك، استلمنا تقييمك.
+    box.innerHTML = `<div class="cert ready">شكرًا لك، استلمنا تقييمك.
       ${sv.rating_overall ? `<div style="margin-top:7px;color:var(--muted);">تقييمك العام: ${sv.rating_overall} من 5</div>` : ''}
     </div>`;
     return;
   }
-  if(!me.survey_open){
-    box.innerHTML = `<div class="closed">الاستبيان مغلق حاليًا.</div>`;
-    return;
-  }
+  if(!me.survey_open){ box.innerHTML = `<div class="closed">الاستبيان مغلق حاليًا.</div>`; return; }
 
   box.innerHTML = `
-    <div style="font-size:12.5px;color:var(--muted);line-height:1.85;margin-bottom:6px;">
-      رأيك يساعدنا نطوّر البرنامج.${me.require_survey ? ' وتعبئته شرط لإصدار شهادتك.' : ''}
-    </div>
+    <div class="note">رأيك يساعدنا نطوّر البرنامج.${me.require_survey ? ' وتعبئته شرط لإصدار شهادتك.' : ''}</div>
     ${SURVEY_Q.map(([k,q]) => `
-      <div class="q">
-        <div class="qt">${q}</div>
+      <div class="q"><div class="qt">${q}</div>
         <div class="stars" id="st-${k}">
           ${[5,4,3,2,1].map(n => `<button onclick="setStar('${k}',${n})" title="${n}">★</button>`).join('')}
-        </div>
-      </div>`).join('')}
-    <div class="q">
-      <div class="qt">هل توصي زملاءك بالمشاركة في النسخة القادمة؟</div>
+        </div></div>`).join('')}
+    <div class="q"><div class="qt">هل توصي زملاءك بالمشاركة في النسخة القادمة؟</div>
       <div class="yesno">
         <button id="rec-yes" onclick="setRecommend(true)">نعم</button>
         <button id="rec-no"  onclick="setRecommend(false)">لا</button>
-      </div>
-    </div>
+      </div></div>
     <label for="svComment">ملاحظات أو مقترحات (اختياري)</label>
     <textarea id="svComment" placeholder="شاركنا رأيك بحرية..."></textarea>
     <button class="b b-teal" id="svBtn" onclick="submitSurvey()">إرسال التقييم</button>
@@ -462,10 +628,7 @@ function renderSurvey(){
 function setStar(key, n){
   answers[key] = n;
   const box = document.getElementById('st-' + key);
-  // الأزرار معروضة 5←1، فالنجوم المضاءة هي الأخيرة
-  [...box.children].forEach(b => {
-    b.classList.toggle('on', Number(b.title) <= n);
-  });
+  [...box.children].forEach(b => b.classList.toggle('on', Number(b.title) <= n));
 }
 function setRecommend(v){
   recommend = v;
@@ -475,58 +638,20 @@ function setRecommend(v){
 
 async function submitSurvey(){
   const missing = SURVEY_Q.filter(([k]) => !answers[k]);
-  if(missing.length){ msg('svMsg', 'الرجاء تقييم كل المحاور.'); return; }
-
+  if(missing.length){ msg('svMsg','الرجاء تقييم كل المحاور.'); return; }
   const btn = document.getElementById('svBtn');
   btn.disabled = true; btn.textContent = 'جاري الإرسال...';
   const { error } = await supabaseClient.rpc('my_submit_survey', {
     p_token: token,
-    p_content:      answers.content,
-    p_organization: answers.organization,
-    p_mentorship:   answers.mentorship,
-    p_judging:      answers.judging,
-    p_overall:      answers.overall,
-    p_recommend:    recommend,
-    p_comment:      document.getElementById('svComment').value.trim() || null,
+    p_content: answers.content, p_organization: answers.organization,
+    p_mentorship: answers.mentorship, p_judging: answers.judging,
+    p_overall: answers.overall, p_recommend: recommend,
+    p_comment: document.getElementById('svComment').value.trim() || null,
   });
   btn.disabled = false; btn.textContent = 'إرسال التقييم';
-
   if(error){ msg('svMsg', error.message); return; }
+  toast('شكرًا لك');
   await loadMe();
-}
-
-function renderCert(){
-  const box = document.getElementById('certBox');
-  if(me.certificate_issued){
-    box.innerHTML = `<div class="cert ready">
-      شهادتك جاهزة.
-      <div style="margin-top:12px;"><a class="flink" href="certificate.html?code=${me.certificate_code}" target="_blank">عرض الشهادة وتحميلها</a></div>
-    </div>`;
-    return;
-  }
-  const days = (me.day1_attended?1:0) + (me.day2_attended?1:0);
-  const need = me.min_attendance_days ?? 1;
-  const needSurvey = me.require_survey && !me.survey_submitted;
-
-  const unmet = [];
-  if(days < need){
-    unmet.push(need === 2
-      ? `حضور اليومين — سجّلنا لك ${days} من 2`
-      : `حضور يوم واحد على الأقل — سجّلنا لك ${days}`);
-  }
-  if(needSurvey) unmet.push('تعبئة استبيان التقييم');
-
-  if(!unmet.length){
-    box.innerHTML = `<div class="cert wait">أنت مؤهل للشهادة.
-      <button class="b b-teal" onclick="getCert()" id="certBtn">إصدار الشهادة</button></div>
-      <div class="msg" id="certMsg"></div>`;
-  } else {
-    box.innerHTML = `<div class="cert wait">
-      لإصدار شهادتك يتبقّى:
-      <ul style="margin:9px 0 0;padding-inline-start:20px;line-height:2;">
-        ${unmet.map(u => `<li>${u}</li>`).join('')}
-      </ul></div>`;
-  }
 }
 
 async function getCert(){
@@ -535,14 +660,16 @@ async function getCert(){
   const { data, error } = await supabaseClient.rpc('my_request_certificate', { p_token: token });
   const r = (data && data[0]) || {};
   if(error || !r.success){
-    msg('certMsg', (r.message) || 'تعذّر الإصدار، حاول لاحقًا.');
+    msg('certMsg', r.message || 'تعذّر الإصدار، حاول لاحقًا.');
     btn.disabled = false; btn.textContent = 'إصدار الشهادة';
     return;
   }
   me.certificate_issued = true;
   me.certificate_code = r.certificate_code;
+  toast('صدرت شهادتك');
   renderCert();
 }
+
 if(token) loadMe(); else showCard('checkCard');
 </script>
 </body>
