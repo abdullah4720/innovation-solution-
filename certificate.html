@@ -52,8 +52,9 @@
   .cert.b .to{font-size:14px;color:#5C6B82;margin-top:18px;}
   .cert.b .name{font-family:'Tajawal';font-weight:900;font-size:44px;margin-top:12px;color:#0E1938;}
   .cert.b .uline{width:96px;height:4px;background:var(--accent);border-radius:3px;margin:16px auto 0;}
-  .cert.b .body{font-size:14.5px;color:#41506A;line-height:2.05;margin-top:20px;max-width:730px;
-    margin-inline:auto;text-wrap:balance;}
+  .cert.b .body{margin-top:26px;max-width:820px;margin-inline:auto;}
+  .cert.b .body .ln{font-size:16px;color:#2C3A52;margin-bottom:20px;line-height:1.9;}
+  .cert.b .body .ln.sm{font-size:14px;color:#6B7A90;margin-bottom:0;}
   .cert.b .body b{color:#0E1938;font-weight:700;}
   .cert.b .foot{position:absolute;inset:auto 76px 40px;display:flex;justify-content:space-between;
     align-items:flex-end;border-top:1px solid #DDE3EA;padding-top:16px;}
@@ -97,8 +98,9 @@
         </div>
         <div class="foot">
           <div><div class="lbl">رمز التحقق</div><div class="val code" id="cCode"></div></div>
-          <div style="text-align:center;"><div class="val">فريق صنّاع الحلول الابتكارية</div>
-            <div class="lbl" style="letter-spacing:.4px;margin-top:5px;">مركز الابتكار والملكية الفكرية · جامعة القصيم</div></div>
+          <div style="text-align:center;">
+            <div class="lbl" style="letter-spacing:.4px;">مع خالص الشكر والتقدير،</div>
+            <div class="val" style="margin-top:7px;">فريق صنّاع الحلول الابتكارية</div></div>
           <div style="text-align:left;"><div class="lbl">تاريخ الإصدار</div><div class="val" id="cDate"></div></div>
         </div>
       </div>
@@ -115,11 +117,11 @@
 
 function param(k){ return new URLSearchParams(location.search).get(k); }
 function arDate(d){
-  return d ? new Date(d).toLocaleDateString('ar-SA-u-ca-gregory',{day:'numeric',month:'long',year:'numeric'}) : '';
+  return d ? new Date(d).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{day:'numeric',month:'long',year:'numeric'}) : '';
 }
 function dayNum(d){ return d ? new Date(d).getDate() : null; }
 function monthYear(d){
-  return d ? new Date(d).toLocaleDateString('ar-SA-u-ca-gregory',{month:'long',year:'numeric'}) : '';
+  return d ? new Date(d).toLocaleDateString('ar-SA-u-ca-gregory-nu-latn',{month:'long'}) : '';
 }
 const ACCENTS = {
   safety: ['#DB8A52','#9E5F33','#C0743F'],
@@ -147,23 +149,24 @@ function fill(r, code){
   nameEl.style.fontSize = L > 34 ? '32px' : L > 26 ? '37px' : L > 19 ? '42px' : '47px';
 
   const d1 = dayNum(r.day1_date), d2 = dayNum(r.day2_date);
-  const period = (d1 && d2) ? `في الفترة من ${d1}–${d2} ${monthYear(r.day2_date)}`
-    : (r.day1_date || r.day2_date ? `بتاريخ ${arDate(r.day1_date || r.day2_date)}` : '');
+  const periodShort = (d1 && d2) ? `${d1}-${d2} ${monthYear(r.day2_date)}`
+    : (r.day1_date || r.day2_date ? arDate(r.day1_date || r.day2_date) : '');
 
   const body = document.getElementById('cBody');
   if(body){
+    const period = (d1 && d2)
+      ? `في الفترة من ${d1}-${d2} ${monthYear(r.day2_date)}، ${new Date(r.day2_date).getFullYear()}م`
+      : (r.day1_date || r.day2_date ? `بتاريخ ${arDate(r.day1_date || r.day2_date)}` : '');
     body.innerHTML =
-      `على ${f ? 'مشاركتها المتميّزة' : 'مشاركته المتميّزة'} في فعالية <b>صنّاع الحلول الابتكارية</b>` +
-      (track ? ` ضمن <b>${track.replace('مسار ','')}</b>` : '') +
-      (r.team_name ? `، ${f ? 'عضوةً' : 'عضوًا'} في فريق ${nb(r.team_name)}` : '') +
-      (r.project_title ? ` بمشروع ${nb(r.project_title)}` : '') +
-      `،<br>${f ? 'وإتمامها' : 'وإتمامه'} متطلبات البرنامج بنجاح` + (period ? ` ${period}` : '') + `.` +
-      `<br>متمنين ${f ? 'لها' : 'له'} دوام التوفيق والنجاح.`;
+      `<div class="ln">على ${f ? 'مشاركتها المتميّزة' : 'مشاركته المتميّزة'} في <b>صنّاع الحلول الابتكارية</b>` +
+        (track ? ` ضمن <b>${track.startsWith('مسار') ? track : 'مسار ' + track}</b>` : '') + `</div>` +
+      `<div class="ln">${f ? 'وإتمامها' : 'وإتمامه'} متطلبات البرنامج بنجاح وذلك ${period}</div>` +
+      `<div class="ln sm">متمنين ${f ? 'لها' : 'له'} دوام التوفيق والنجاح في ${f ? 'مسيرتها' : 'مسيرته'} العلمية والمهنية.</div>`;
   }
   put('cTrack',   track.replace('مسار ','') || '—');
   put('cTeam',    r.team_name || '—');
   put('cProject', r.project_title || '—');
-  put('cPeriod',  period.replace('في الفترة من ','').replace('بتاريخ ','') || '—');
+  put('cPeriod',  periodShort || '—');
   put('cShort',   `${f ? 'مشاركتها' : 'مشاركته'} المتميّزة ${f ? 'وإتمامها' : 'وإتمامه'} متطلبات البرنامج بنجاح`);
   put('cCode', String(code).toUpperCase());
   put('cDate', arDate(new Date()));
