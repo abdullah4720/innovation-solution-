@@ -645,6 +645,341 @@ async function exportSurvey(){
   save(rows, 'ردود-الاستبيان.xlsx');
 }
 
+/* ================= نافذة تحرير عامة ================= */
+function closeOvl(){ const m=document.getElementById('ovl'); if(m) m.remove(); }
+
+function openEdit(opts){
+  closeOvl();
+  const f = opts.fields.map(fd => {
+    const v = (opts.values || {})[fd.key] ?? '';
+    if(fd.type === 'select'){
+      return `<label for="ov-${fd.key}">${fd.label}</label>
+        <select id="ov-${fd.key}">${fd.options.map(o =>
+          `<option value="${o.v}" ${String(v)===String(o.v)?'selected':''}>${o.t}</option>`).join('')}</select>
+        ${fd.hint?`<div style="font-size:11.5px;color:var(--muted);margin-top:4px;">${fd.hint}</div>`:''}`;
+    }
+    if(fd.type === 'textarea'){
+      return `<label for="ov-${fd.key}">${fd.label}</label>
+        <textarea id="ov-${fd.key}" rows="3" style="width:100%;background:var(--surface-2);
+          border:1px solid var(--line);color:var(--text);border-radius:9px;padding:9px 11px;
+          font-family:inherit;font-size:13.5px;">${v}</textarea>`;
+    }
+    return `<label for="ov-${fd.key}">${fd.label}</label>
+      <input type="${fd.type||'text'}" id="ov-${fd.key}" value="${String(v).replace(/"/g,'&quot;')}"
+        ${fd.placeholder?`placeholder="${fd.placeholder}"`:''}
+        ${fd.dir?`dir="${fd.dir}" style="text-align:right;"`:''}>
+      ${fd.hint?`<div style="font-size:11.5px;color:var(--muted);margin-top:4px;">${fd.hint}</div>`:''}`;
+  }).join('');
+
+  const el = document.createElement('div');
+  el.className = 'ovl'; el.id = 'ovl';
+  el.innerHTML = `<div class="box">
+      <h3>${opts.title}</h3>
+      ${opts.sub ? `<div class="sub2">${opts.sub}</div>` : '<div style="height:10px"></div>'}
+      ${f}
+      ${opts.extraHtml || ''}
+      <div class="msg" id="ovMsg"></div>
+      <div class="acts">
+        <button class="b b-ghost" onclick="closeOvl()">إلغاء</button>
+        <button class="b b-teal" id="ovSave">حفظ</button>
+      </div>
+    </div>`;
+  document.body.appendChild(el);
+
+  document.getElementById('ovSave').onclick = async () => {
+    const vals = {};
+    opts.fields.forEach(fd => { vals[fd.key] = document.getElementById('ov-'+fd.key).value; });
+    const btn = document.getElementById('ovSave');
+    btn.disabled = true; btn.textContent = 'جاري الحفظ...';
+    try{
+      await opts.onSave(vals);
+      closeOvl(); toast('تم الحفظ'); loadAll();
+    } catch(e){
+      msg('ovMsg', e.message || 'تعذّر الحفظ');
+      btn.disabled = false; btn.textContent = 'حفظ';
+    }
+  };
+}
+
+async function dbSave(table, id, payload){
+  const q = id
+    ? supabaseClient.from(table).update(payload).eq('id', id)
+    : supabaseClient.from(table).insert(payload);
+  const { error } = await q;
+  if(error) throw new Error(error.code === '23505' ? 'القيمة مكررة مسبقًا' : error.message);
+}
+async function dbDelete(table, id, confirmText){
+  if(!confirm(confirmText)) return false;
+  const { error } = await supabaseClient.from(table).delete().eq('id', id);
+  if(error){ toast('تعذّر الحذف: ' + error.message); return false; }
+  loadAll(); toast('تم الحذف'); return true;
+}
+
+const trackOpts = () => tracks.map(t => ({ v:t.id, t:t.name_ar }));
+const chOpts    = tid => [{v:'',t:'— بلا تحدٍّ —'}].concat(
+  challenges.filter(c => !tid || c.track_id === tid)
+            .map(c => ({ v:c.id, t:`التحدي ${c.number===1?'الأول':'الثاني'}` })));
+const comOpts   = () => [{v:'',t:'— بلا لجنة —'}].concat(committees.map(c => ({ v:c.id, t:c.name })));
+const teamOpts  = () => [{v:'',t:'— بلا فريق —'}].concat(teams.map(t => ({ v:t.id, t:`${t.reg_no||t.code} — ${t.name}` })));
+
+/* ================= الفرق ================= */
+function editTeam(id){
+  const t = id ? teams.find(x => x.id === id) : null;
+  openEdit({
+    title: t ? 'تعديل الفريق' : 'فريق جديد',
+    sub: t ? `${t.reg_no || t.code}` : 'أضف فريقًا يدويًا خارج ملف الاستيراد.',
+    fields: [
+      { key:'name',  label:'اسم الفريق / الابتكار' },
+      { key:'code',  label:'رقم التسجيل', dir:'ltr', hint:'يظهر للمشاركين والمحكّمين' },
+      { key:'track_id', label:'المسار', type:'select', options:trackOpts() },
+      { key:'challenge_id', label:'التحدي', type:'select', options:chOpts(t && t.track_id) },
+      { key:'committee_id', label:'لجنة التحكيم', type:'select', options:comOpts() },
+      { key:'judging_order', label:'ترتيب العرض', type:'number' },
+      { key:'status', label:'الحالة', type:'select', options:[
+        {v:'registered',t:'مسجَّل'},{v:'shortlisted',t:'مرشَّح'},
+        {v:'rejected',t:'مستبعد'},{v:'withdrawn',t:'منسحب'}] },
+    ],
+    values: t || { status:'registered', track_id:(tracks[0]||{}).id },
+    onSave: async v => {
+      if(!v.name.trim()) throw new Error('اسم الفريق مطلوب');
+      if(!v.code.trim()) throw new Error('رقم التسجيل مطلوب');
+      await dbSave('teams', id, {
+        name:v.name.trim(), code:v.code.trim(), reg_no:v.code.trim(),
+        track_id:v.track_id, challenge_id:v.challenge_id || null,
+        committee_id:v.committee_id || null,
+        judging_order: v.judging_order ? parseInt(v.judging_order,10) : null,
+        status:v.status,
+      });
+    },
+  });
+}
+
+function manageMembers(teamId){
+  const t = teams.find(x => x.id === teamId);
+  const mem = people.filter(p => p.team_id === teamId);
+  closeOvl();
+  const el = document.createElement('div');
+  el.className = 'ovl'; el.id = 'ovl';
+  el.innerHTML = `<div class="box">
+    <h3>أعضاء ${t.name}</h3>
+    <div class="sub2">${t.reg_no || t.code} · ${mem.length} عضو</div>
+    <table class="subtable"><tbody>
+      ${mem.map(m => `<tr>
+        <td>${m.full_name}${m.is_leader?' <span class="pill teal">قائد</span>':''}
+          <div style="font-size:11px;color:var(--muted);" dir="ltr">${m.email}</div></td>
+        <td style="white-space:nowrap;text-align:left;">
+          <button class="b b-ghost b-sm" onclick="editPerson('${m.id}')">تعديل</button>
+          ${m.is_leader ? '' : `<button class="b b-ghost b-sm" onclick="makeLeader('${m.id}','${teamId}')">قائدًا</button>`}
+          <button class="b b-danger b-sm" onclick="removePerson('${m.id}')">حذف</button>
+        </td></tr>`).join('') || '<tr><td style="color:var(--muted);">لا يوجد أعضاء.</td></tr>'}
+    </tbody></table>
+    <div class="acts">
+      <button class="b b-ghost" onclick="closeOvl()">إغلاق</button>
+      <button class="b b-teal" onclick="editPerson(null,'${teamId}')">إضافة عضو</button>
+    </div></div>`;
+  document.body.appendChild(el);
+}
+
+async function makeLeader(pid, teamId){
+  await supabaseClient.from('participants').update({ is_leader:false }).eq('team_id', teamId);
+  const { error } = await supabaseClient.from('participants').update({ is_leader:true }).eq('id', pid);
+  if(error) return toast('تعذّر التعيين: ' + error.message);
+  toast('تم تعيين القائد'); closeOvl(); loadAll();
+}
+
+/* ================= المشاركون ================= */
+function editPerson(id, presetTeam){
+  const p = id ? people.find(x => x.id === id) : null;
+  openEdit({
+    title: p ? 'تعديل المشارك' : 'مشارك جديد',
+    fields: [
+      { key:'full_name', label:'الاسم الكامل' },
+      { key:'email', label:'البريد الإلكتروني', type:'email', dir:'ltr' },
+      { key:'phone', label:'رقم الجوال', dir:'ltr' },
+      { key:'member_role', label:'دور العضو' },
+      { key:'organization', label:'الجهة' },
+      { key:'category', label:'الفئة' },
+      { key:'city', label:'المدينة' },
+      { key:'gender', label:'الجنس', type:'select', options:[
+        {v:'',t:'— غير محدد —'},{v:'ذكر',t:'ذكر'},{v:'أنثى',t:'أنثى'}] },
+      { key:'team_id', label:'الفريق', type:'select', options:teamOpts() },
+    ],
+    values: p || { team_id: presetTeam || '' },
+    onSave: async v => {
+      if(!v.full_name.trim() || !v.email.trim() || !v.phone.trim())
+        throw new Error('الاسم والبريد ورقم الجوال مطلوبة');
+      const team = teams.find(t => t.id === v.team_id);
+      await dbSave('participants', id, {
+        full_name:v.full_name.trim(), email:v.email.trim().toLowerCase(), phone:v.phone.trim(),
+        member_role:v.member_role.trim()||null, organization:v.organization.trim()||null,
+        category:v.category.trim()||null, city:v.city.trim()||null, gender:v.gender||null,
+        team_id:v.team_id||null,
+        track_id: team ? team.track_id : (p ? p.track_id : null),
+        challenge_id: team ? team.challenge_id : (p ? p.challenge_id : null),
+      });
+    },
+  });
+}
+
+async function removePerson(id){
+  const p = people.find(x => x.id === id);
+  const name = p ? p.full_name : 'هذا المشارك';
+  if(await dbDelete('participants', id, `حذف ${name} نهائيًا؟`)) closeOvl();
+}
+
+/* ================= التحديثات ================= */
+function editAnnouncement(id){
+  const a = id ? announcements.find(x => x.id === id) : null;
+  openEdit({
+    title: a ? 'تعديل التحديث' : 'تحديث جديد',
+    sub: 'يظهر للمشاركين في الصفحة الرئيسية ببوابتهم.',
+    fields: [
+      { key:'title', label:'العنوان' },
+      { key:'body',  label:'النص', type:'textarea' },
+      { key:'track_id', label:'الفئة المستهدفة', type:'select',
+        options:[{v:'',t:'كل المشاركين'}].concat(trackOpts()) },
+    ],
+    values: a || {},
+    onSave: async v => {
+      if(!v.title.trim() || !v.body.trim()) throw new Error('العنوان والنص مطلوبان');
+      await dbSave('announcements', id, {
+        title:v.title.trim(), body:v.body.trim(), track_id:v.track_id || null });
+    },
+  });
+}
+
+function renderAnnouncements(){
+  const box = document.getElementById('annBody');
+  if(!box) return;
+  box.innerHTML = announcements.map(a => `<tr>
+    <td><div style="font-size:13px;">${a.title}</div>
+      <div style="font-size:11.5px;color:var(--muted);margin-top:3px;">${a.body}</div></td>
+    <td>${a.track_id ? trackPill(a.track_id) : '<span class="pill grey">الجميع</span>'}</td>
+    <td style="font-size:11.5px;color:var(--muted);white-space:nowrap;">
+      ${new Date(a.created_at).toLocaleDateString('ar-SA-u-ca-gregory',{day:'numeric',month:'short'})}</td>
+    <td style="white-space:nowrap;">
+      <button class="b b-ghost b-sm" onclick="editAnnouncement('${a.id}')">تعديل</button>
+      <button class="b b-danger b-sm" onclick="dbDelete('announcements','${a.id}','حذف هذا التحديث؟')">حذف</button>
+    </td></tr>`).join('') || '<tr><td colspan="4"><div class="empty">لا توجد تحديثات منشورة.</div></td></tr>';
+}
+
+/* ================= المعايير والمحكّمون ================= */
+function editCriterion(id){
+  const c = id ? criteria.find(x => x.id === id) : null;
+  openEdit({
+    title: c ? 'تعديل المعيار' : 'معيار جديد',
+    fields: [
+      { key:'name_ar', label:'اسم المعيار' },
+      { key:'hint_ar', label:'التوضيح' },
+      { key:'weight', label:'الوزن %', type:'number' },
+      { key:'max_score', label:'أعلى درجة', type:'number' },
+      { key:'sort_order', label:'الترتيب', type:'number' },
+    ],
+    values: c || { weight:25, max_score:5, sort_order:criteria.length+1 },
+    onSave: async v => {
+      if(!v.name_ar.trim()) throw new Error('اسم المعيار مطلوب');
+      await dbSave('judging_criteria', id, {
+        name_ar:v.name_ar.trim(), hint_ar:v.hint_ar.trim()||null,
+        weight:parseInt(v.weight,10)||25, max_score:parseInt(v.max_score,10)||5,
+        sort_order:parseInt(v.sort_order,10)||0 });
+    },
+  });
+}
+
+function editJudge(id){
+  const j = id ? judges.find(x => x.id === id) : null;
+  openEdit({
+    title: j ? 'تعديل المحكّم' : 'محكّم جديد',
+    fields: [
+      { key:'full_name', label:'الاسم الكامل' },
+      { key:'email', label:'البريد الإلكتروني', type:'email', dir:'ltr' },
+      { key:'phone', label:'رقم الجوال', dir:'ltr' },
+      { key:'organization', label:'الجهة' },
+      { key:'active', label:'الحالة', type:'select',
+        options:[{v:'true',t:'نشط'},{v:'false',t:'موقوف'}] },
+    ],
+    values: j ? { ...j, active:String(j.active) } : { active:'true' },
+    onSave: async v => {
+      if(!v.full_name.trim() || !v.email.trim() || !v.phone.trim())
+        throw new Error('الاسم والبريد ورقم الجوال مطلوبة');
+      await dbSave('judges', id, {
+        full_name:v.full_name.trim(), email:v.email.trim().toLowerCase(),
+        phone:v.phone.trim(), organization:v.organization.trim()||null,
+        active: v.active === 'true' });
+    },
+  });
+}
+
+/* ================= المسارات والتحديات ================= */
+function editTrack(id){
+  const t = id ? tracks.find(x => x.id === id) : null;
+  openEdit({
+    title: t ? 'تعديل المسار' : 'مسار جديد',
+    fields: [
+      { key:'id', label:'المعرّف', dir:'ltr', hint:'حروف لاتينية بلا مسافات — لا يُعدَّل بعد الإنشاء' },
+      { key:'name_ar', label:'اسم المسار' },
+      { key:'sort_order', label:'الترتيب', type:'number' },
+    ],
+    values: t || { sort_order:tracks.length+1 },
+    onSave: async v => {
+      if(!v.id.trim() || !v.name_ar.trim()) throw new Error('المعرّف والاسم مطلوبان');
+      if(id) await dbSave('tracks', id, { name_ar:v.name_ar.trim(), sort_order:parseInt(v.sort_order,10)||0 });
+      else {
+        const { error } = await supabaseClient.from('tracks').insert({
+          id:v.id.trim(), name_ar:v.name_ar.trim(), sort_order:parseInt(v.sort_order,10)||0 });
+        if(error) throw new Error(error.message);
+      }
+    },
+  });
+}
+
+function editChallenge(id){
+  const c = id ? challenges.find(x => x.id === id) : null;
+  openEdit({
+    title: c ? 'تعديل التحدي' : 'تحدٍّ جديد',
+    fields: [
+      { key:'id', label:'المعرّف', dir:'ltr', hint:'مثال: safety-3 — لا يُعدَّل بعد الإنشاء' },
+      { key:'track_id', label:'المسار', type:'select', options:trackOpts() },
+      { key:'number', label:'رقم التحدي', type:'number' },
+      { key:'title_ar', label:'نص التحدي', type:'textarea' },
+      { key:'description_ar', label:'الوصف', type:'textarea' },
+    ],
+    values: c || { number:1, track_id:(tracks[0]||{}).id },
+    onSave: async v => {
+      if(!v.title_ar.trim()) throw new Error('نص التحدي مطلوب');
+      const payload = { track_id:v.track_id, number:parseInt(v.number,10)||1,
+        title_ar:v.title_ar.trim(), description_ar:v.description_ar.trim()||null };
+      if(id) await dbSave('challenges', id, payload);
+      else {
+        if(!v.id.trim()) throw new Error('المعرّف مطلوب');
+        const { error } = await supabaseClient.from('challenges').insert({ id:v.id.trim(), ...payload });
+        if(error) throw new Error(error.message);
+      }
+    },
+  });
+}
+
+function renderTaxonomy(){
+  const tb = document.getElementById('trackBody');
+  if(tb) tb.innerHTML = tracks.map(t => `<tr>
+    <td dir="ltr" style="text-align:right;color:var(--teal);">${t.id}</td>
+    <td>${t.name_ar}</td>
+    <td>${teams.filter(x=>x.track_id===t.id).length}</td>
+    <td style="white-space:nowrap;">
+      <button class="b b-ghost b-sm" onclick="editTrack('${t.id}')">تعديل</button>
+    </td></tr>`).join('');
+
+  const cb = document.getElementById('chBody');
+  if(cb) cb.innerHTML = challenges.map(c => `<tr>
+    <td dir="ltr" style="text-align:right;color:var(--teal);">${c.id}</td>
+    <td>${trackPill(c.track_id)}</td>
+    <td style="max-width:380px;font-size:12.5px;">${c.title_ar}</td>
+    <td style="white-space:nowrap;">
+      <button class="b b-ghost b-sm" onclick="editChallenge('${c.id}')">تعديل</button>
+      <button class="b b-danger b-sm" onclick="dbDelete('challenges','${c.id}','حذف هذا التحدي؟')">حذف</button>
+    </td></tr>`).join('') || '<tr><td colspan="4"><div class="empty">لا توجد تحديات.</div></td></tr>';
+}
+
 /* ---------- الفرق ---------- */
 function renderTeams(){
   const q=(document.getElementById('teamSearch').value||'').trim().toLowerCase();
