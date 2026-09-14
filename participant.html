@@ -746,7 +746,7 @@ function renderCert(){
   renderSurvey();
 }
 
-let answers = {};
+let answers = {}, surveyChecked = false;
 
 function renderSurvey(){
   const box = document.getElementById('surveyBox');
@@ -761,9 +761,32 @@ function renderSurvey(){
     return;
   }
 
-  const qs = me.survey_questions || [];
+  let qs = me.survey_questions || [];
+
+  // احتياط: لو لم تصل الأسئلة مع الحالة، اجلبها مباشرة
+  if(!qs.length && !surveyChecked){
+    surveyChecked = true;
+    box.innerHTML = `<div class="closed">جارٍ تحميل الأسئلة…</div>`;
+    supabaseClient.rpc('survey_form', { p_token: token }).then(({ data, error }) => {
+      if(error){
+        box.innerHTML = `<div class="closed">
+          تعذّر تحميل الاستبيان.<br>
+          <span style="color:var(--bad);">${error.message}</span><br>
+          أبلغ فريق التنظيم بهذه الرسالة.</div>`;
+        return;
+      }
+      const row = (data && data[0]) || {};
+      me.survey_questions = row.questions || [];
+      me.survey_answers   = row.my_answers || {};
+      renderSurvey();
+    });
+    return;
+  }
+
   if(!qs.length){
-    box.innerHTML = `<div class="closed">لم تُضَف أسئلة للاستبيان بعد.</div>`;
+    box.innerHTML = `<div class="closed">
+      لم تُضَف أسئلة للاستبيان بعد.<br>
+      إن كنت من فريق التنظيم: شغّل ملفي الترحيل 017 و018.</div>`;
     return;
   }
 
