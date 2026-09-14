@@ -161,6 +161,7 @@
   </div>
 
   <div class="tabs" id="tabs"></div>
+  <div id="loadErr" style="display:none;max-width:1180px;margin:16px auto 0;padding:0 16px;"></div>
 
   <main>
     <!-- نظرة عامة -->
@@ -509,6 +510,28 @@ async function loadAll(){
     supabaseClient.from('survey_questions').select('*').order('sort_order'),
     supabaseClient.rpc('survey_results'),
   ]);
+  // أبلِغ عن أي استعلام فشل بدل ابتلاعه
+  const named = { 'tracks':tr,'challenges':ch,'teams':tm,'participants':pp,'judges':jd,
+    'judging_criteria':cr,'judge_assignments':as,'judge_evaluations':ev,'app_settings':st,
+    'v_team_results':rs,'survey_summary()':sv,'survey_results()':ss,
+    'judging_committees':cm,'committee_members':cmm,'event_materials':mt,
+    'announcements':an,'survey_questions':qq,'survey_results':qr };
+  const problems = Object.entries(named)
+    .filter(([, r]) => r && r.error)
+    .map(([n, r]) => `${n} — ${r.error.message}`);
+  const errBox = document.getElementById('loadErr');
+  if(problems.length){
+    errBox.style.display = 'block';
+    errBox.innerHTML = `<div class="panel" style="border-color:var(--bad);">
+      <h3 style="color:var(--bad);">تعذّر تحميل بعض البيانات</h3>
+      <div class="sub" style="margin-bottom:10px;">
+        الأرجح أن ترحيلًا لم يُشغَّل بعد. شغّل الملفات الناقصة ثم أنعش الصفحة.</div>
+      <ul style="margin:0;padding-inline-start:20px;line-height:2;font-size:12.5px;color:var(--muted);">
+        ${problems.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
+  } else {
+    errBox.style.display = 'none'; errBox.innerHTML = '';
+  }
+
   tracks=tr.data||[]; challenges=ch.data||[]; teams=tm.data||[]; people=pp.data||[];
   judges=jd.data||[]; criteria=cr.data||[]; assignments=as.data||[]; evals=ev.data||[];
   settings=st.data||{}; results=rs.data||[];
