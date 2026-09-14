@@ -307,8 +307,14 @@ async function loadWorkspace(){
   if(crit === null && tms === null){ logout(); return; }
 
   criteria   = crit || [];
-  teams      = tms  || [];
   committees = coms || [];
+
+  // ترتيب صريح: اللجنة ثم ترتيب المشروع داخلها، ثم رقم التسجيل عند التساوي.
+  // لا نعتمد على ترتيب الدالة لأن PostgreSQL قد يُدمجها ويُسقِط ORDER BY.
+  teams = (tms || []).slice().sort((a, b) =>
+    String(a.committee_name || '').localeCompare(String(b.committee_name || ''), 'ar')
+    || (Number(a.order_index) || 9999) - (Number(b.order_index) || 9999)
+    || String(a.team_code || '').localeCompare(String(b.team_code || ''), 'ar'));
 
   if(pending) document.getElementById('whoami').textContent = pending.full_name;
   document.getElementById('logoutBtn').classList.remove('hide');
