@@ -834,7 +834,7 @@ function renderQuestion(q){
     <div class="scale10" id="q-${q.id}">
       ${nums.map(n => `<button class="${Number(cur.num) === n ? 'on' : ''}"
         onclick="setNum('${q.id}', this, ${n})">${n}</button>`).join('')}
-      <div class="ends"><span>${from === 0 ? 'غير راضٍ' : 'ضعيف'}</span><span>ممتاز</span></div>
+      <div class="ends"><span>${from === 0 ? 'غير راضٍ' : 'ضعيف جدًا'}</span><span>ممتاز</span></div>
     </div></div>`;
 }
 
