@@ -9,6 +9,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js"></script>
 <style>
   :root{--navy:#0E1938;--ink:#1B2436;--teal:#35C9AE;--amber:#DB8A52;
     --line:#E3E8EF;--muted:#69788E;--bg:#F6F7F9;}
@@ -111,6 +112,7 @@
   <div class="toolbar">
     <span class="sp" id="stamp"></span>
     <button class="b b-ghost" onclick="exportAll()">تصدير البيانات</button>
+    <button class="b b-ghost" onclick="exportDeck()" id="pptBtn">تصدير PowerPoint</button>
     <button class="b b-teal" onclick="window.print()">طباعة / PDF</button>
   </div>
   <div class="page" id="page"></div>
@@ -157,13 +159,13 @@ async function load(){
     supabaseClient.from('judging_committees').select('*'),
     supabaseClient.from('committee_members').select('*'),
     supabaseClient.from('judge_evaluations').select('*'),
-    supabaseClient.from('event_evaluations').select('*'),
+    supabaseClient.rpc('survey_results'),
     supabaseClient.from('app_settings').select('*').eq('id',1).single(),
     supabaseClient.from('v_team_results').select('*'),
   ]);
   D = { tracks:tr.data||[], challenges:ch.data||[], teams:tm.data||[], people:pp.data||[],
         projects:pr.data||[], judges:jd.data||[], criteria:cr.data||[], committees:cm.data||[],
-        comMembers:cmm.data||[], evals:ev.data||[], surveys:sv.data||[],
+        comMembers:cmm.data||[], evals:ev.data||[], surveyQ:sv.data||[],
         settings:st.data||{}, results:(rs.data||[]) };
   render();
 }
@@ -198,10 +200,16 @@ function render(){
                           .sort((a,b)=>b.final_score-a.final_score).slice(0,3);
   });
 
-  const sAvg = k => avg(surveys.map(s=>s[k]).filter(x=>x!=null));
-  const recommend = surveys.length
-    ? Math.round(surveys.filter(s=>s.would_recommend).length*100/surveys.length) : null;
-  const comments = surveys.map(s=>s.comment).filter(Boolean).slice(0,5);
+  const sq = (D.surveyQ || []).filter(q => Number(q.answers) > 0);
+  const responded = sq.reduce((n,q) => Math.max(n, Number(q.answers||0)), 0);
+  const numeric = sq.filter(q => q.qtype === 'rating10' || q.qtype === 'rating5');
+  const overall = numeric.length
+    ? Math.round(numeric.reduce((a,q) => a + (Number(q.avg_num)||0) /
+        (q.qtype === 'rating5' ? 5 : 10), 0) / numeric.length * 100)
+    : null;
+  const comments = sq.filter(q => q.qtype === 'text')
+    .flatMap(q => (q.texts || [])).filter(Boolean).slice(0, 5);
+  const choices = sq.filter(q => q.qtype === 'choice');
 
   const flags = {
     cr: projects.filter(p=>p.has_commercial_register).length,
@@ -324,29 +332,38 @@ function render(){
 
     <section>
       <h2>رضا المشاركين</h2>
-      ${surveys.length ? `
+      ${responded ? `
       <div class="kpis">
-        <div class="kpi"><div class="n">${surveys.length}</div><div class="l">رد من ${people.length}</div></div>
-        <div class="kpi"><div class="n">${sAvg('rating_overall') ?? '—'}</div><div class="l">التقييم العام (5)</div></div>
-        <div class="kpi"><div class="n">${recommend ?? '—'}%</div><div class="l">يوصون بالمشاركة</div></div>
+        <div class="kpi"><div class="n">${responded}</div><div class="l">رد من ${people.length}</div></div>
+        <div class="kpi"><div class="n">${overall ?? '—'}%</div><div class="l">متوسط الرضا العام</div></div>
+        <div class="kpi"><div class="n">${numeric.length}</div><div class="l">محور مقيَّم</div></div>
       </div>
       <table>
-        <thead><tr><th>المحور</th><th>المتوسط</th><th style="width:40%;"></th></tr></thead>
-        <tbody>${[
-          ['المحتوى والتحديات','rating_content'],
-          ['التنظيم والمرافق','rating_organization'],
-          ['الإرشاد والدعم','rating_mentorship'],
-          ['آلية التحكيم','rating_judging'],
-          ['التجربة عمومًا','rating_overall'],
-        ].map(([l,k])=>{ const v=sAvg(k);
-          return `<tr><td>${l}</td><td>${v ?? '—'}</td>
-            <td><div class="bar"><i style="width:${v?v/5*100:0}%"></i></div></td></tr>`;}).join('')}
-        </tbody>
+        <thead><tr><th>السؤال</th><th>المتوسط</th><th style="width:35%;"></th></tr></thead>
+        <tbody>${numeric.map(q => {
+          const max = q.qtype === 'rating5' ? 5 : 10;
+          const v = Number(q.avg_num) || 0;
+          return `<tr><td>${q.question}</td><td>${q.avg_num ?? '—'} / ${max}</td>
+            <td><div class="bar"><i style="width:${v/max*100}%"></i></div></td></tr>`;
+        }).join('')}</tbody>
       </table>
+      ${choices.map(q => {
+        const b = q.breakdown || {};
+        const tot = Object.values(b).reduce((a,c)=>a+Number(c),0) || 1;
+        return `<h3 style="font-size:14.5px;margin-top:20px;">${q.question}</h3>
+          <table><tbody>${Object.entries(b).map(([k,v])=>`
+            <tr><td>${k}</td><td>${v}</td>
+              <td style="width:35%;"><div class="bar amber"><i style="width:${v*100/tot}%"></i></div></td></tr>`).join('')}
+          </tbody></table>`;
+      }).join('')}
       ${comments.length ? `<h3 style="font-size:14.5px;margin-top:22px;">من ملاحظات المشاركين</h3>
         ${comments.map(c=>`<div class="quote">${c}</div>`).join('')}` : ''}
       ` : '<div class="lead">لم تصل ردود على الاستبيان.</div>'}
     </section>`;
+
+  window.__R = { teams, people, projects, judges, criteria, committees, tracks, settings,
+                 d1, d2, rate, certs, orgs, submitted, done, expected, byTrack, cats,
+                 ranked, sq, responded, numeric, overall, comments, choices, flags };
 
   if(typeof paintLogos === 'function') paintLogos(document.getElementById('page'));
 
@@ -360,6 +377,235 @@ function render(){
       options:{ maintainAspectRatio:false,
         plugins:{ legend:{ position:'bottom', labels:{ font:{ family:'IBM Plex Sans Arabic' } } } } }
     });
+  }
+}
+
+
+/* ================= تصدير عرض تقديمي ================= */
+const NAVY='0E1422', SURF='182036', TEAL='35C9AE', AMBER='DB8A52',
+      WHITE='FFFFFF', MUTED='96A3B8', LINE='2B3652';
+
+function slideBase(pres, title){
+  const sl = pres.addSlide();
+  sl.background = { color: NAVY };
+  if(title){
+    sl.addText(title, { x:0.55, y:0.42, w:8.9, h:0.6, align:'right', rtlMode:true,
+      fontFace:'Tajawal', fontSize:26, bold:true, color:WHITE, isTextBox:true, margin:0 });
+  }
+  return sl;
+}
+
+function kpiRow(sl, items, y){
+  const n = items.length, gap = 0.18;
+  const w = (8.9 - gap * (n - 1)) / n;
+  items.forEach((it, k) => {
+    const x = 0.55 + k * (w + gap);
+    sl.addShape('roundRect', { x, y, w, h:1.15, rectRadius:0.09,
+      fill:{ color:SURF }, line:{ color:LINE, width:1 } });
+    sl.addText(String(it.n), { x, y:y+0.16, w, h:0.5, align:'center', rtlMode:true,
+      fontFace:'Tajawal', fontSize:26, bold:true, color:TEAL, isTextBox:true, margin:0 });
+    sl.addText(it.l, { x, y:y+0.68, w, h:0.32, align:'center', rtlMode:true,
+      fontFace:'IBM Plex Sans Arabic', fontSize:10, color:MUTED, isTextBox:true, margin:0 });
+  });
+}
+
+function tableRows(sl, head, rows, y, colW, x, w){
+  sl.addTable([
+      head.map(h => ({ text:h, options:{ bold:true, color:MUTED, fontSize:10 } })),
+      ...rows.map(r => r.map(c => ({ text:String(c), options:{ color:WHITE, fontSize:11 } })))
+    ], {
+    x: x ?? 0.55, y, w: w ?? 8.9, colW, rtlMode:true, align:'right',
+    fontFace:'IBM Plex Sans Arabic',
+    border:{ type:'solid', color:LINE, pt:1 },
+    fill:{ color:NAVY }, margin:6,
+  });
+}
+
+/* تحميل المكتبة من مصدر بديل إن تعذّر الأول */
+function loadPptx(){
+  if(typeof PptxGenJS !== 'undefined') return Promise.resolve(true);
+  return new Promise(resolve => {
+    const sc = document.createElement('script');
+    sc.src = 'https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js';
+    sc.onload  = () => resolve(typeof PptxGenJS !== 'undefined');
+    sc.onerror = () => resolve(false);
+    document.head.appendChild(sc);
+  });
+}
+
+async function exportDeck(){
+  const R = window.__R;
+  if(!R){
+    alert('لم تكتمل قراءة البيانات بعد. انتظر ظهور التقرير ثم أعد المحاولة.');
+    return;
+  }
+  const btn = document.getElementById('pptBtn');
+  btn.disabled = true; btn.textContent = 'جاري تحميل المكتبة...';
+  const ready = await loadPptx();
+  if(!ready){
+    btn.disabled = false; btn.textContent = 'تصدير PowerPoint';
+    alert('تعذّر تحميل مكتبة العروض التقديمية.\n'
+        + 'تأكد من الاتصال بالإنترنت، أو أن الشبكة لا تحجب cdn.jsdelivr.net و unpkg.com.\n'
+        + 'يمكنك بديلًا استخدام «طباعة / PDF».');
+    return;
+  }
+  btn.disabled = true; btn.textContent = 'جاري التجهيز...';
+
+  try{
+    const pres = new PptxGenJS();
+    pres.layout = 'LAYOUT_16x9';
+    pres.rtlMode = true;
+    pres.title = 'التقرير الختامي — صنّاع الحلول الابتكارية';
+
+    const S = R.settings;
+    const dt = d => d ? new Date(d).toLocaleDateString('ar-SA-u-ca-gregory',
+      { day:'numeric', month:'long', year:'numeric' }) : '';
+
+    /* ---- الغلاف ---- */
+    const c = slideBase(pres, null);
+    if(typeof LOGOS === 'object'){
+      c.addImage({ data: LOGOS['qu'],  x:7.55, y:0.42, w:1.9,  h:0.58 });
+      c.addImage({ data: LOGOS['mim'], x:5.45, y:0.42, w:1.95, h:0.58 });
+    }
+    c.addText('التقرير الختامي', { x:0.6, y:2.0, w:8.8, h:0.9, align:'right', rtlMode:true,
+      fontFace:'Tajawal', fontSize:44, bold:true, color:WHITE, isTextBox:true, margin:0 });
+    c.addText('صنّاع الحلول الابتكارية', { x:0.6, y:2.95, w:8.8, h:0.5, align:'right', rtlMode:true,
+      fontFace:'Tajawal', fontSize:20, color:TEAL, isTextBox:true, margin:0 });
+    c.addText(`${dt(S.day1_date)} — ${dt(S.day2_date)}   ·   ${S.event_location || 'جامعة القصيم'}\nبالشراكة مع وزارة الصناعة والثروة المعدنية`,
+      { x:0.6, y:3.55, w:8.8, h:0.8, align:'right', rtlMode:true,
+        fontFace:'IBM Plex Sans Arabic', fontSize:12, color:MUTED, isTextBox:true, margin:0, lineSpacingMultiple:1.4 });
+
+    /* ---- الملخص ---- */
+    const s1 = slideBase(pres, 'الملخص التنفيذي');
+    s1.addText(`شارك ${R.teams.length} فريقًا ضمّت ${R.people.length} مشاركًا من ${R.orgs} جهة، `
+      + `عملوا على تحديات واقعية في ${R.tracks.length} مسارات، وقُيّمت مشاريعهم من ${R.judges.length} محكّمين `
+      + `عبر ${R.criteria.length} معايير.`,
+      { x:0.55, y:1.15, w:8.9, h:0.7, align:'right', rtlMode:true,
+        fontFace:'IBM Plex Sans Arabic', fontSize:13, color:'C3CFE1', isTextBox:true, margin:0, lineSpacingMultiple:1.5 });
+    kpiRow(s1, [
+      { n:R.teams.length,  l:'فريق مشارك' },
+      { n:R.people.length, l:'مشارك' },
+      { n:R.orgs,          l:'جهة' },
+      { n:R.submitted,     l:'عرض مُسلَّم' },
+      { n:R.rate + '%',    l:'نسبة الحضور' },
+      { n:R.certs,         l:'شهادة صادرة' },
+    ], 2.1);
+
+    /* ---- المشاركة ---- */
+    const s2 = slideBase(pres, 'المشاركة');
+    s2.addChart(pres.ChartType.bar, [{
+      name:'الفرق',
+      labels:R.byTrack.map(t => t.name.replace('مسار ','')),
+      values:R.byTrack.map(t => t.teams),
+    }], { x:0.55, y:1.5, w:4.1, h:3.2, barDir:'col',
+      chartColors:[TEAL, AMBER], showTitle:false,
+      showValue:true, dataLabelPosition:'outEnd', dataLabelColor:WHITE, dataLabelFontSize:11,
+      catAxisLabelColor:MUTED, catAxisLabelFontSize:10,
+      valAxisLabelColor:MUTED, valAxisMinVal:0,
+      valGridLine:{ color:LINE, size:1 }, catGridLine:{ style:'none' },
+      showLegend:false, chartArea:{ fill:{ color:NAVY } } });
+    s2.addText('الفرق لكل مسار', { x:0.55, y:1.15, w:4.1, h:0.3, align:'right',
+      rtlMode:true, fontFace:'Tajawal', fontSize:13, bold:true, color:WHITE, isTextBox:true, margin:0 });
+
+    const catRows = Object.entries(R.cats).sort((a,b)=>b[1]-a[1])
+      .map(([k,v]) => [k, v, Math.round(v*100/R.people.length) + '%']);
+    tableRows(s2, ['الفئة','العدد','النسبة'], catRows, 1.5, [2.5, 0.9, 0.9], 5.05, 4.4);
+    s2.addText('توزيع المشاركين على الفئات', { x:5.05, y:1.15, w:4.4, h:0.3, align:'right',
+      rtlMode:true, fontFace:'Tajawal', fontSize:13, bold:true, color:WHITE, isTextBox:true, margin:0 });
+
+    /* ---- الحضور ---- */
+    const s3 = slideBase(pres, 'الحضور والشهادات');
+    kpiRow(s3, [
+      { n:R.d1, l:'حضور اليوم الأول' },
+      { n:R.d2, l:'حضور اليوم الثاني' },
+      { n:R.people.filter(p=>p.day1_attended&&p.day2_attended).length, l:'حضروا اليومين' },
+      { n:R.certs, l:'شهادة صادرة' },
+    ], 1.5);
+    s3.addText(`شرط الشهادة: حضور ${S.min_attendance_days === 2 ? 'اليومين' : 'يوم واحد على الأقل'}`
+      + (S.require_survey ? '، مع تعبئة استبيان التقييم.' : '.'),
+      { x:0.55, y:3.0, w:8.9, h:0.4, align:'right', rtlMode:true,
+        fontFace:'IBM Plex Sans Arabic', fontSize:12, color:MUTED, isTextBox:true, margin:0 });
+
+    /* ---- المشاريع والتحكيم ---- */
+    const s4 = slideBase(pres, 'المشاريع والتحكيم');
+    kpiRow(s4, [
+      { n:R.projects.length, l:'مشروع' },
+      { n:R.submitted,       l:'عرض مرفوع' },
+      { n:R.flags.proto,     l:'نموذج مصغر' },
+      { n:R.flags.pat,       l:'براءة اختراع' },
+      { n:R.judges.length,   l:'محكّم' },
+      { n:R.committees.length, l:'لجنة' },
+    ], 1.25);
+    tableRows(s4, ['معيار التحكيم','الوزن','أعلى درجة'],
+      R.criteria.map(c => [c.name_ar, c.weight + '%', c.max_score]), 2.8, [4.2, 1.0, 1.0], 1.35, 6.2);
+
+    /* ---- النتائج ---- */
+    R.tracks.forEach(tr => {
+      const rows = R.ranked[tr.id] || [];
+      if(!rows.length) return;
+      const sl = slideBase(pres, 'النتائج — ' + tr.name_ar.replace('مسار ',''));
+      const accent = tr.id === 'safety' ? AMBER : TEAL;
+      rows.forEach((r, k) => {
+        const y = 1.35 + k * 1.15;
+        sl.addShape('roundRect', { x:0.55, y, w:8.9, h:0.95, rectRadius:0.09,
+          fill:{ color:SURF }, line:{ color: k === 0 ? accent : LINE, width:1 } });
+        sl.addText(String(k+1), { x:8.55, y:y+0.22, w:0.7, h:0.5, align:'center', rtlMode:true,
+          fontFace:'Tajawal', fontSize:20, bold:true, color:accent, isTextBox:true, margin:0 });
+        sl.addText(r.name, { x:2.2, y:y+0.14, w:6.2, h:0.36, align:'right', rtlMode:true,
+          fontFace:'Tajawal', fontSize:16, bold:true, color:WHITE, isTextBox:true, margin:0 });
+        sl.addText(r.project_title || '', { x:2.2, y:y+0.5, w:6.2, h:0.3, align:'right', rtlMode:true,
+          fontFace:'IBM Plex Sans Arabic', fontSize:11, color:MUTED, isTextBox:true, margin:0 });
+        sl.addText(r.final_score + '%', { x:0.75, y:y+0.26, w:1.3, h:0.45, align:'left', rtlMode:true,
+          fontFace:'Tajawal', fontSize:18, bold:true, color:WHITE, isTextBox:true, margin:0 });
+      });
+    });
+
+    /* ---- الرضا ---- */
+    if(R.numeric.length){
+      const s5 = slideBase(pres, 'رضا المشاركين');
+      s5.addChart(pres.ChartType.bar, [{
+        name:'المتوسط',
+        labels:R.numeric.map(q => q.question.replace(/^كيف تقيّم\s*/,'').replace(/؟$/,'')),
+        values:R.numeric.map(q => Number(q.avg_num) || 0),
+      }], { x:0.55, y:1.2, w:8.9, h:3.5, barDir:'bar',
+        chartColors:[TEAL], showTitle:false,
+        showValue:true, dataLabelPosition:'outEnd', dataLabelColor:WHITE, dataLabelFontSize:10,
+        dataLabelFormatCode:'0.0',
+        catAxisLabelColor:MUTED, catAxisLabelFontSize:9,
+        valAxisLabelColor:MUTED, valAxisMinVal:0, valAxisMaxVal:10,
+        valGridLine:{ color:LINE, size:1 }, catGridLine:{ style:'none' },
+        showLegend:false, chartArea:{ fill:{ color:NAVY } } });
+      s5.addText(`${R.responded} رد من ${R.people.length} مشاركًا`,
+        { x:0.55, y:4.8, w:8.9, h:0.3, align:'right', rtlMode:true,
+          fontFace:'IBM Plex Sans Arabic', fontSize:11, color:MUTED, isTextBox:true, margin:0 });
+    }
+
+    /* ---- الملاحظات ---- */
+    if(R.comments.length){
+      const s6 = slideBase(pres, 'من ملاحظات المشاركين');
+      R.comments.slice(0,4).forEach((t, k) => {
+        const y = 1.3 + k * 0.95;
+        s6.addShape('roundRect', { x:0.55, y, w:8.9, h:0.78, rectRadius:0.08,
+          fill:{ color:SURF }, line:{ color:LINE, width:1 } });
+        s6.addText(t, { x:0.8, y:y+0.1, w:8.4, h:0.58, align:'right', rtlMode:true,
+          fontFace:'IBM Plex Sans Arabic', fontSize:11, color:'C3CFE1',
+          isTextBox:true, margin:0, valign:'middle', shrinkText:true });
+      });
+    }
+
+    /* ---- الختام ---- */
+    const s7 = slideBase(pres, null);
+    s7.addText('شكرًا لكم', { x:0.6, y:2.3, w:8.8, h:0.9, align:'center', rtlMode:true,
+      fontFace:'Tajawal', fontSize:40, bold:true, color:WHITE, isTextBox:true, margin:0 });
+    s7.addText('مركز الابتكار والملكية الفكرية · جامعة القصيم',
+      { x:0.6, y:3.25, w:8.8, h:0.4, align:'center', rtlMode:true,
+        fontFace:'IBM Plex Sans Arabic', fontSize:12, color:MUTED, isTextBox:true, margin:0 });
+
+    await pres.writeFile({ fileName:'التقرير-الختامي.pptx' });
+  } catch(e){
+    alert('تعذّر إنشاء العرض: ' + (e.message || e));
+  } finally {
+    btn.disabled = false; btn.textContent = 'تصدير PowerPoint';
   }
 }
 
@@ -387,11 +633,10 @@ function exportAll(){
     'المحكّمون':r.judges_count,'النتيجة %':r.final_score,
   })), 'النتائج');
 
-  add(D.surveys.map(s=>({
-    'المحتوى':s.rating_content,'التنظيم':s.rating_organization,'الإرشاد':s.rating_mentorship,
-    'التحكيم':s.rating_judging,'العام':s.rating_overall,
-    'يوصي':s.would_recommend===true?'نعم':(s.would_recommend===false?'لا':''),
-    'ملاحظات':s.comment||'',
+  add((D.surveyQ||[]).map(q=>({
+    'السؤال':q.question,'النوع':q.qtype,'عدد الإجابات':q.answers,
+    'المتوسط':q.avg_num ?? '',
+    'التوزيع':q.breakdown ? JSON.stringify(q.breakdown) : '',
   })), 'الاستبيان');
 
   XLSX.writeFile(wb, 'التقرير-الختامي.xlsx');
