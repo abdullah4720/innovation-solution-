@@ -306,10 +306,9 @@
         <div class="sub">كل مشروع للجنة واحدة. الترتيب يحدد تسلسل عرضه على المحكّمين.</div>
         <div id="assignStats" class="stats" style="margin-bottom:14px;"></div>
         <div style="display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px;">
-          <select id="bulkCom" style="max-width:230px;"></select>
-          <select id="bulkTrack" style="max-width:230px;"></select>
-          <button class="b b-ghost" onclick="bulkAssign()">إسناد مشاريع المسار للجنة</button>
+          <button class="b b-teal"  onclick="openAssignTool()">أداة الإسناد</button>
           <button class="b b-ghost" onclick="renumber()">إعادة الترقيم</button>
+          <button class="b b-ghost" onclick="window.open('monitor.html','_blank')">شاشة المتابعة الحيّة</button>
           <button class="b b-danger" onclick="clearAllJudging()">مسح التحكيم بالكامل</button>
         </div>
         <div class="table-wrap"><table>
@@ -1455,13 +1454,6 @@ function renderAssign(){
       <div class="l">مشروع بلا لجنة</div></div>
     <div class="stat"><div class="n">${submitted}</div><div class="l">تقييم معتمَد</div></div>`;
 
-  document.getElementById('bulkCom').innerHTML =
-    '<option value="">— اختر اللجنة —</option>' +
-    committees.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-  document.getElementById('bulkTrack').innerHTML =
-    '<option value="">كل المسارات</option>' +
-    tracks.map(t => `<option value="${t.id}">${t.name_ar}</option>`).join('');
-
   const sorted = [...teams].sort((a,b) =>
     String(a.committee_id||'zz').localeCompare(String(b.committee_id||'zz')) ||
     (a.judging_order ?? 999) - (b.judging_order ?? 999));
@@ -1539,17 +1531,126 @@ async function setOrder(team_id, value){
   toast('تم');
 }
 
-async function bulkAssign(){
-  const cid = document.getElementById('bulkCom').value;
-  const tid = document.getElementById('bulkTrack').value;
-  if(!cid) return toast('اختر اللجنة');
-  const list = teams.filter(t => !tid || t.track_id === tid);
-  if(!list.length) return toast('لا توجد مشاريع مطابقة');
-  if(!confirm(`إسناد ${list.length} مشروعًا لهذه اللجنة؟ سيُستبدل الإسناد السابق.`)) return;
-  const { error } = await supabaseClient.from('teams')
-    .update({ committee_id: cid }).in('id', list.map(t => t.id));
-  if(error) return toast('تعذّر الإسناد: ' + error.message);
-  loadAll(); toast('تم الإسناد');
+function openAssignTool(){
+  if(!committees.length){ toast('أنشئ لجنة أولًا'); return; }
+  closeOvl();
+  const el = document.createElement('div');
+  el.className = 'ovl'; el.id = 'ovl';
+  el.innerHTML = `<div class="box">
+    <h3>إسناد المشاريع على اللجان</h3>
+    <div class="sub2">اختر نطاق المشاريع واللجان، ثم طريقة التوزيع.</div>
+
+    <label for="atTrack">نطاق المشاريع</label>
+    <select id="atTrack" onchange="assignPreview()">
+      <option value="">كل المسارات</option>
+      ${tracks.map(t => `<option value="${t.id}">${t.name_ar}</option>`).join('')}
+    </select>
+
+    <label>اللجان المشاركة</label>
+    <div class="assign-teams" id="atComs">
+      ${committees.map(c => {
+        const n = comMembers(c.id).length;
+        return `<span class="tchip" data-com="${c.id}" onclick="toggleAtCom(this)">
+          ${c.name}${n ? ` · ${n} محكّم` : ' · بلا محكّمين'}</span>`;
+      }).join('')}
+    </div>
+
+    <label>طريقة التوزيع</label>
+    <div class="assign-teams" id="atMode">
+      <span class="tchip on" data-mode="single" onclick="setAtMode(this)">كل المشاريع للجنة واحدة</span>
+      <span class="tchip" data-mode="spread" onclick="setAtMode(this)">توزيع متوازن على اللجان</span>
+    </div>
+
+    <label>المشاريع المسندة مسبقًا</label>
+    <div class="assign-teams" id="atOver">
+      <span class="tchip on" data-over="skip" onclick="setAtOver(this)">تُترك كما هي</span>
+      <span class="tchip" data-over="replace" onclick="setAtOver(this)">يُعاد إسنادها</span>
+    </div>
+
+    <div class="sub2" id="atInfo" style="margin-top:16px;"></div>
+    <div class="msg" id="atMsg"></div>
+    <div class="acts">
+      <button class="b b-ghost" onclick="closeOvl()">إلغاء</button>
+      <button class="b b-teal" id="atGo" onclick="runAssign()">تنفيذ الإسناد</button>
+    </div></div>`;
+  document.body.appendChild(el);
+  assignPreview();
+}
+
+function toggleAtCom(elm){ elm.classList.toggle('on'); assignPreview(); }
+function setAtMode(elm){
+  document.querySelectorAll('#atMode .tchip').forEach(x => x.classList.remove('on'));
+  elm.classList.add('on'); assignPreview();
+}
+function setAtOver(elm){
+  document.querySelectorAll('#atOver .tchip').forEach(x => x.classList.remove('on'));
+  elm.classList.add('on'); assignPreview();
+}
+function atState(){
+  const track = document.getElementById('atTrack').value;
+  const coms  = [...document.querySelectorAll('#atComs .tchip.on')].map(x => x.dataset.com);
+  const mode  = (document.querySelector('#atMode .tchip.on') || {}).dataset?.mode || 'single';
+  const over  = (document.querySelector('#atOver .tchip.on') || {}).dataset?.over || 'skip';
+  let list = teams.filter(t => (!track || t.track_id === track) && t.status !== 'withdrawn');
+  if(over === 'skip') list = list.filter(t => !t.committee_id);
+  return { track, coms, mode, over, list };
+}
+
+function assignPreview(){
+  const box = document.getElementById('atInfo');
+  if(!box) return;
+  const { coms, mode, list } = atState();
+  if(!coms.length){ box.innerHTML = 'اختر لجنة واحدة على الأقل.'; return; }
+  if(!list.length){ box.innerHTML = 'لا توجد مشاريع مطابقة للنطاق المحدد.'; return; }
+
+  if(mode === 'single'){
+    const c = committees.find(x => x.id === coms[0]);
+    box.innerHTML = `<b style="color:var(--teal);">${list.length}</b> مشروعًا `
+      + `إلى «${c ? c.name : ''}»${coms.length > 1 ? ' (ستُستخدم أول لجنة مختارة)' : ''}.`;
+  } else {
+    const per = Math.ceil(list.length / coms.length);
+    box.innerHTML = `<b style="color:var(--teal);">${list.length}</b> مشروعًا على `
+      + `<b style="color:var(--teal);">${coms.length}</b> لجان — نحو ${per} مشروع لكل لجنة.`;
+  }
+}
+
+async function runAssign(){
+  const { coms, mode, list } = atState();
+  if(!coms.length) return msg('atMsg', 'اختر لجنة واحدة على الأقل.');
+  if(!list.length) return msg('atMsg', 'لا توجد مشاريع مطابقة.');
+
+  const empty = coms.filter(id => comMembers(id).length === 0);
+  if(empty.length && !confirm('بعض اللجان المختارة بلا محكّمين، ولن يُقيَّم ما يُسنَد إليها. المتابعة؟')) return;
+
+  const btn = document.getElementById('atGo');
+  btn.disabled = true; btn.textContent = 'جاري الإسناد...';
+
+  // رتّب حسب رقم التسجيل ليكون التوزيع متوقَّعًا
+  const sorted = [...list].sort((a,b) =>
+    String(a.reg_no || a.code).localeCompare(String(b.reg_no || b.code), 'ar'));
+
+  const plan = {};   // committee_id -> [team...]
+  coms.forEach(c => plan[c] = []);
+  if(mode === 'single'){
+    plan[coms[0]] = sorted;
+  } else {
+    sorted.forEach((t, i) => plan[coms[i % coms.length]].push(t));
+  }
+
+  try{
+    for(const cid of Object.keys(plan)){
+      const rows = plan[cid];
+      for(let i = 0; i < rows.length; i++){
+        const { error } = await supabaseClient.from('teams')
+          .update({ committee_id: cid, judging_order: i + 1 }).eq('id', rows[i].id);
+        if(error) throw new Error(error.message);
+      }
+    }
+    closeOvl(); toast(`أُسنِد ${sorted.length} مشروعًا`); loadAll();
+  } catch(e){
+    msg('atMsg', 'تعذّر الإسناد: ' + e.message);
+    btn.disabled = false; btn.textContent = 'تنفيذ الإسناد';
+  }
 }
 
 async function renumber(){
@@ -1559,7 +1660,8 @@ async function renumber(){
     (groups[t.committee_id] = groups[t.committee_id] || []).push(t);
   });
   for(const cid in groups){
-    const list = groups[cid].sort((a,b) => String(a.code).localeCompare(String(b.code)));
+    const list = groups[cid].sort((a,b) =>
+      String(a.reg_no || a.code).localeCompare(String(b.reg_no || b.code), 'ar'));
     for(let i = 0; i < list.length; i++){
       await supabaseClient.from('teams').update({ judging_order: i + 1 }).eq('id', list[i].id);
     }
